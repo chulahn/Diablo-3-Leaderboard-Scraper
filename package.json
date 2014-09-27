@@ -1,0 +1,17 @@
+{
+  "name": "D3Leader",
+  "version": "1.0.0",
+  "description": "",
+  "main": "request.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+  	"express" : "4.2.x",
+  	"jsdom" : "x.x.x",
+  	"ejs" : "x.x.x"
+
+  },
+  "author": "Chul Ahn",
+  "license": "ISC"
+}

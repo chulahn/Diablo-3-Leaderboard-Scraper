@@ -1,0 +1,28 @@
+<h1>These are <%= ejs_btag %>s <%= ejs_heroData.name %> </h1>
+<script src="http://localhost:3000/get.js"> </script>
+
+<ul>
+
+	<li>Name : <%= ejs_heroData.name %></li>
+	<li>Class : <%= ejs_heroData.class %></li>
+	<li>Active Skills :
+		<!-- loop through the active skills -->
+		<ul><% ejs_heroData.skills.active.forEach(function (activeSkills) { %>
+			<!-- if skill is not null, add it to list -->
+			<% if (activeSkills.skill != undefined) { %><li><%= activeSkills.skill.name %>
+				<!-- if there is a rune add it to skill -->
+				<% if (activeSkills.rune != undefined) { %> : <%= activeSkills.rune.name %><% } %>
+			</li><% } %> 
+		<% }) %></ul><!-- end of active skills loop -->
+
+	<li>Passives :
+		<ul><% ejs_heroData.skills.passive.forEach(function (passives) { %>
+			<% if (passives.skill != undefined) { %> <li> <%= passives.skill.name %> </li> <% } %>
+		<% }) %></ul>
+	</li>
+
+
+</ul>
+
+<p>
+Barb
