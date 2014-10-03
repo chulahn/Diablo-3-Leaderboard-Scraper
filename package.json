@@ -7,10 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-  	"express" : "4.2.x",
-  	"jsdom" : "x.x.x",
-  	"ejs" : "x.x.x"
-
+    "ejs": "x.x.x",
+    "express": "4.2.x",
+    "jsdom": "x.x.x",
+    "mongoose": "^3.8.16"
   },
   "author": "Chul Ahn",
   "license": "ISC"

@@ -5,7 +5,7 @@
 //creates a list of all the battle tags
 <ol>
 <% ejs_battletags.forEach(function (tag) { %>
-	<li><a href = "/barbarian/<%- tag %>" >  <%= tag %></a></li>
+	<li><a href = "/player/<%= tag %>" >  <%= tag %></a></li>
 <% }) %>
 </ol>
 
