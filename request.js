@@ -17,28 +17,9 @@ var diabloClasses = ["crusader", "barbarian", "dh", "wizard", "wd", "monk"];
 var apiKey = "y34m8hav4zpvrezvrs6xhgjh6uphqa5r";
 var locale = "en_US";
 
-function getResponse(isbn){
-	var requestURLleft = "http://www-k6.thinkcentral.com/content/hsp/math/hspmath/go_math_2012/na/gr4/practice_book_te_";
-
-	var number = isbn;
-	var requestURLright = "_/launch.html";
-	var requestURL = String(requestURLleft+number+requestURLright);
-	// requestURL = "http://www-k6.thinkcentral.com/content/hsp/math/hspmath/go_math_2012/na/gr3/practice_book_te_9780547589091_/launch.html";
-	console.log(requestURL);
-
-	request(requestURL, function(error, response, data) {
-		var b = data.indexOf("<Error");
-		if (b != -1) {
-			getResponse(isbn+1);
-		}
-		else {
-			console.log(isbn);
-		}
-	});
-}
-
 //gets data from battletag and writes to db.  y param is for finding out which was called first
-function requestData(requestURL, player , delay ,db, diabloClass) {
+//helper method for database
+function requestData(requestURL, player, delay, db, diabloClass) {
 	setTimeout( function() {
 		request(requestURL, function (error, response, data) {
 			//...parse it
@@ -114,17 +95,14 @@ function findLeaderboardHero(player, matches){
 
 }
 
-//adds players from leaderboards to db in collection barb
+//adds players from leaderboards to db in class collection
 function dataBase(diabloClass) {
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 		//successfully connected
 		if(!err) {
 			console.log("We are connected");
 		}	
-	// var collection = db.collection('hero');
-	// var doc1 = {'hi' : 'yo'};
-	// collection.insert(doc1 , function (err, result) {
-		// });
+
 		//inside db
 		date = new Date();
 		console.log(diabloClass +" Leaders before request "+ date.getMinutes() +":"+ date.getSeconds());
@@ -254,13 +232,8 @@ app.get('/', function(req, res) {
 	res.sendfile('default.html');
 });
 
-app.get('/1', function(req,res) {
-	getResponse(9780547580000);
-})
 app.get('/updatebarb', function (req,res) {
-	console.log(12);
 	dataBase('barbarian');
-	console.log(123);
 })
 
 app.get('/updatesader', function (req,res) {
@@ -274,36 +247,67 @@ app.get('/get.js', function(req,res) {
 // function getLeaderboard(diabloClass, length, req, res) {
 	//rewrite this for access database
 	function getLeaderboard(diabloClass, req, res) {
-		date = new Date();
-		console.log(diabloClass +" Leaders before request "+ date.getMinutes() +":"+ date.getSeconds());
-		var requestURL = "http://us.battle.net/d3/en/rankings/era/1/rift-" + diabloClass
-		request(requestURL, function (error, response, body) {
-			var startTable = body.indexOf("<table>");
-			var endTable = body.indexOf("</table>");
-		//get leaderboard table
-		var table = body.substring(startTable,endTable);
-		var battleTags = [];
 
-		//env uses HTML or URL, [script, it will be JQuery], and callback function(error, window)
-		jsdom.env(table, ["http://code.jquery.com/jquery.js"], function (error, window) {
-			//allows normal JQuery usage
-			var $ = window.jQuery;
-			var count =0;
-			$('.battletag > a ').each(function() {
-				//for each battletag, get the href, remove the last char "/" and remove the begging to get just the tag
-				// if (count < length) {
-					battleTags.push($(this).attr('href').substring(0,$(this).attr('href').length-1).replace("/d3/en/profile/",""));
-				// }
-				// count ++;
-			});
 
-			//show all the battletags that have in leaderboards
-			
-			date = new Date();
-			console.log(diabloClass + " Leaders "+ date.getMinutes() +":"+ date.getSeconds());
-			res.render('ClassLeaderboard.ejs', {title : diabloClass , ejs_battletags : battleTags });
+		MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
+			//successfully connected
+			if(!err) {
+				console.log("We are connected");
+			}	
+			var collection = "";
+			switch (diabloClass) {
+				case "barbarian":
+					collection = "barbs";
+					break;
+				case "crusader":
+					collection = "sader";
+					break;
+			} 
+
+			var collection = db.collection(collection);
+
+			var battleTags = collection.find({},{"_id" : 0 ,"Standing" : 0,"Greater Rift" : 0,"Heroes" : 0}).sort({"Standing" : 1}).toArray(function(err, results) {
+        		console.log(results[0].Battletag);
+        		// Let's close the db
+        		res.render('ClassLeaderboard.ejs', {title : diabloClass , ejs_battletags : results });
+
+        		db.close();
+      		});
+
+
+
 		});
-	});
+
+	// 	date = new Date();
+	// 	console.log(diabloClass +" Leaders before request "+ date.getMinutes() +":"+ date.getSeconds());
+	// 	var requestURL = "http://us.battle.net/d3/en/rankings/era/1/rift-" + diabloClass
+	// 	request(requestURL, function (error, response, body) {
+	// 		var startTable = body.indexOf("<table>");
+	// 		var endTable = body.indexOf("</table>");
+	// 	//get leaderboard table
+	// 	var table = body.substring(startTable,endTable);
+	// 	var battleTags = [];
+
+	// 	//env uses HTML or URL, [script, it will be JQuery], and callback function(error, window)
+	// 	jsdom.env(table, ["http://code.jquery.com/jquery.js"], function (error, window) {
+	// 		//allows normal JQuery usage
+	// 		var $ = window.jQuery;
+	// 		var count =0;
+	// 		$('.battletag > a ').each(function() {
+	// 			//for each battletag, get the href, remove the last char "/" and remove the begging to get just the tag
+	// 			// if (count < length) {
+	// 				battleTags.push($(this).attr('href').substring(0,$(this).attr('href').length-1).replace("/d3/en/profile/",""));
+	// 			// }
+	// 			// count ++;
+	// 		});
+
+	// 		//show all the battletags that have in leaderboards
+			
+	// 		date = new Date();
+	// 		console.log(diabloClass + " Leaders "+ date.getMinutes() +":"+ date.getSeconds());
+	// 		res.render('ClassLeaderboard.ejs', {title : diabloClass , ejs_battletags : battleTags });
+	// 	});
+	// });
 	// return battleTags;
 }
 
