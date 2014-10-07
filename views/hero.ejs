@@ -1,6 +1,8 @@
 <h1>These are <%= ejs_btag %>s <%= ejs_heroData.name %> </h1>
 <script src="http://localhost:3000/get.js"> </script>
 
+
+//Shows information for a Hero
 <ul>
 
 	<li>Name : <%= ejs_heroData.name %></li>
@@ -20,6 +22,45 @@
 			<% if (passives.skill != undefined) { %> <li> <%= passives.skill.name %> </li> <% } %>
 		<% }) %></ul>
 	</li>
+
+	<li> Items : 
+		<ul>
+			<% if (ejs_heroData.items.head != undefined) { %>
+			<li title="Insert data from tooltip params">Head : <%= ejs_heroData.items.head.name %></li>
+			<% } %>
+
+			<% if (ejs_heroData.items.torso != undefined) { %>
+			<li title="Insert data from tooltip params">Torse : <%= ejs_heroData.items.torso.name %></li>
+			<% } %>
+			<% if (ejs_heroData.items.feet != undefined) { %>
+			<li title="Insert data from tooltip params">Feet : <%= ejs_heroData.items.feet.name %></li>
+			<% } %>
+			<% if (ejs_heroData.items.hands != undefined) { %>
+			<li title="Insert data from tooltip params">Hands : <%= ejs_heroData.items.hands.name %></li>
+			<% } %>
+			<% if (ejs_heroData.items.shoulders != undefined) { %>
+			<li title="Insert data from tooltip params">Shoulders : <%= ejs_heroData.items.shoulders.name %></li>
+			<% } %>
+			<% if (ejs_heroData.items.legs != undefined) { %>
+			<li title="Insert data from tooltip params">Legs : <%= ejs_heroData.items.legs.name %></li>
+			<% } %>
+			<% if (ejs_heroData.items.bracers != undefined) { %>
+			<li title="Insert data from tooltip params">Bracers : <%= ejs_heroData.items.bracers.name %></li>
+			<% } %>
+			<% if (ejs_heroData.items.rightFinger != undefined) { %>
+			<li title="Insert data from tooltip params">Right Finger : <%= ejs_heroData.items.rightFinger.name %></li>
+			<% } %>
+			<% if (ejs_heroData.items.leftFinger != undefined) { %>
+			<li title="Insert data from tooltip params">Left Finger : <%= ejs_heroData.items.leftFinger.name %></li>
+			<% } %>
+			<% if (ejs_heroData.items.head != undefined) { %>
+			<li title="Insert data from tooltip params">Head : <%= ejs_heroData.items.head.name %></li>
+			<% } %>
+		</ul>
+	</li>
+
+
+
 
 
 </ul>

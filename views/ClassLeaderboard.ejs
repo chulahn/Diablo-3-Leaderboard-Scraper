@@ -2,10 +2,15 @@
 <script src="../get.js"> </script>
 
 
-//creates a list of all the battle tags
+//List of all the BattleTags for the corresponding Leaderboard
 <ol>
 <% ejs_battletags.forEach(function (tag) { %>
-	<li><a href = "/player/<%= tag %>" >  <%= tag %></a></li>
+
+	<li><a href = "/player/<%= tag.Battletag.replace("#","-") %>" >  <%= tag.Battletag %></a></li>
+<!-- //if using requestURL.
+// 	<li><a href = "/player/<%= tag %>" >  <%= tag %></a></li>
+-->
+
 <% }) %>
 </ol>
 

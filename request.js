@@ -17,6 +17,98 @@ var diabloClasses = ["crusader", "barbarian", "dh", "wizard", "wd", "monk"];
 var apiKey = "y34m8hav4zpvrezvrs6xhgjh6uphqa5r";
 var locale = "en_US";
 
+
+//For accessing Battletags on Leaderboard from database and create page
+function getLeaderboard(diabloClass, req, res) {    
+	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
+		if(!err) {
+			console.log("We are connected");
+		}	
+
+		var collection = "";
+		switch (diabloClass) {
+			case "barbarian":
+				collection = "barbs";
+				break;
+			case "crusader":
+				collection = "sader";
+				break;
+		} 
+		var collection = db.collection(collection);
+		//from the collection, get only the Battletags as an array sorted by rank, and create site
+		collection.find({},{"_id" : 0 ,"Standing" : 0,"Greater Rift" : 0,"Heroes" : 0}).sort({"Standing" : 1}).toArray(function(err, results) {
+    		console.log(results[0].Battletag);
+    		res.render('ClassLeaderboard.ejs', {title : diabloClass , ejs_battletags : results });
+    		db.close();
+  		});
+	});
+
+/* Takes ~1 Minute.  Always up to date
+	date = new Date();
+	console.log(diabloClass +" Leaders before request "+ date.getMinutes() +":"+ date.getSeconds());
+	var requestURL = "http://us.battle.net/d3/en/rankings/era/1/rift-" + diabloClass
+	request(requestURL, function (error, response, body) {
+		var startTable = body.indexOf("<table>");
+		var endTable = body.indexOf("</table>");
+		//get leaderboard table
+		var table = body.substring(startTable,endTable);
+		var battleTags = [];
+		//env uses HTML or URL, [script, it will be JQuery], and callback function(error, window)
+		jsdom.env(table, ["http://code.jquery.com/jquery.js"], function (error, window) {
+			//allows normal JQuery usage
+			var $ = window.jQuery;
+			var count =0;
+			$('.battletag > a ').each(function() {
+				//for each battletag, get the href, remove the last char "/" and remove the begging to get just the tag
+				// if (count < length) {
+					battleTags.push($(this).attr('href').substring(0,$(this).attr('href').length-1).replace("/d3/en/profile/",""));
+				// }c
+				// count ++;
+			});
+			//show all the battletags that have in leaderboards
+			date = new Date();
+			console.log(diabloClass + " Leaders "+ date.getMinutes() +":"+ date.getSeconds());
+			res.render('ClassLeaderboard.ejs', {title : diabloClass , ejs_battletags : battleTags });
+		});
+	});
+*/
+}
+
+//for a given Battletag, it makes a request to get all heroes for that tag.  After getting heroes, create the page for that Battletag
+function getHeroes(battletag, req, res) {
+	var requestURL = "https://us.api.battle.net/d3/profile/" + battletag + "/?locale="+locale+"&apikey=" + apiKey;
+	date = new Date();
+	console.log(battletag + " Page before request"+ date.getMinutes() +":"+ date.getSeconds() + date.getMilliseconds());
+	//...get JSON data
+	request(requestURL, function (error, response, data) {
+		//...parse it
+		var jsonData = JSON.parse(data);
+		if (jsonData.code == "NOTFOUND") {
+			res.send("Invalid Battletag");
+		}
+		//...get all heroes from jsonData and store it
+		var heroes = jsonData.heroes;
+		
+
+		res.render('player.ejs', { ejs_btag : battletag , ejs_heroes : heroes });
+		date = new Date();
+		console.log(battletag + " Page "+ date.getMinutes() +":"+ date.getSeconds() + date.getMilliseconds());
+	});
+}
+
+function getHeroDetails(heroID, req, res) {
+	//..create url to get json data for that hero
+	var heroRequestURL = "https://us.api.battle.net/d3/profile/"+req.params.battletag+"/hero/"+heroID+"?locale="+locale+"&apikey="+apiKey;
+	request(heroRequestURL, function (error, response, data) {
+
+		var heroData = JSON.parse(data);
+		res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData})
+		date = new Date();
+		console.log(date.getMinutes() +":"+ date.getSeconds());
+	});
+
+}
+
 //gets data from battletag and writes to db.  y param is for finding out which was called first
 //helper method for database
 function requestData(requestURL, player, delay, db, diabloClass) {
@@ -94,6 +186,8 @@ function findLeaderboardHero(player, matches){
 	});
 
 }
+
+
 
 //adds players from leaderboards to db in class collection
 function dataBase(diabloClass) {
@@ -243,111 +337,13 @@ app.get('/get.js', function(req,res) {
 	res.sendfile('get.js');
 })
 
+app.get('/battletag.css', function(req,res) {
+	res.sendfile('battletag.css');
+})
 
-// function getLeaderboard(diabloClass, length, req, res) {
-	//rewrite this for access database
-	function getLeaderboard(diabloClass, req, res) {
-
-
-		MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
-			//successfully connected
-			if(!err) {
-				console.log("We are connected");
-			}	
-			var collection = "";
-			switch (diabloClass) {
-				case "barbarian":
-					collection = "barbs";
-					break;
-				case "crusader":
-					collection = "sader";
-					break;
-			} 
-
-			var collection = db.collection(collection);
-
-			var battleTags = collection.find({},{"_id" : 0 ,"Standing" : 0,"Greater Rift" : 0,"Heroes" : 0}).sort({"Standing" : 1}).toArray(function(err, results) {
-        		console.log(results[0].Battletag);
-        		// Let's close the db
-        		res.render('ClassLeaderboard.ejs', {title : diabloClass , ejs_battletags : results });
-
-        		db.close();
-      		});
-
-
-
-		});
-
-	// 	date = new Date();
-	// 	console.log(diabloClass +" Leaders before request "+ date.getMinutes() +":"+ date.getSeconds());
-	// 	var requestURL = "http://us.battle.net/d3/en/rankings/era/1/rift-" + diabloClass
-	// 	request(requestURL, function (error, response, body) {
-	// 		var startTable = body.indexOf("<table>");
-	// 		var endTable = body.indexOf("</table>");
-	// 	//get leaderboard table
-	// 	var table = body.substring(startTable,endTable);
-	// 	var battleTags = [];
-
-	// 	//env uses HTML or URL, [script, it will be JQuery], and callback function(error, window)
-	// 	jsdom.env(table, ["http://code.jquery.com/jquery.js"], function (error, window) {
-	// 		//allows normal JQuery usage
-	// 		var $ = window.jQuery;
-	// 		var count =0;
-	// 		$('.battletag > a ').each(function() {
-	// 			//for each battletag, get the href, remove the last char "/" and remove the begging to get just the tag
-	// 			// if (count < length) {
-	// 				battleTags.push($(this).attr('href').substring(0,$(this).attr('href').length-1).replace("/d3/en/profile/",""));
-	// 			// }
-	// 			// count ++;
-	// 		});
-
-	// 		//show all the battletags that have in leaderboards
-			
-	// 		date = new Date();
-	// 		console.log(diabloClass + " Leaders "+ date.getMinutes() +":"+ date.getSeconds());
-	// 		res.render('ClassLeaderboard.ejs', {title : diabloClass , ejs_battletags : battleTags });
-	// 	});
-	// });
-	// return battleTags;
-}
-
-function getHeroes(battletag, req, res) {
-	var requestURL = "https://us.api.battle.net/d3/profile/" + battletag + "/?locale="+locale+"&apikey=" + apiKey;
-	date = new Date();
-	console.log(battletag + " Page before request"+ date.getMinutes() +":"+ date.getSeconds());
-	//...get JSON data
-	request(requestURL, function (error, response, data) {
-		//...parse it
-		var jsonData = JSON.parse(data);
-		if (jsonData.code == "NOTFOUND") {
-			res.send("Invalid Battletag");
-		}
-
-		//...get all heroes from jsonData and store it
-		var heroes = jsonData.heroes;
-
-		res.render('player.ejs', { ejs_btag : battletag , ejs_heroes : heroes });
-		date = new Date();
-		console.log(battletag + " Page "+ date.getMinutes() +":"+ date.getSeconds());
-	});
-}
-
-function getHeroDetails(heroID, req, res) {
-	//..create url to get json data for that hero
-	var heroRequestURL = "https://us.api.battle.net/d3/profile/"+req.params.battletag+"/hero/"+heroID+"?locale="+locale+"&apikey="+apiKey;
-	request(heroRequestURL, function (error, response, data) {
-
-		var heroData = JSON.parse(data);
-		res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData})
-		date = new Date();
-		console.log(date.getMinutes() +":"+ date.getSeconds());
-	});
-
-}
 
 app.get('/barbarian', function(req, res) {
 	var b = getLeaderboard("barbarian", req, res);
-	console.log(b);
 });
 
 
@@ -396,20 +392,8 @@ app.get('/barbarian/:battletag', function(req, res) {
 	getHeroes(req.params.battletag, req, res);
 });
 
-app.get('/barbarian/:battletag/:heroID', function(req, res) {
-
+app.get('/player/:battletag/hero/:heroID', function(req, res) {
 	getHeroDetails(req.params.heroID, req, res);
-	// //..create url to get json data for that hero
-	// var heroData;
-	// var heroRequestURL = "https://us.api.battle.net/d3/profile/"+req.params.battletag+"/hero/"+req.params.heroID+"?locale="+locale+"&apikey="+apiKey;
-	// request(heroRequestURL, function (error, response, data) {
-
-	// 	heroData = JSON.parse(data);
-	// 	res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData})
-	// 	date = new Date();
-	// 	console.log(date.getMinutes() +":"+ date.getSeconds());
-	// });
-
 });
 
 app.get('/demon-hunter', function(req,res) {
