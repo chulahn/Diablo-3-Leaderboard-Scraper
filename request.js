@@ -138,39 +138,55 @@ function getHeroDetails(heroID, req, res) {
 
 //gets data from battletag and writes to db.
 //helper method for database
-function requestDataWriteToDB(action, requestURL, player, delay, db, diabloClass) {
+function updatePlayerDB(requestURL, playerData, delay, db, diabloClass, calledAgain) {
 	setTimeout( function() {
 		request(requestURL, function (error, response, data) {
-			//...parse it
 			var jsonData = JSON.parse(data);
-			//
+			//if call was null, 
 			if (jsonData.battleTag == undefined){
-				jsonData.battleTag = "UNDEFINED";
+				console.log("-----" + playerData[0] + " was undefined " + calledAgain)
+				updatePlayerDB(requestURL,playerData,1000,db,diabloClass,calledAgain+1);
+				// jsonData.battleTag = "UNDEFINED";
 			}
-			console.log(player[0] + " " + jsonData.battleTag);
-			//...get all heroes from jsonData and store it
-			var collection = "";
-			switch (diabloClass) {
-				case "barbarian":
-					collection = "barbs";
-					break;
-				case "crusader":
-					collection = "sader";
-					break;
-			} 
-			// console.log(findHero(jsonData, diabloClass));
-			if (action == "write") {
-				db.collection(collection).insert({"Standing" : player[0] ,"Battletag" : jsonData.battleTag , "Greater Rift" : player[2] ,"Heroes" : jsonData.heroes}, function(err, results) {
-					// if (!err) {
-						// console.log('successfully added ' + jsonData.battleTag);
-					// }
-				});
-			}
-			if (action == "update") {
-				db.collection(collection).update({"Standing" : player[0]}, {"Standing" : player[0] ,"Battletag" : jsonData.battleTag , "Greater Rift" : player[2] ,"Heroes" : jsonData.heroes}, function(err, results) {
-					// if (!err) {
-						// console.log('successfully added ' + jsonData.battleTag);
-					// }
+			else {
+				console.log("jsondata not null " + calledAgain + "  " +  playerData[0] + " " + jsonData.battleTag);
+				//...get all heroes from jsonData and store it
+				var collectionName = getCollectionName(diabloClass);
+				var diabloClassCollection = db.collection(collectionName);
+
+				diabloClassCollection.find().toArray(function(err, results) {
+					//[rank, battletag, tier, timespend, date accomplished]
+					var collectionLength = results.length;
+					//nothing in collection add player
+					if (collectionLength == 0) {
+						diabloClassCollection.insert({"Standing" : playerData[0] , "Battletag" : jsonData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : jsonData.heroes}, function(err, results) {
+						});
+					}
+					//change to 1000 later
+					//check what hasnt been added
+					else if (collectionLength <100) {
+						diabloClassCollection.find({"Standing" : playerData[0]}).toArray(function(err, result) {
+							// console.log(result.length);
+							if (result.length == 0) {
+								diabloClassCollection.insert({"Standing" : playerData[0] , "Battletag" : jsonData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : jsonData.heroes}, function(err, results) {
+								});
+							}
+							else {
+							}
+						});
+					}
+					//collection is correct size
+					else if (collectionLength == 100) {
+						diabloClassCollection.find({"Standing" : playerData[0]}).toArray(function(err, result) {
+							//If Leaderboard spot has not changed, do nothing, otherwise update
+							if(playerData[1].replace("-","#") == jsonData.battleTag && result[0]["Greater Rift"] == playerData[2] && result[0]["Time Spent"] == playerData[3] && result[0]["Date Completed"] == playerData[4]) {
+							}
+							else {	
+								diabloClassCollection.update({"Standing" : playerData[0]} , {"Battletag" : jsonData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : jsonData.heroes}, function(err, results) {
+								});			
+							}
+						});					 
+					}
 				});
 			}
 		});
@@ -256,7 +272,7 @@ function findLeaderboardHero(player, matches){
 
 //adds players from leaderboards to db in class collection
 //action can be update or add
-function addPlayersTodataBase(diabloClass, action) {
+function getCurrentLeaderboard(diabloClass) {
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 		//successfully connected
 		if(!err) {
@@ -270,6 +286,7 @@ function addPlayersTodataBase(diabloClass, action) {
 
 		var requestURL = "http://us.battle.net/d3/en/rankings/era/1/rift-" + diabloClass;
 		request(requestURL, function (error, response, body) {
+			console.log("requesting")
 			var startTable = body.indexOf("<table>");
 			var endTable = body.indexOf("</table>");
 			//get leaderboard table from Battle.net website
@@ -286,8 +303,9 @@ function addPlayersTodataBase(diabloClass, action) {
 				var count =0;
 
 				//for each row
-				$('tbody tr').each( function(){
+				$('tbody tr').each( function getDataFromRow(){
 					//get the top players from 1 to count
+					//change to 1000 later
 					if (count < 100) {
 						//index for a row's column.  gets reset after each row.
 						var cellIndex = 0; 
@@ -303,7 +321,7 @@ function addPlayersTodataBase(diabloClass, action) {
 								//remove char in front, last space and period at end
 								rank = rank.substring(1,rank.length-2);
 								if (rank != "Rankings not yet availabl") {
-									playerData.push(rank);
+									playerData.push(parseInt(rank));
 								}
 							}
 							//battletag
@@ -334,86 +352,60 @@ function addPlayersTodataBase(diabloClass, action) {
 				//count is used to know which call# it currently is to know when to make the next request
 				var currentCallNum =0;
 				var timer;
-				leaders.forEach(function (player, i) {
+				leaders.forEach(function (playerData, i) {
 					i = currentCallNum;
-					var requestURL = "https://us.api.battle.net/d3/profile/" + player[1] + "/?locale="+locale+"&apikey=" + apiKey;
-					date = new Date();
-					// ...get JSON data
-					
+					var requestURL = "https://us.api.battle.net/d3/profile/" + playerData[1] + "/?locale="+locale+"&apikey=" + apiKey;
+					date = new Date();					
 					var timeCheck = new Date();
 					timeCheck = timeCheck.getSeconds()*1000 + timeCheck.getMilliseconds();
 					
-					//on 10th call, set a time
-					if (i % 10 == 9) {
-						// timer = new Date();
-						timer = timer+ 1000;
-						if (i==9){
-							console.log("requested " + i + " " + timer + "Current request" + timeCheck);
-							if (action == "write") {
-								requestDataWriteToDB("write", requestURL,player,0,db,diabloClass);
-							}
-							if (action == "update") {
-								requestDataWriteToDB("update", requestURL,player,0,db,diabloClass);
-							}
-						}
-						//after 10th call
-						else{
-							var timeDifference = timer - timeCheck;
-							console.log("requested " + i + " " + timer + " " + timeCheck);
-							if (action == "write") {
-								requestDataWriteToDB("write", requestURL, player, timeDifference+800,db,diabloClass);
-							}
-							if (action == "update") {
-								requestDataWriteToDB("update", requestURL,player,timeDifference+800,db,diabloClass);
-							}
-						}	
-					}
-					//not a 10th call, check time difference
-					else {
-						//first 10 calls
+					//only allowed 10 api calls per second
+					//not the 10th call
+					if (i % 10 != 9) {
+						//if its the first 10 calls, set a timer to know when when to make next 10 calls
 						if (i < 10) {
-							//first call, set a timer to know when to call requests after reaching limit
+							//timer is set on first call
 							if (i == 0) {
 								timer = new Date();
 								timer = timer.getSeconds()*1000 + timer.getMilliseconds();
 							}
 							console.log("requested " + i + " " + timer);
-							if (action == "write") {
-								requestDataWriteToDB("write", requestURL,player,0,db,diabloClass);	
-							}
-							if (action == "update") {
-								requestDataWriteToDB("update", requestURL,player,0,db,diabloClass);
-							}						
+							updatePlayerDB(requestURL,playerData,0,db,diabloClass,0);					
 						}
-						//not 10th call or first 10
+						//not 10th call or first 10, get the current time and check how long its been since the previous 10 calls
 						else {
 							//get current time
 							var timeCheck = new Date();
 							timeCheck = timeCheck.getSeconds()*1000 + timeCheck.getMilliseconds();
 
 							var timeDifference = timer - timeCheck;
-							console.log("requested " + player + " " + timer + " " + timeCheck);
+							console.log("requested " + playerData + " " + timer + " " + timeCheck);
 							//if time difference is 0 or less, no delay
 							if (timeDifference <= 0) {
-								if (action == "write") {
-									requestDataWriteToDB("write", requestURL,player,0,db,diabloClass);
-								}
-								if (action == "update") {
-									requestDataWriteToDB("update", requestURL,player,0,db,diabloClass);
-								}	
+								updatePlayerDB(requestURL,playerData,0,db,diabloClass,0);	
 							}
 							else {
 								console.log(i + " timeDiff was "+ timeDifference);
-								if (action == "write") {
-									requestDataWriteToDB("write", requestURL,player,timeDifference+800,db,diabloClass);
-								}
-								if (action == "update") {
-									requestDataWriteToDB("update", requestURL,player,timeDifference+800,db,diabloClass);
-								}	
+								updatePlayerDB(requestURL,playerData,timeDifference+800,db,diabloClass,0);
 							}
-						}//end else all not fist 10
+						}//end not first 10 else
+					}//end not a 10th call loop
+					
+					//on 10th call set the next time to make next 10 calls to 1s after previous 10.
+					else {
+						timer = timer+ 1000;
+						if (i==9){
+							console.log("requested " + i + " " + timer + "Current request" + timeCheck);
+							updatePlayerDB(requestURL,playerData,0,db,diabloClass,0);
+						}
+						//after 10th call
+						else{
+							var timeDifference = timer - timeCheck;
+							console.log("requested " + i + " " + timer + " " + timeCheck);
+							updatePlayerDB(requestURL,playerData,timeDifference+800,db,diabloClass,0);
+						}	
 					}
-					count++;
+					currentCallNum++;
 				});//end battletag forloop
 			});//end jsdom
 		});//end request
@@ -424,16 +416,48 @@ app.get('/', function(req, res) {
 	res.sendfile('default.html');
 });
 
+
 app.get('/updatebarb', function (req,res) {
-	addPlayersTodataBase('barbarian','update');
+	getCurrentLeaderboard('barbarian');
+	res.redirect('/');
 })
 
 app.get('/updatesader', function (req,res) {
-	addPlayersTodataBase('crusader','update');
+	getCurrentLeaderboard('crusader');
+	res.redirect('/');
 })
+
+
+app.get('/updatedh', function (req,res) {
+	getCurrentLeaderboard('dh');
+	res.redirect('/');
+})
+
+app.get('/updatemonk', function (req,res) {
+	getCurrentLeaderboard('monk');
+	res.redirect('/');
+})
+
+app.get('/updatewiz', function (req,res) {
+	getCurrentLeaderboard('wizard');
+	res.redirect('/');
+})
+
+app.get('/updatewd', function (req,res) {
+	getCurrentLeaderboard('wd');
+	res.redirect('/');
+})
+
+
+
 app.get('/get.js', function(req,res) {
 	res.sendfile('get.js');
 })
+
+app.get('/request.js', function(req,res) {
+	res.sendfile('request.js');
+})
+
 
 app.get('/battletag.css', function(req,res) {
 	res.sendfile('battletag.css');
@@ -462,16 +486,11 @@ app.get('/wd', function(req, res) {
 	getLeaderboard("wd", req, res);
 });
 
-
 app.get('/player/:battletag', function(req,res) {
 
 	getHeroes(req.params.battletag, req, res);
 
 });
-
-// app.get('/crusader', function(req, res) {
-// 	getLeaderboard("crusader", req, res);
-// });
 
 app.get('/wizard', function(req, res) {
 	getLeaderboard("wizard", req, res);
