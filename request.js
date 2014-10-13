@@ -14,11 +14,20 @@ var MongoClient = mongo.MongoClient;
 var date;
 
 var diabloClasses = ["crusader", "barbarian", "dh", "wizard", "wd", "monk"];
+
+
+//https://kr.api.battle.net/d3/profile/Nokia-3756/?locale=ko_KR&apikey=y34m8hav4zpvrezvrs6xhgjh6uphqa5r
+
+//"https://" + region + apiURL + "/profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey  
+
 var apiKey = "y34m8hav4zpvrezvrs6xhgjh6uphqa5r";
+var region = "us";
+var apiURL = ".api.battle.net/d3/"
 var locale = "en_US";
 
 
 function getCollectionName(diabloClass) {
+
 	switch (diabloClass) {
 			case "barbarian":
 				return "barbs";
@@ -35,6 +44,34 @@ function getCollectionName(diabloClass) {
 		} 
 }
 
+function getGRiftCategory(category) {
+	switch (category) {
+		case "normal" :
+			return "era/1/rift-";
+		case "hc" :
+			return "era/1/rift-hardcore-";
+		case "season" :
+			return "season/1/rift-";
+		case "seasonhc" :
+			return "season/1/rift-hardcore-"
+	}
+}
+function getRegion(region) {
+	switch (region) {
+		case "us":
+			locale = "en_US";
+			region = "us";
+		case "eu":
+			locale = "en_GB";
+			region = "eu";
+		case "tw":
+			locale = "zh_TW";
+			region = "tw";
+		case "kr":
+			locale = "ko_KR";
+			region = "kr";
+	}
+}
 
 //For accessing Battletags on Leaderboard from DB and create Leaderboard page.
 function getLeaderboard(diabloClass, req, res) {    
@@ -43,7 +80,11 @@ function getLeaderboard(diabloClass, req, res) {
 		date = new Date();
 		console.log(diabloClass + " Page before request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 		//successfully connected
-		if(!err) {
+
+		if (err) {
+			return console.log(err);
+		}	
+		else  {
 			console.log("Inside getLeaderboard");
 			var collectionName = getCollectionName(diabloClass);
 			var diabloClassCollection = db.collection(collectionName);
@@ -55,10 +96,6 @@ function getLeaderboard(diabloClass, req, res) {
 	    		db.close();
 	  		});
 		}
-
-		else {
-			return console.log(err);
-		}	
 	});
 
 /* Takes ~1 Minute.  Always up to date
@@ -92,7 +129,7 @@ function getLeaderboard(diabloClass, req, res) {
 */
 }
 
-//add heroesdata to hero colelction.
+//add heroesdata to hero collection.
 function addHeroData(battletag, heroID, delay) {
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 		if(err) {
@@ -103,9 +140,9 @@ function addHeroData(battletag, heroID, delay) {
 			var requestURL = "https://us.api.battle.net/d3/profile/" + battletag.replace("#","-") + "/hero/" + heroID +"?locale=en_US&apikey=" + apiKey
 			setTimeout( function() {
 				request(requestURL, function (error, response, data) {
-					//...parse it
 					if (data == undefined) {
 						console.log("addHeroData data was undefined");
+						//error handling, call again
 						addHeroData(battletag, heroID, 1000);
 					}
 					else {
@@ -114,11 +151,13 @@ function addHeroData(battletag, heroID, delay) {
 						//check if data is not null
 						if (items == null) {
 							console.log("addHeroData items was null for " + battletag + " " + heroID);
+							//error handling, call again
 							addHeroData(battletag, heroID,1000);
 						}					
 						else {
 							if (db == null) {
 								console.log("addHeroData database was null for " + battletag + " " + heroID);
+								//error handling, call again
 								addHeroData(battletag, heroID, 1000);							
 							}
 							else {
@@ -155,8 +194,7 @@ function getHeroes(battletag, req, res) {
 		var heroCollection = db.collection("hero");
 	});
 
-
-	var requestURL = "https://us.api.battle.net/d3/profile/" + battletag + "/?locale="+locale+"&apikey=" + apiKey;
+	var requestURL = "https://" + region + apiURL + "/profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey;
 	date = new Date();
 	console.log(battletag + " Page before request"+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 	request(requestURL, function (error, response, data) {
@@ -183,7 +221,9 @@ function getHeroes(battletag, req, res) {
 //localhost:3000/player/:battletag/hero/:heroID
 //for a given heroID, it gets hero's stats, skills and items
 function getHeroDetails(heroID, req, res) {
-	var heroRequestURL = "https://us.api.battle.net/d3/profile/"+req.params.battletag+"/hero/"+heroID+"?locale="+locale+"&apikey="+apiKey;
+	console.log(getCollectionName('barbs'));	
+	// console.log("https://" + region + apiURL + "/profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey  );
+	var heroRequestURL = "https://" + region + apiURL + "/profile/" +req.params.battletag+"/hero/"+heroID+"?locale="+locale+"&apikey="+apiKey;
 
 	date = new Date();
 	console.log(heroID + " Page before request"+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
@@ -192,8 +232,9 @@ function getHeroDetails(heroID, req, res) {
 		//string to json
 		var heroData = JSON.parse(data);
 		var heroItems = heroData.items;
-		getItemIDsFromHero(heroItems,0);
-
+		if (heroData.level == 70) {
+			getItemIDsFromHero(heroItems,10);
+		}
 		res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems})
 		date = new Date();
 		console.log(heroID + " Page after request"+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
@@ -243,14 +284,10 @@ function getItemIDsFromHero(heroItems, delay) {
 	}
 	allItems.forEach(function(item, i) {
 		console.log(item.name + " " + i);
-		// if (i==10) {
-		// 	console.log("added delay")
-		// 	delay = delay+1000;
-		// }
 		console.log(delay);
 		itemID = item.tooltipParams.replace("item/" , "");
 		updateItemDB(itemID, delay);
-		delay = delay + 150;
+		delay = delay + 100;
 		i++;
 	});
 
@@ -263,30 +300,35 @@ function updateItemDB(itemID , delay){
 			return console.log("updateItemDB error connecting to db")
 		}
 		else {
-			var itemRequestURL = "https://us.api.battle.net/d3/data/item/" + itemID + "?locale=" + locale+"&apikey=" + apiKey;
 			var itemCollection = db.collection("item");
+			var itemRequestURL = "https://us.api.battle.net/d3/data/item/" + itemID + "?locale=" + locale+"&apikey=" + apiKey;
 			setTimeout( function() {
 				request(itemRequestURL, function (error, response, data) {
 					currentItem = JSON.parse(data);
-					console.log(delay + " inrequest " +currentItem.name);
-
-					itemCollection.find({"itemID" : itemID}).toArray(function(err, result) {
-						if (result.length != 1) {
-							itemCollection.insert({"itemID" : itemID, "Name" : currentItem.name, "Affixes" : currentItem.attributes, "Random Affixes" : currentItem.randomAffixes, "Gems" : currentItem.gems, "Socket Effects" : currentItem.socketEffects}, function(err, result) {
-								console.log("updateItemDB successfully inserted " + currentItem.name + " " + itemID.substring(0,5));
-							});
-						}
-						else {
-							console.log("updateItemDB already in database " + currentItem.name + " " + itemID.substring(0,5));
-						}
-
-					});
+					if (currentItem.code == 403) {
+						updateItemDB(itemID,delay+1000);
+					}
+					else{
+						console.log(delay + " updateItemDB inrequest " +currentItem.name);
+						(function(currentItem) {
+							itemCollection.find({"itemID" : currentItem.tooltipParams.replace("item/","")}).toArray(function(err, result) {
+								console.log("finding " + currentItem.tooltipParams.replace("item/","").substring(0,5) + " " + currentItem.name)
+								if (result.length != 1) {
+									itemCollection.insert({"itemID" : currentItem.tooltipParams.replace("item/",""), "Name" : currentItem.name, "Affixes" : currentItem.attributes, "Random Affixes" : currentItem.randomAffixes, "Gems" : currentItem.gems, "Socket Effects" : currentItem.socketEffects}, function(err, result) {
+										console.log("updateItemDB successfully inserted " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
+									});
+								}
+								else {
+									console.log("updateItemDB already in database " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
+								}
+							});//end find in colleciton
+						})(currentItem);//end self-invoking function
+					}				
 				});//end request
 			},delay);//end settimeout
 		}//end if successfully in db
 	});
 }
-
 
 //adds players from leaderboards to db in class collection
 //action can be update or add
@@ -298,6 +340,8 @@ function getCurrentLeaderboard(diabloClass) {
 			//Time log
 			date = new Date();
 			console.log(diabloClass +" Leaders before request "+ date.getMinutes() +":"+ date.getSeconds());
+
+			// console.log("https://" + region + apiURL + "/profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey);  
 
 			var requestURL = "http://us.battle.net/d3/en/rankings/era/1/rift-" + diabloClass;
 			request(requestURL, function (error, response, body) {
@@ -335,6 +379,7 @@ function getCurrentLeaderboard(diabloClass) {
 									var rank = $(this).html();
 									//remove char in front, last space and period at end
 									rank = rank.substring(1,rank.length-2);
+									console.log(rank + " " + (count+1));
 									if (rank != "Rankings not yet availabl") {
 										playerData.push(parseInt(rank));
 									}
@@ -446,11 +491,14 @@ function updateDiabloClassDBforPlayer(requestURL, playerData, delay, db, diabloC
 				//if call was null, 
 				if (jsonData.battleTag == undefined){
 					console.log("updateDiabloClassDBforPlayer-----" + playerData[0] + " was undefined, called " + calledAgain + "times")
-					// updateDiabloClassDBforPlayer(requestURL,playerData,1000,db,diabloClass,calledAgain+1);
+					updateDiabloClassDBforPlayer(requestURL,playerData,1000,db,diabloClass,calledAgain+1);
 					// jsonData.battleTag = "UNDEFINED";
 				}
 				else {
-					console.log("updateDiabloClassDBforPlayer, jsondata not null " + calledAgain + "  " +  playerData[0] + " " + jsonData.battleTag);
+					console.log("updateDiabloClassDBforPlayer, jsondata not null " + calledAgain + "  " +  playerData + " " + jsonData.battleTag);
+					if (playerData.length != 5) {
+						console.log("updateDiabloClassDBforPlayer did not have length of 5 for " + jsonData.battleTag);
+					}
 					//...get all heroes from jsonData and store it
 					var collectionName = getCollectionName(diabloClass);
 					var diabloClassCollection = db.collection(collectionName);
@@ -469,7 +517,7 @@ function updateDiabloClassDBforPlayer(requestURL, playerData, delay, db, diabloC
 							diabloClassCollection.find({"Standing" : playerData[0]}).toArray(function(err, result) {
 								//if it the current standing hasn't been added, add it
 								if (result.length == 0) {
-									console.log(playerData[0])
+									console.log("adding " + jsonData.battleTag + " to " + playerData[0]);
 									diabloClassCollection.insert({"Standing" : playerData[0] , "Battletag" : jsonData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : jsonData.heroes}, function(err, results) {
 									});
 								}
@@ -479,18 +527,20 @@ function updateDiabloClassDBforPlayer(requestURL, playerData, delay, db, diabloC
 						}
 						//collection is correct size
 						else if (collectionLength == 100) {
+
+							//playerData[0] occasionally doesn't show up
+
 							diabloClassCollection.find({"Standing" : playerData[0]}).toArray(function(err, result) {
 								//If Leaderboard spot has not changed, do nothing, otherwise update
-								console.log("updateDiabloClassDBforPlayer" + result.length);
 								if (result.length == 0) {
-									console.log(playerData[0]);
+									console.log("updateDiabloClassDBforPlayer ranking not found for " + playerData[0]);
 								}
 								if(playerData[1].replace("-","#") == jsonData.battleTag && result[0]["Greater Rift"] == playerData[2] && result[0]["Time Spent"] == playerData[3] && result[0]["Date Completed"] == playerData[4]) {
-										console.log("updateDiabloClassDBforPlayer found, nothing changed");
+										console.log("updateDiabloClassDBforPlayer found " + jsonData.battleTag + " nothing changed");
 								}
 								else {	
 									diabloClassCollection.update({"Standing" : playerData[0]} , {"Battletag" : jsonData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : jsonData.heroes}, function(err, results) {
-										console.log("updateDiabloClassDBforPlayer, found, -------------------------updated");
+										console.log("updateDiabloClassDBforPlayer, found,"+ jsonData.battleTag +  " --------updated with " + playerData);
 									});			
 								}
 							});					 

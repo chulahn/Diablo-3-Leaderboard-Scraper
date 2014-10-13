@@ -1,6 +1,19 @@
-function getData() {
-	console.log(1);
+ function getCollectionName(diabloClass) {
 
+	switch (diabloClass) {
+			case "barbarian":
+				return "barbs";
+			case "crusader":
+				return "sader";
+			case "dh":
+				return "dh";
+			case "wd":
+				return "wd";
+			case "monk":
+				return "monk";
+			case "wizard":
+				return "wiz";
+		} 
 }
 
-getData();
+// console.log(getCollectionName("barbarian"))
