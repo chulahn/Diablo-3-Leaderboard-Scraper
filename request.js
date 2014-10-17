@@ -1,3 +1,4 @@
+
 var request = require("request");
 var express = require("express");
 var fs = require("fs");
@@ -13,47 +14,67 @@ var MongoClient = mongo.MongoClient;
 
 var date;
 
-var diabloClasses = ["crusader", "barbarian", "dh", "wizard", "wd", "monk"];
-
-
-//https://kr.api.battle.net/d3/profile/Nokia-3756/?locale=ko_KR&apikey=y34m8hav4zpvrezvrs6xhgjh6uphqa5r
-
-//"https://" + region + apiURL + "/profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey  
-
 var apiKey = "y34m8hav4zpvrezvrs6xhgjh6uphqa5r";
 var region = "us";
 var apiURL = ".api.battle.net/d3/"
 var locale = "en_US";
+var diabloClasses = ["crusader", "barbarian", "dh", "wizard", "wd", "monk"];
 
+//https://kr.api.battle.net/d3/profile/Nokia-3756/?locale=ko_KR&apikey=y34m8hav4zpvrezvrs6xhgjh6uphqa5r
+//"https://" + region + apiURL + "/profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey  
 
-function getCollectionName(diabloClass) {
+var gRiftCategory= "era/1/rift-";
+var collectionCategory = "normal";
+
+function getCollectionName(diabloClass, gRiftCategory) {
+	//when requesting from battle.net, set collection name based on what was set in getGRiftCategory
+	if (gRiftCategory == "era/1/rift-") {
+		collectionCategory="normal";		
+	}
+	else if (gRiftCategory ==  "era/1/rift-hardcore-") {
+		collectionCategory="hc";
+	}
+	else if (gRiftCategory ==  "season/1/rift-") {
+		collectionCategory="season";
+	}
+	else if (gRiftCategory ==  "season/1/rift-hardcore-") {
+		collectionCategory="seasonhc";
+	}
+	//when accesing db from getLeaderboard
+	else {
+		collectionCategory = gRiftCategory;
+	}
 
 	switch (diabloClass) {
 			case "barbarian":
-				return "barbs";
+				return collectionCategory + "barbs";
 			case "crusader":
-				return "sader";
+				return collectionCategory + "sader";
 			case "dh":
-				return "dh";
+				return collectionCategory + "dh";
 			case "wd":
-				return "wd";
+				return collectionCategory + "wd";
 			case "monk":
-				return "monk";
+				return collectionCategory + "monk";
 			case "wizard":
-				return "wiz";
+				return collectionCategory + "wiz";
 		} 
 }
-
+//used to set the griftcategory to know which leaderboard to request from.
 function getGRiftCategory(category) {
 	switch (category) {
 		case "normal" :
-			return "era/1/rift-";
+			gRiftCategory = "era/1/rift-";
+			return;
 		case "hc" :
-			return "era/1/rift-hardcore-";
+			gRiftCategory =  "era/1/rift-hardcore-";
+			return;
 		case "season" :
-			return "season/1/rift-";
+			gRiftCategory =  "season/1/rift-";
+			return;
 		case "seasonhc" :
-			return "season/1/rift-hardcore-"
+			gRiftCategory =  "season/1/rift-hardcore-"
+			return;
 	}
 }
 function getRegion(region) {
@@ -74,7 +95,7 @@ function getRegion(region) {
 }
 
 //For accessing Battletags on Leaderboard from DB and create Leaderboard page.
-function getLeaderboard(diabloClass, req, res) {    
+function getLeaderboard(diabloClass, leaderboardType, req, res) {    
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 //Takes about 1/10th second
 		date = new Date();
@@ -86,13 +107,14 @@ function getLeaderboard(diabloClass, req, res) {
 		}	
 		else  {
 			console.log("Inside getLeaderboard");
-			var collectionName = getCollectionName(diabloClass);
+			var collectionName = getCollectionName(diabloClass, leaderboardType);
+			console.log(collectionName);
 			var diabloClassCollection = db.collection(collectionName);
 			//from the collection, get only the Battletags as an array sorted by rank, and create site
 			diabloClassCollection.find({},{"_id" : 0 ,"Standing" : 0,"Greater Rift" : 0,"Heroes" : 0}).sort({"Standing" : 1}).toArray(function(err, results) {
 	    		date = new Date();
 				console.log(diabloClass + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
-	    		res.render('ClassLeaderboard.ejs', {title : diabloClass , ejs_battletags : results });
+	    		res.render('ClassLeaderboard.ejs', {title : diabloClass , leaderboardType : collectionCategory , ejs_battletags : results });
 	    		db.close();
 	  		});
 		}
@@ -137,7 +159,10 @@ function addHeroData(battletag, heroID, delay) {
 		}
 		else {
 			console.log("inside addHeroData for " + battletag + " " + heroID + "delay is " + delay);
-			var requestURL = "https://us.api.battle.net/d3/profile/" + battletag.replace("#","-") + "/hero/" + heroID +"?locale=en_US&apikey=" + apiKey
+			var requestURL = "https://" + region + apiURL + "profile/" + battletag.replace("#", "-") + "/hero/" + heroID + "?locale=" + locale + "&apikey=" + apiKey;
+			console.log(requestURL);
+			// var requestURL = "https://us.api.battle.net/d3/profile/" + battletag.replace("#","-") + "/hero/" + heroID +"?locale=en_US&apikey=" + apiKey
+			// console.log(requestURL);
 			setTimeout( function() {
 				request(requestURL, function (error, response, data) {
 					if (data == undefined) {
@@ -290,8 +315,6 @@ function getItemIDsFromHero(heroItems, delay) {
 		delay = delay + 100;
 		i++;
 	});
-
-
 }
 
 function updateItemDB(itemID , delay){
@@ -339,18 +362,18 @@ function getCurrentLeaderboard(diabloClass) {
 			console.log("We are connected");
 			//Time log
 			date = new Date();
-			console.log(diabloClass +" Leaders before request "+ date.getMinutes() +":"+ date.getSeconds());
-
+			console.log(diabloClass + " " + gRiftCategory + " Leaders before request "+ date.getMinutes() +":"+ date.getSeconds());
 			// console.log("https://" + region + apiURL + "/profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey);  
 
-			var requestURL = "http://us.battle.net/d3/en/rankings/era/1/rift-" + diabloClass;
+			// var requestURL = "http://us.battle.net/d3/en/rankings/era/1/rift-" + diabloClass;
+			var requestURL = "https://" + region + ".battle.net/d3/en/rankings/" + gRiftCategory + diabloClass;
+			console.log(requestURL);
 			request(requestURL, function (error, response, body) {
 				console.log("requesting")
 				var startTable = body.indexOf("<table>");
 				var endTable = body.indexOf("</table>");
 				//get leaderboard table from Battle.net website
 				var table = body.substring(startTable,endTable);
-
 				//the information of all players on leaderboard
 				var leaders = [];
 				//env uses HTML or URL, [script, it will be JQuery], and callback function(error, window)
@@ -473,8 +496,6 @@ function getCurrentLeaderboard(diabloClass) {
 	});//end mongodb
 }//end function
 
-
-
 //gets data from battletag and writes to diabloClass db.
 //helper method for getCurrentLeaderboard
 function updateDiabloClassDBforPlayer(requestURL, playerData, delay, db, diabloClass, calledAgain) {
@@ -500,7 +521,7 @@ function updateDiabloClassDBforPlayer(requestURL, playerData, delay, db, diabloC
 						console.log("updateDiabloClassDBforPlayer did not have length of 5 for " + jsonData.battleTag);
 					}
 					//...get all heroes from jsonData and store it
-					var collectionName = getCollectionName(diabloClass);
+					var collectionName = getCollectionName(diabloClass,gRiftCategory);
 					var diabloClassCollection = db.collection(collectionName);
 
 					diabloClassCollection.find().toArray(function(err, results) {
@@ -554,6 +575,7 @@ function updateDiabloClassDBforPlayer(requestURL, playerData, delay, db, diabloC
 
 
 app.get('/', function(req, res) {
+	console.log(gRiftCategory);
 	res.sendfile('default.html');
 });
 
@@ -561,85 +583,68 @@ app.get('/', function(req, res) {
 app.get('/updatebarb', function (req,res) {
 	getCurrentLeaderboard('barbarian');
 	res.redirect('/');
-})
-
+});
 app.get('/updatesader', function (req,res) {
 	getCurrentLeaderboard('crusader');
 	res.redirect('/');
-})
-
-
+});
 app.get('/updatedh', function (req,res) {
 	getCurrentLeaderboard('dh');
 	res.redirect('/');
-})
-
+});
 app.get('/updatemonk', function (req,res) {
 	getCurrentLeaderboard('monk');
 	res.redirect('/');
-})
-
+});
 app.get('/updatewiz', function (req,res) {
 	getCurrentLeaderboard('wizard');
 	res.redirect('/');
-})
-
+});
 app.get('/updatewd', function (req,res) {
 	getCurrentLeaderboard('wd');
 	res.redirect('/');
-})
+});
 
-
-
+//files
 app.get('/get.js', function(req,res) {
 	res.sendfile('get.js');
-})
-
+});
 app.get('/request.js', function(req,res) {
 	res.sendfile('request.js');
-})
-
-
+});
 app.get('/battletag.css', function(req,res) {
 	res.sendfile('battletag.css');
-})
-
-
-app.get('/barbarian', function(req, res) {
-	getLeaderboard("barbarian", req, res);
 });
 
-
-app.get('/crusader', function(req, res) {
-	getLeaderboard("crusader", req, res);
-});
-
-app.get('/dh', function(req, res) {
-	getLeaderboard("dh", req, res);
-});
-
-app.get('/monk', function(req, res) {
-	getLeaderboard("monk", req, res);
-});
-
-app.get('/wd', function(req, res) {
-	getLeaderboard("wd", req, res);
+app.get('/:category/:diabloClass', function(req,res) {
+	getLeaderboard(req.params.diabloClass, req.params.category, req, res);
 });
 
 app.get('/player/:battletag', function(req,res) {
-
 	getHeroes(req.params.battletag, req, res);
-
-});
-
-app.get('/wizard', function(req, res) {
-	getLeaderboard("wizard", req, res);
 });
 
 app.get('/player/:battletag/hero/:heroID', function(req, res) {
 	getHeroDetails(req.params.heroID, req, res);
 });
 
+//setting which leaderboard to get data from.
+app.get('/normal', function(req,res) {
+	getGRiftCategory('normal');
+	res.redirect('/');
+});
+app.get('/hc', function(req,res) {
+	getGRiftCategory('hc');
+	res.redirect('/');
+});
+app.get('/season', function(req,res) {
+	getGRiftCategory('season');
+	res.redirect('/');
+});
+app.get('/seasonhc', function(req,res) {
+	getGRiftCategory('seasonhc');
+	res.redirect('/');
+});
 
 app.get('/*' , function(req,res) {
 	res.send("404");

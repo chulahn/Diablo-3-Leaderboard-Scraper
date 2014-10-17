@@ -2,29 +2,61 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
+<link rel="stylesheet" type="text/css" href="../battletag.css">
+
 <script src="http://localhost:3000/request.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script>
+
+var diabloClasses = ["crusader", "barbarian", "dh", "wizard", "wd", "monk"];
+var groups = ["normal", "hc", "season", "seasonhc"];
+$(document).ready(function() {
+	$('#normalboard').click(function() {
+		$(this).toggleClass("selected");
+	});
+	var innerHTML ="";
+	for (i=0; i<groups.length; i++) {
+		innerHTML += "<p>";
+		if (groups[i] != "") {
+			innerHTML += groups[i];
+		}
+		else {
+			innerHTML += "Normal";
+		}
+		innerHTML += "<p>";
+		for (j=0; j<diabloClasses.length; j++) {
+			innerHTML += "<a href=\"/" + groups[i] +"/"+ diabloClasses[j]+ "\">"+diabloClasses[j]+"</a> ";
+		}
+		innerHTML += "</p>";
+		innerHTML += "</p>";
+	}
+	$('#pagenavigation').append(innerHTML);
+});
+</script>
+
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 <title>Diablo Project</title>
 </head>
 
 <body>
 
-<p><a href="/barbarian">Barbarian</a>
-  <a href="/dh">Demon Hunter</a>
-  <a href="/wd">Witch Doctor</a>
-  <a href="/wizard">Wizard</a>
-  <a href="/crusader">Crusader</a>
-  <a href="/monk">Monk</a>
+<nav id = "pagenavigation">
+
+
+</nav>
+<p>&nbsp;</p>
+
+<nav class ="currentBoard">
+
+<p><a id="normalboard" href="/normal" >Normal</a>
+  <a id="hc" href="/hc">Hardcore</a>
   
+  <a id="season" href="/season">Seasonal</a>
+  <a id="seasonhc" href="/seasonhc">Seasonal Hardcore</a>  
 </p>
-<p><a href="normal">Normal</a>
-  <a href="hc">Hardcore</a>
-  
-  <a href="/seasonal">Seasonal</a>
-  <a href="/seasonalhc">Seasonal Hardcore</a>
-  
-  
-</p>
+</nav>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
 
 <input type="submit" onclick="location.href='/updatebarb'" name="button" id="button" value="update barbs" />
 
@@ -34,7 +66,7 @@
 
 <input type="submit" onclick="location.href='/updatemonk'" name="button" id="button" value="update monk" />
 
-<input type="submit" onclick="location.href='/updatewiz'" name="button" id="button" value="update sader" />
+<input type="submit" onclick="location.href='/updatewiz'" name="button" id="button" value="update wiz" />
 
 <input type="submit" onclick="location.href='/updatewd'" name="button" id="button" value="update wd" />
 </p>

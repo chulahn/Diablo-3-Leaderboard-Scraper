@@ -22,3 +22,7 @@
 	color: yellow;
 	background-color:black;
 }
+
+.selected {
+	font-weight : bold;
+}
