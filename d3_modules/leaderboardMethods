@@ -1,10 +1,8 @@
-
 var exports = module.exports = {};
 var request = require("request");
-var express = require("express");
 var jsdom = require("jsdom");
-
 var mongo = require('mongodb');
+
 var MongoClient = mongo.MongoClient;
 
 var apiKey = "y34m8hav4zpvrezvrs6xhgjh6uphqa5r";
@@ -35,59 +33,60 @@ exports.getGRiftCategory = function(category) {
 
 exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {    
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
-//Takes about 1/10th second
+	//Takes about 1/10th second
 		date = new Date();
 		console.log(diabloClass + " Page before request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 		//successfully connected
-
 		if (err) {
 			return console.log(err);
 		}	
 		else  {
-			console.log("Inside getLeaderboard");
+			console.log("Inside getLeaderboard for " + diabloClass + " " + leaderboardType);
 			var collectionName = getCollectionName(diabloClass, leaderboardType);
 			console.log(collectionName);
 			var diabloClassCollection = db.collection(collectionName);
 			//from the collection, get only the Battletags as an array sorted by rank, and create site
 			diabloClassCollection.find({},{"_id" : 0 ,"Greater Rift" : 0,"Heroes" : 0}).sort({"Standing" : 1}).toArray(function (err, leaderboardResults) {
-	    		date = new Date();
-				console.log(diabloClass + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+	    		console.log(leaderboardResults.length)
+	    		
+	    		if (leaderboardResults.length == 0) {
+	    			exports.getGRiftCategory(leaderboardType);
+	    			exports.getCurrentLeaderboard(diabloClass);
+	    		}
+	    		else {
+		    		date = new Date();
+					console.log(diabloClass + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 
-	    		var dpsArray = [];
-
-	    		//for each battletag from the leaderboard
-	    		leaderboardResults.forEach(function(currentPlayer) {
-	    			//get the correct hero based on class, and add to array
-	    			// console.log(results);
-	    			console.log(currentPlayer.Standing);
-	    			console.log(diabloClass);
-	    			db.collection("hero").find({"Battletag" : currentPlayer.Battletag.replace("#", "-"), "Class" : getClassName(diabloClass) }).toArray(function (error, heroResults) {
-	    				//if we found the Hero based on BattleTag and class, add that Hero's Damage to dpsArray, else put 
-	    				console.log(diabloClass);
-	    				if (heroResults[0] != null) {
-	    					console.log(heroResults[0].Stats.damage);
-	    					dpsArray[currentPlayer.Standing-1] = heroResults[0].Stats.damage;
-	    				}
-	    				else {
-	    					dpsArray[currentPlayer.Standing-1] = 500000;
-	    				}
-						//if everyone found in hero database that has same class and battletag
-						if (dpsArray.length == leaderboardResults.length) {
-							var count = 0;
-							for (i = 0 ; i < leaderboardResults.length ; i++) {
-								if (dpsArray[i] != undefined) {
-									count++;
+		    		var dpsArray = [];
+		    		//for each battletag from the leaderboard
+		    		leaderboardResults.forEach(function(currentPlayer) {
+		    			//get the correct hero based on class, and add to array
+		    			db.collection("hero").find({"Battletag" : currentPlayer.Battletag.replace("#", "-"), "Class" : getClassNameForDatabase(diabloClass) }).toArray(function (error, heroResults) {
+		    				//if we found the Hero based on BattleTag and class, add that Hero's Damage to dpsArray, else put 
+		    				if (heroResults[0] != null) {
+		    					console.log(heroResults[0].Stats.damage);
+		    					dpsArray[currentPlayer.Standing-1] = heroResults[0].Stats.damage;
+		    				}
+		    				else {
+		    					dpsArray[currentPlayer.Standing-1] = 500000;
+		    				}
+							//if everyone found in hero database that has same class and battletag
+							if (dpsArray.length == leaderboardResults.length) {
+								var count = 0;
+								for (i = 0 ; i < leaderboardResults.length ; i++) {
+									if (dpsArray[i] != undefined) {
+										count++;
+									}
+								}
+								if (count ==  leaderboardResults.length) {
+									// console.log(dpsArray);
+									//page renders when dpsArray has not been completely filled
+			    					res.render('ClassLeaderboard.ejs', {title : diabloClass , leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , dpsData : dpsArray });
 								}
 							}
-							if (count ==  leaderboardResults.length) {
-								// console.log(dpsArray);
-								console.log(1123);
-								//page renders when dpsArray has not been completely filled
-		    					res.render('ClassLeaderboard.ejs', {title : diabloClass , leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , dpsData : dpsArray });
-							}
-						}
-	    			})//end toArray callback from finding hero.
-	    		})//end for each result from Leaderboard search
+		    			})//end toArray callback from finding hero.
+		    		})//end for each result from Leaderboard search
+		  		}
 	  		});//end toArray callbackk from finding leaderboard
 		}//end else
 	});//end mongoconnect
@@ -137,8 +136,7 @@ exports.getCurrentLeaderboard = function(diabloClass) {
 			console.log(diabloClass + " " + gRiftCategory + " Leaders before request "+ date.getMinutes() +":"+ date.getSeconds());
 			// console.log("https://" + region + apiURL + "/profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey);  
 
-			// var requestURL = "http://us.battle.net/d3/en/rankings/era/1/rift-" + diabloClass;
-			var requestURL = "https://" + region + ".battle.net/d3/en/rankings/" + gRiftCategory + diabloClass;
+			var requestURL = "https://" + region + ".battle.net/d3/en/rankings/" + gRiftCategory + getClassNameForLeaderboard(diabloClass);
 			console.log(requestURL);
 			request(requestURL, function (error, response, body) {
 				console.log("requesting")
@@ -347,19 +345,49 @@ exports.getCurrentLeaderboard = function(diabloClass) {
 
 
 
-//used when searching a collection for a class.  used in getLeaderboard.  the diabloclass passed in is req.params.diabloclass
-function getClassName(diabloClass) {
-	if (diabloClass == "dh") {
+//used when searching a collection for a class.  used in getCurrentLeaderboard.  the diabloclass passed in is req.params.diabloclass
+function getClassNameForLeaderboard(diabloClass) {
+
+	if (diabloClass == "wiz" ){
+		return "wizard";
+	}
+	else if (diabloClass == "barb") {
+		return "barbarian";
+	}
+	else if (diabloClass == "sader") {
+		return "crusader";
+	}
+	else {
+		return diabloClass;
+	
+	}
+}
+
+//used when searching a collection for a class.  used in getCurrentLeaderboard.  the diabloclass passed in is req.params.diabloclass
+function getClassNameForDatabase(diabloClass) {
+
+	if (diabloClass == "wiz" ){
+		return "wizard";
+	}
+	else if (diabloClass == "barb") {
+		return "barbarian";
+	}
+	else if (diabloClass == "sader") {
+		return "crusader";
+	}
+	else if (diabloClass == "dh") {
 		return "demon-hunter";
 	}
-	else if (diabloClass == "wd" ) {
-		console.log("here");
+	else if (diabloClass == "wd") {
 		return "witch-doctor";
 	}
 	else {
 		return diabloClass;
+	
 	}
 }
+
+
 
 //sets the Region for requests.  used when adding to DB
 function getRegion(region) {
@@ -398,18 +426,6 @@ function getCollectionName(diabloClass, gRiftCategory) {
 		collectionCategory = gRiftCategory;
 	}
 	
-	switch (diabloClass) {
-			case "barbarian":
-				return collectionCategory + "barbs";
-			case "crusader":
-				return collectionCategory + "sader";
-			case "dh":
-				return collectionCategory + "dh";
-			case "wd":
-				return collectionCategory + "wd";
-			case "monk":
-				return collectionCategory + "monk";
-			case "wizard":
-				return collectionCategory + "wiz";
-		} 
+	return collectionCategory + diabloClass;
+
 }
