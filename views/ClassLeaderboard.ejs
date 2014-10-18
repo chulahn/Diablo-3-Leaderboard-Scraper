@@ -1,6 +1,40 @@
-<h1>Hello This is the <%- leaderboardType %> <%- title %> Leaderboard page</h1>
-<script src="../get.js"> </script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<meta charset="UTF-8">
+	<title><%- leaderboardType %> <%- title %> Leaderboard page</title>
+</head>
 
+
+
+
+
+
+<body>
+<h1>Hello This is the <%- leaderboardType %> <%- title %> Leaderboard page</h1>
+<script>
+var height = 300, width = 500;
+var barPadding = 1;
+var dpsArray = <%= JSON.stringify(dpsData) %>;
+<!-- dpsArray = [1,5,10]; -->
+var svg= d3.select("body")
+	.append("svg")
+	.attr("height", 300)
+	.attr("width" , 500);
+
+svg.selectAll("rect").data(dpsArray).enter().append("rect")
+	.attr("x" , function(d,i) {
+		return i * (width/dpsArray.length); })
+	.attr("y" , function(d) { 
+		return height-d/10000;})
+	.attr("width", width / dpsArray.length - barPadding)
+	.attr("height", function(d) {
+		return d/10000;
+	});
+
+
+</script>
 
 //List of all the BattleTags for the corresponding Leaderboard
 <ol>
@@ -13,5 +47,4 @@
 
 <% }) %>
 </ol>
-
-<p>
+</body>

@@ -20,11 +20,27 @@ var apiURL = ".api.battle.net/d3/"
 var locale = "en_US";
 var diabloClasses = ["crusader", "barbarian", "dh", "wizard", "wd", "monk"];
 
+
+
+
 //https://kr.api.battle.net/d3/profile/Nokia-3756/?locale=ko_KR&apikey=y34m8hav4zpvrezvrs6xhgjh6uphqa5r
 //"https://" + region + apiURL + "/profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey  
 
 var gRiftCategory= "era/1/rift-";
 var collectionCategory = "normal";
+
+function getClassName(diabloClass) {
+	if (diabloClass == "dh") {
+		return "demon-hunter";
+	}
+	else if (diabloClass == "wd" ) {
+		console.log("here");
+		return "witch-doctor";
+	}
+	else {
+		return diabloClass;
+	}
+}
 
 function getCollectionName(diabloClass, gRiftCategory) {
 	//when requesting from battle.net, set collection name based on what was set in getGRiftCategory
@@ -111,14 +127,47 @@ function getLeaderboard(diabloClass, leaderboardType, req, res) {
 			console.log(collectionName);
 			var diabloClassCollection = db.collection(collectionName);
 			//from the collection, get only the Battletags as an array sorted by rank, and create site
-			diabloClassCollection.find({},{"_id" : 0 ,"Standing" : 0,"Greater Rift" : 0,"Heroes" : 0}).sort({"Standing" : 1}).toArray(function(err, results) {
+			diabloClassCollection.find({},{"_id" : 0 ,"Greater Rift" : 0,"Heroes" : 0}).sort({"Standing" : 1}).toArray(function (err, leaderboardResults) {
 	    		date = new Date();
 				console.log(diabloClass + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
-	    		res.render('ClassLeaderboard.ejs', {title : diabloClass , leaderboardType : collectionCategory , ejs_battletags : results });
-	    		db.close();
-	  		});
-		}
-	});
+
+	    		var dpsArray = [];
+
+	    		//for each battletag from the leaderboard
+	    		leaderboardResults.forEach(function(currentPlayer) {
+	    			//get the correct hero based on class, and add to array
+	    			// console.log(results);
+	    			console.log(currentPlayer.Standing);
+	    			console.log(diabloClass);
+	    			db.collection("hero").find({"Battletag" : currentPlayer.Battletag.replace("#", "-"), "Class" : getClassName(diabloClass) }).toArray(function (error, heroResults) {
+	    				//if we found the Hero based on BattleTag and class, add that Hero's Damage to dpsArray, else put 
+	    				console.log(diabloClass);
+	    				if (heroResults[0] != null) {
+	    					console.log(heroResults[0].Stats.damage);
+	    					dpsArray[currentPlayer.Standing-1] = heroResults[0].Stats.damage;
+	    				}
+	    				else {
+	    					dpsArray[currentPlayer.Standing-1] = 500000;
+	    				}
+						//if everyone found in hero database that has same class and battletag
+						if (dpsArray.length == leaderboardResults.length) {
+							var count = 0;
+							for (i = 0 ; i < leaderboardResults.length ; i++) {
+								if (dpsArray[i] != undefined) {
+									count++;
+								}
+							}
+							if (count ==  leaderboardResults.length) {
+								console.log(dpsArray);
+								//page renders when dpsArray has not been completely filled
+		    					res.render('ClassLeaderboard.ejs', {title : diabloClass , leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , dpsData : dpsArray });
+							}
+						}
+	    			})//end toArray callback from finding hero.
+	    		})//end for each result from Leaderboard search
+	  		});//end toArray callbackk from finding leaderboard
+		}//end else
+	});//end mongoconnect
 
 /* Takes ~1 Minute.  Always up to date
 	date = new Date();
@@ -191,12 +240,12 @@ function addHeroData(battletag, heroID, delay) {
 									heroCollection.find({"heroID" : jsonData.id}).toArray(function(err, results) {
 										//found, just update.  otherwise insert.
 										if (results.length == 1) {
-											heroCollection.update({"heroID" : jsonData.id}, {"heroID" : jsonData.id , "Battletag": battletag,  "Name" : jsonData.name, "Class" : jsonData.class , "Level" : jsonData.level, "Paragon" : jsonData.paragonLevel, "Hardcore" : jsonData.hardcore, "Seasonal" : jsonData.seasonal, "Skills" : jsonData.skills, "Items" : jsonData.items}, function(err, results) {
+											heroCollection.update({"heroID" : jsonData.id}, {"heroID" : jsonData.id , "Battletag": battletag,  "Name" : jsonData.name, "Class" : jsonData.class , "Level" : jsonData.level, "Paragon" : jsonData.paragonLevel, "Hardcore" : jsonData.hardcore, "Seasonal" : jsonData.seasonal, "Skills" : jsonData.skills, "Items" : jsonData.items, "Stats" : jsonData.stats}, function(err, results) {
 												console.log("addHeroData found, updating "+ battletag + " " + jsonData.id);
 											});//end update.
 										}
 										else {
-											heroCollection.insert({"heroID" : jsonData.id , "Battletag": battletag,  "Name" : jsonData.name, "Class" : jsonData.class , "Level" : jsonData.level, "Paragon" : jsonData.paragonLevel, "Hardcore" : jsonData.hardcore, "Seasonal" : jsonData.seasonal, "Skills" : jsonData.skills, "Items" : jsonData.items}, function(err, results) {
+											heroCollection.insert({"heroID" : jsonData.id , "Battletag": battletag,  "Name" : jsonData.name, "Class" : jsonData.class , "Level" : jsonData.level, "Paragon" : jsonData.paragonLevel, "Hardcore" : jsonData.hardcore, "Seasonal" : jsonData.seasonal, "Skills" : jsonData.skills, "Items" : jsonData.items, "Stats" : jsonData.stats}, function(err, results) {
 												console.log("addHeroData not found, inserting "+ battletag + " " + jsonData.id);
 											});//end insertion.
 										}
@@ -445,7 +494,7 @@ function updateItemDB(itemID, heroID, delay){
 									});
 								}
 								else {
-									console.log("updateItemDB already in database " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
+									console.log("updateItemDB already in database " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5) + " " + i);
 								}
 							});//end find in colleciton
 						})(currentItem);//end self-invoking function
@@ -734,7 +783,6 @@ app.get('/player/:battletag/hero/:heroID', function(req, res) {
 app.get('/:category/:diabloClass', function(req,res) {
 	getLeaderboard(req.params.diabloClass, req.params.category, req, res);
 });
-
 
 //setting which leaderboard to get data from.
 app.get('/normal', function(req,res) {

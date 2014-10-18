@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+		div.bar {
+		    display: inline-block;
+		    width: 20px;
+		    height: 75px;   /* We'll override height later */
+		    margin-right: 2px;
+		    background-color: teal;
+		}
+	</style>
+</head>
+<body>
+<script>
+var dataset = [ 5, 10, 15, 20, 25 ];
+d3.select("body").selectAll("p")
+	.data(dataset)
+	.enter()
+	.append("div")
+	.attr("class" , "bar")
+	.style("height", function(d) {
+		return d + "px";
+	});
+	// .append("p")
+	// .text(function(d) { return d; })
+	// .style("color", function(d) {
+	// 	if (d>50) {
+	// 		return "red";
+	// 	}	
+	// 	else {
+	// 		return "green";
+	// 	}
+	// });
+
+//width and height are easily accessible
+var w = 300;
+var h = 50;
+
+//reference to all shapes
+var svg= d3.select("body")
+	.append("svg")
+	.attr("width" , w)
+	.attr("height" , h);
+//reference to all circles in dataset
+var circles = svg.selectAll("circle")
+	.data(dataset)
+	.enter()
+	.append("circle");
+
+//cx is center x coord
+circles.attr("cx", function(d,i) {
+	//i is index
+	return (i*50) + 25;
+	})
+	.attr("cy" , h/2)
+	.attr("r" , function(d) {
+		return d;
+	})
+	.attr("fill" , "blue");
+
+var dataset2 = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13,
+                11, 12, 15, 20, 18, 17, 16, 18, 23, 25 ];
+
+// d3.select("body").selectAll("div")
+// 	.data(dataset2)
+
+var w1 = 500, h1 = 100;
+var barPadding = 1;
+var svg2 = d3.select("body")
+			.append("svg")
+			.attr("width" , w1)
+			.attr("height" , h1);
+
+	// .enter()
+	// .append("div")
+	// .attr("class", "bar")
+	// .style("height", function(d) {
+	// 	var barHeight = d*5;
+	// 	return barHeight + "px";
+svg2.selectAll("rect")
+	.data(dataset2)
+	.enter()
+	.append("rect")
+	//sets bar spacing
+	.attr("x" , function(d, i) {
+		//20 for bar width + 1 for padding
+		// return (i*21);
+
+		//i is index, w is width of svg and length is number of data points
+		return i * (w1 / dataset2.length);
+	})
+	//svg coordinates start from top left.
+	.attr("y" , function(d) {
+		return (h1-d);
+	})
+	
+	//set bar width to 20
+	// .attr("width", 20)
+	.attr("width", w1 / dataset2.length - barPadding)
+	
+	// .style("height", function(d) {
+	// 	return d;
+	// });
+	.attr("height", function(d) {
+		return d;
+	})
+	// .attr("fill" , "teal");
+	.attr("fill", function(d) {
+		return "rgb(0,0, " + (d*10) + ")";
+	});
+
+</script>
+	
+</body>
+</html>
