@@ -1,0 +1,10 @@
+#profile, #items {
+	display:inline-block;
+	position:relative;
+}
+.demon-hunter {
+	color: purple;
+}
+#items {
+	right: 50%;
+}

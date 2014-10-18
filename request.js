@@ -155,7 +155,7 @@ function getLeaderboard(diabloClass, leaderboardType, req, res) {
 function addHeroData(battletag, heroID, delay) {
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 		if(err) {
-			return console.log("addHeroData error")
+			return console.log("addHeroData error");
 		}
 		else {
 			console.log("inside addHeroData for " + battletag + " " + heroID + "delay is " + delay);
@@ -246,7 +246,6 @@ function getHeroes(battletag, req, res) {
 //localhost:3000/player/:battletag/hero/:heroID
 //for a given heroID, it gets hero's stats, skills and items
 function getHeroDetails(heroID, req, res) {
-	console.log(getCollectionName('barbs'));	
 	// console.log("https://" + region + apiURL + "/profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey  );
 	var heroRequestURL = "https://" + region + apiURL + "/profile/" +req.params.battletag+"/hero/"+heroID+"?locale="+locale+"&apikey="+apiKey;
 
@@ -612,12 +611,11 @@ app.get('/get.js', function(req,res) {
 app.get('/request.js', function(req,res) {
 	res.sendfile('request.js');
 });
-app.get('/battletag.css', function(req,res) {
-	res.sendfile('battletag.css');
+app.get('/styles/battletag.css', function(req,res) {
+	res.sendfile('styles/battletag.css');
 });
-
-app.get('/:category/:diabloClass', function(req,res) {
-	getLeaderboard(req.params.diabloClass, req.params.category, req, res);
+app.get('/styles/hero.css', function(req,res) {
+	res.sendfile('styles/hero.css');
 });
 
 app.get('/player/:battletag', function(req,res) {
@@ -627,6 +625,11 @@ app.get('/player/:battletag', function(req,res) {
 app.get('/player/:battletag/hero/:heroID', function(req, res) {
 	getHeroDetails(req.params.heroID, req, res);
 });
+
+app.get('/:category/:diabloClass', function(req,res) {
+	getLeaderboard(req.params.diabloClass, req.params.category, req, res);
+});
+
 
 //setting which leaderboard to get data from.
 app.get('/normal', function(req,res) {

@@ -1,0 +1,13 @@
+#profile, #items, #skills {
+	display:inline-block;
+	position:relative;
+	border-style:solid;
+	border-width:1px;
+	padding:5px;
+}
+#skills {
+	left : 10%;
+}
+#items {
+	left : 20%;
+}

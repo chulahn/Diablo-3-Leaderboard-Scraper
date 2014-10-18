@@ -1,14 +1,50 @@
 <h1>These are <%= ejs_btag %>s <%= ejs_heroData.name %> </h1>
-<script src="http://localhost:3000/get.js"> </script>
+<script src = "http://localhost:3000/get.js"> </script>
+<link rel="stylesheet" type="text/css" href="../../../styles/hero.css">
 
-
-//Shows information for a Hero
-<div>
-	<ul>
-
-		<li>Name : <%= ejs_heroData.name %></li>
+<!-- Shows information for a Hero -->
+<div id="profile">
+	<ul><h2><%= ejs_heroData.name %></h2>
 		<li>Class : <%= ejs_heroData.class %></li>
 		<li>Level : <%= ejs_heroData.level %></li>
+		<li>Damage : <%= ejs_heroData.stats.damage %></li>
+			<ul>
+				<% if ( ejs_heroData.class == "demon-hunter" || ejs_heroData.class == "monk" ) { %>
+					<li>Dexterity : <%= ejs_heroData.stats.dexterity %></li>
+				<% } %>
+				<% if ( ejs_heroData.class == "witch-doctor" || ejs_heroData.class == "wizard" ) { %>
+					<li>Intelligence : <%= ejs_heroData.stats.intelligence %></li>
+				<% } %>
+				<% if ( ejs_heroData.class == "barbarian" || ejs_heroData.class == "crusader" ) { %>
+					<li>Strength : <%= ejs_heroData.stats.strength %></li>
+				<% } %>
+				
+				<li>Crit Chance : <%= (ejs_heroData.stats.critChance*100).toFixed(2)+"%" %></li>
+				<li>Crit Damage : <%= (ejs_heroData.stats.critDamage*100).toFixed(2)+"%" %></li>
+			</ul>
+		<li>Toughness : <%= ejs_heroData.stats.toughness %></li>
+			<ul>
+				<li>Vitality : <%= ejs_heroData.stats.vitality %></li>
+				<li>Armor : <%= ejs_heroData.stats.armor %></li>
+				<li>Average Resist : <%= Math.round((ejs_heroData.stats.fireResist+ejs_heroData.stats.coldResist+ejs_heroData.stats.lightningResist+ejs_heroData.stats.poisonResist+ejs_heroData.stats.arcaneResist)/6) %></li>
+				<li>Life : <%= ejs_heroData.stats.life %></li>
+			</ul>
+		<li>Healing : <%= ejs_heroData.stats.healing %></li>
+		<% if ( ejs_heroData.class == "demon-hunter" || ejs_heroData.class == "monk" ) { %>
+			<li>Strength : <%= ejs_heroData.stats.strength %></li>
+			<li>Intelligence : <%= ejs_heroData.stats.intelligence %></li>
+		<% } %>
+		<% if ( ejs_heroData.class == "witch-doctor" || ejs_heroData.class == "wizard" ) { %>
+			<li>Strength : <%= ejs_heroData.stats.strength %></li>
+			<li>Dexterity : <%= ejs_heroData.stats.dexterity %></li>
+		<% } %>
+		<% if ( ejs_heroData.class == "barbarian" || ejs_heroData.class == "crusader" ) { %>
+			<li>Dexterity : <%= ejs_heroData.stats.dexterity %></li>
+			<li>Intelligence : <%= ejs_heroData.stats.intelligence %></li>
+		<% } %>
+		
+</div>
+<div id="skills">
 		<li>Active Skills :
 			<!-- loop through the active skills -->
 			<ul><% ejs_heroData.skills.active.forEach(function (activeSkills) { %>
@@ -24,7 +60,11 @@
 				<% if (passives.skill != undefined) { %> <li> <%= passives.skill.name %> </li> <% } %>
 			<% }) %></ul>
 		</li>
+	</ul>
+</div>
 
+<div id="items">
+	<ul>
 		<li> Items : 
 			<ul>
 				<% if (ejs_heroData.items.head != undefined) { %>
@@ -70,7 +110,6 @@
 				<% if (ejs_heroData.items.offHand != undefined) { %>
 				<li title="Insert data from tooltip params">Off Hand : <%= ejs_heroData.items.offHand.name %></li>
 				<% } %>		
-
 			</ul>
 		</li>
 	</ul>
