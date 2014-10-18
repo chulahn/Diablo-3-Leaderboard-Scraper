@@ -257,7 +257,7 @@ function getHeroDetails(heroID, req, res) {
 		var heroData = JSON.parse(data);
 		var heroItems = heroData.items;
 		if (heroData.level == 70) {
-			getItemIDsFromHero(heroItems,10);
+			getItemIDsFromHero(heroItems,heroID,10);
 		}
 		res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems})
 		date = new Date();
@@ -265,7 +265,111 @@ function getHeroDetails(heroID, req, res) {
 	});
 }
 
-function getItemIDsFromHero(heroItems, delay) {
+function getImportantStats(heroID) {
+	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
+		if (err) {
+			return console.log("getImportantStats error connecting to db")
+		}
+		else {
+			var itemCollection = db.collection("item");
+
+			var eliteDam = 0;
+			var fireDam = 0;
+			var lightningDam = 0;
+			var coldDam = 0;
+			var arcaneDam = 0;
+			var poisonDam = 0;
+			var physDam = 0;
+			var cooldown = 0;
+			//fire,light,cold,arcane,poison,phys
+			var elementalDam = [0,0,0,0,0,0];
+			var meleeDamRed = 0;
+			var rangeDamRed = 0;
+			var eliteDamRed = 0;
+			console.log("getImportantStats " + heroID);
+			itemCollection.find({"Hero" : parseInt(heroID)}).toArray(function(error, results) {
+				// console.log(results);
+				for(i=0; i<results.length; i++) {
+					for (j=0; j<results[i].Affixes.primary.length; j++) {
+						//get cooldown reduction from every item
+						if (results[i].Affixes.primary[j].text.indexOf("cooldown") != -1) {
+							cooldownString = results[i].Affixes.primary[j].text;
+							// console.log(results[i].Name + " " + cooldownString.substring(cooldownString.lastIndexOf(" ")+1,cooldownString.length-2 )+"%");
+							cooldown += parseFloat(cooldownString.substring(cooldownString.lastIndexOf(" ")+1,cooldownString.length-2 ));
+						}
+						//get element damage from every item
+						if (results[i].Affixes.primary[j].text.indexOf("skills deal") != -1) {
+							// console.log(results[i].Affixes.primary[j].text);
+							skillsString = results[i].Affixes.primary[j].text;
+							number = parseInt(skillsString.substring(skillsString.indexOf("deal ")+5, skillsString.indexOf("%")));
+							element = skillsString.substring(0, skillsString.indexOf(" skills"));
+
+							switch (element) {
+								case "Fire" :
+									elementalDam[0] += number;
+									fireDam += number;
+									break;
+								case "Cold" :
+									elementalDam[1] += number;
+									coldDam += number;
+									break;
+								case "Lightning" :
+									elementalDam[2] += number;
+									lightningDam += number;
+									break;
+								case "Poison" :
+									elementalDam[3] += number;
+									poisonDam += number;
+									break;
+								case "Arcane" :
+									elementalDam[4] += number;
+									arcaneDam += number;
+									break;
+								case "Physical" :
+									elementalDam[5] += number;
+									poisonDam += number;
+									break;
+							}
+							// console.log(element+number);
+						}
+					}//end for affixes
+				}//end for item
+
+				//find the highestelement
+				var highestElement = 0;
+				for (i=0; i<elementalDam.length;i++) {
+					if (elementalDam[i] > highestElement) {
+						highestElement = elementalDam[i];
+					}
+				}
+				switch (elementalDam.indexOf(highestElement)) {
+					case 0 :
+						elementalDam = ["Fire" , elementalDam[0]];
+						break;
+					case 1 :
+						elementalDam = ["Cold" , elementalDam[1]];
+						break;
+					case 2 :
+						elementalDam = ["Lightning" , elementalDam[2]];
+						break;
+					case 3 :
+						elementalDam = ["Poison" , elementalDam[3]];
+						break;
+					case 4 :
+						elementalDam = ["Arcane" , elementalDam[4]];
+						break;
+					case 5 :
+						elementalDam = ["Physical" , elementalDam[5]];
+						break;
+				}
+				console.log(elementalDam);
+				console.log("total cooldown " + cooldown);
+			});//end  find
+		}//end else
+	});	//end connection
+}
+
+function getItemIDsFromHero(heroItems, heroID, delay) {
 	var allItems = [];
 	if (heroItems.rightFinger != null) {
 		allItems.push(heroItems.rightFinger);
@@ -310,13 +414,13 @@ function getItemIDsFromHero(heroItems, delay) {
 		console.log(item.name + " " + i);
 		console.log(delay);
 		itemID = item.tooltipParams.replace("item/" , "");
-		updateItemDB(itemID, delay);
+		updateItemDB(itemID, heroID, delay);
 		delay = delay + 100;
 		i++;
 	});
 }
 
-function updateItemDB(itemID , delay){
+function updateItemDB(itemID, heroID, delay){
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 		if (err) {
 			return console.log("updateItemDB error connecting to db")
@@ -328,7 +432,7 @@ function updateItemDB(itemID , delay){
 				request(itemRequestURL, function (error, response, data) {
 					currentItem = JSON.parse(data);
 					if (currentItem.code == 403) {
-						updateItemDB(itemID,delay+1000);
+						updateItemDB(itemID,heroID,delay+1000);
 					}
 					else{
 						console.log(delay + " updateItemDB inrequest " +currentItem.name);
@@ -336,7 +440,7 @@ function updateItemDB(itemID , delay){
 							itemCollection.find({"itemID" : currentItem.tooltipParams.replace("item/","")}).toArray(function(err, result) {
 								console.log("finding " + currentItem.tooltipParams.replace("item/","").substring(0,5) + " " + currentItem.name)
 								if (result.length != 1) {
-									itemCollection.insert({"itemID" : currentItem.tooltipParams.replace("item/",""), "Name" : currentItem.name, "Affixes" : currentItem.attributes, "Random Affixes" : currentItem.randomAffixes, "Gems" : currentItem.gems, "Socket Effects" : currentItem.socketEffects}, function(err, result) {
+									itemCollection.insert({"itemID" : currentItem.tooltipParams.replace("item/",""), "Name" : currentItem.name, "Affixes" : currentItem.attributes, "Random Affixes" : currentItem.randomAffixes, "Gems" : currentItem.gems, "Socket Effects" : currentItem.socketEffects, "Hero" : parseInt(heroID)}, function(err, result) {
 										console.log("updateItemDB successfully inserted " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
 									});
 								}
@@ -624,6 +728,7 @@ app.get('/player/:battletag', function(req,res) {
 
 app.get('/player/:battletag/hero/:heroID', function(req, res) {
 	getHeroDetails(req.params.heroID, req, res);
+	getImportantStats(req.params.heroID);
 });
 
 app.get('/:category/:diabloClass', function(req,res) {

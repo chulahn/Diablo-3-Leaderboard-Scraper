@@ -1,4 +1,4 @@
-<h1>These are <%= ejs_btag %>s <%= ejs_heroData.name %> </h1>
+<h1><%= ejs_btag %> <%= ejs_heroData.name %>  </h1>
 <script src = "http://localhost:3000/get.js"> </script>
 <link rel="stylesheet" type="text/css" href="../../../styles/hero.css">
 
@@ -77,7 +77,7 @@
 				<% } %>
 
 				<% if (ejs_heroData.items.neck != undefined) { %>
-				<li title="Insert data from tooltip params">Amulet : <%= ejs_heroData.items.bracers.neck %></li>
+				<li title="Insert data from tooltip params">Amulet : <%= ejs_heroData.items.neck.name %></li>
 				<% } %>		
 				<% if (ejs_heroData.items.shoulders != undefined) { %>
 				<li title="Insert data from tooltip params">Shoulders : <%= ejs_heroData.items.shoulders.name %></li>
