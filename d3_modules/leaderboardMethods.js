@@ -85,10 +85,10 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 		    					currentPlayerHeroes.forEach(function(currentHero) {
 		    						if (currentHero.level == 70) {
 			    						if (getClassNameForDatabase(diabloClass) == currentHero.class && currentHero.dead == false) {
-			    							console.log(currentHero);
-			    							console.log("before " + delayCounter);
+			    							// console.log(currentHero);
+			    							// console.log("before " + delayCounter);
 			    							playerMethods.addHeroData(currentPlayer.Battletag.replace("#", "-"), currentHero.id, timeToDelay());
-			    							console.log("after " + delayCounter);
+			    							// console.log("after " + delayCounter);
 			    						}
 			    						else {
 			    							dpsArray[currentPlayer.Standing-1] = 0;
@@ -110,6 +110,9 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 								if (count ==  leaderboardResults.length) {
 									// console.log(dpsArray);
 									//page renders when dpsArray has not been completely filled
+						    		date = new Date();
+									console.log(diabloClass + " Page rendered "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+
 			    					res.render('ClassLeaderboard.ejs', {title : diabloClass , leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , dpsData : dpsArray });
 								}
 							}

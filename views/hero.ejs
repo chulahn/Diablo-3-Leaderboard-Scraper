@@ -26,7 +26,6 @@
 				<% if ( ejs_heroData.class == "barbarian" || ejs_heroData.class == "crusader" ) { %>
 					<li>Strength : <%= ejs_heroData.stats.strength %></li>
 				<% } %>
-				
 				<li>Crit Chance : <%= (ejs_heroData.stats.critChance*100).toFixed(2)+"%" %></li>
 				<li>Crit Damage : <%= (ejs_heroData.stats.critDamage*100).toFixed(2)+"%" %></li>
 			</ul>

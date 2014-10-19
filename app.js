@@ -19,6 +19,7 @@ function getImportantStats(heroID) {
 		}
 		else {
 			var itemCollection = db.collection("item");
+			var heroCollection = db.collection("hero");
 
 			var eliteDam = 0;
 			var fireDam = 0;
@@ -111,7 +112,24 @@ function getImportantStats(heroID) {
 				}
 				console.log(elementalDam);
 				console.log("total cooldown " + cooldown);
-			});//end  find
+
+				heroCollection.update(
+					{"heroID" : heroID}, 
+					{$set :
+						{
+							extraItemData: {
+								"cooldown" : cooldown,
+								"elementalDam" : elementalDam,
+							}
+						}//end of extraItemData
+					}//end of set 
+				, function(err, results) {
+					if (err) {
+						return console.log(err);
+					}
+				});
+
+			});//end  finditem for hero
 		}//end else
 	});	//end connection
 }
@@ -119,7 +137,6 @@ function getImportantStats(heroID) {
 app.get('/', function(req, res) {
 	res.sendfile('default.html');
 });
-
 
 //files
 app.get('/get.js', function(req,res) {
