@@ -9,6 +9,10 @@
 
 <body>
 <h1>This is the <%- leaderboardType %> <%- title %> Leaderboard page</h1>
+<p id='ten'> 10 values </p>
+<p id='twenty'> 20 values </p>
+<p id='hundred'> 100 values </p>
+
 <script>
 var height = 300, width = 500;
 var barPadding = 1;
@@ -25,8 +29,61 @@ svg.selectAll("rect").data(dpsArray).enter().append("rect")
 		return height-d/10000;})
 	.attr("width", width / dpsArray.length - barPadding)
 	.attr("height", function(d) {
+		return d/10000
+	})
+	.attr("class" , "enter");
+
+d3.select("#ten").on("click",function() {
+
+	d3.selectAll('.enter').attr("class", "exit").style('opacity' , 0);
+	svg.selectAll("rect").data(dpsArray.slice(0,10)).transition()
+	.attr("x" , function(d,i) {
+		return i * (width/dpsArray.slice(0,10).length); })
+	.attr("y" , function(d) { 
+		return height-d/10000;})
+	.attr("width", width / dpsArray.slice(0,10).length - barPadding)
+	.attr("height", function(d) {
 		return d/10000;
-	});
+	})
+	.attr("class" , "enter")
+	.style("opacity" , 1);
+	;
+});
+
+d3.select("#twenty").on("click",function() {
+
+	d3.selectAll('.enter').attr("class", "exit").style('opacity' , 0);
+
+	svg.selectAll("rect").data(dpsArray.slice(0,20)).transition()
+	.attr("x" , function(d,i) {
+		return i * (width/dpsArray.slice(0,20).length); })
+	.attr("y" , function(d) { 
+		return height-d/10000;})
+	.attr("width", width / dpsArray.slice(0,20).length - barPadding)
+	.attr("height", function(d) {
+		return d/10000;
+	})
+	.attr("class" , "enter")
+	.style("opacity" , 1);
+	;
+});
+
+d3.select("#hundred").on("click",function() {
+	d3.selectAll('.enter').attr("class", "exit").style('opacity' , 0);
+
+	svg.selectAll("rect").data(dpsArray.slice(0,100)).transition()
+	.attr("x" , function(d,i) {
+		return i * (width/dpsArray.slice(0,100).length); })
+	.attr("y" , function(d) { 
+		return height-d/10000;})
+	.attr("width", width / dpsArray.slice(0,100).length - barPadding)
+	.attr("height", function(d) {
+		return d/10000;
+	})
+	.attr("class" , "enter")
+	.style("opacity" , 1);
+	;
+});
 
 
 </script>
