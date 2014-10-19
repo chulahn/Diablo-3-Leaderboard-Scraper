@@ -120,10 +120,6 @@ app.get('/', function(req, res) {
 	res.sendfile('default.html');
 });
 
-app.get('/update/:diabloClass', function(req,res) {
-	leaderboardMethods.getCurrentLeaderboard(req.params.diabloClass);
-	res.redirect('/');
-});
 
 //files
 app.get('/get.js', function(req,res) {
@@ -146,6 +142,11 @@ app.get('/player/:battletag', function(req,res) {
 app.get('/player/:battletag/hero/:heroID', function(req, res) {
 	heroMethods.getHeroDetails(req.params.heroID, req, res);
 	getImportantStats(req.params.heroID);
+});
+
+app.get('/update/:diabloClass', function(req,res) {
+	leaderboardMethods.getCurrentLeaderboard(req.params.diabloClass);
+	res.redirect('/');
 });
 
 app.get('/:category/:diabloClass', function(req,res) {

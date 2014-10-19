@@ -1,7 +1,8 @@
 var exports = module.exports = {};
 var request = require("request");
 var jsdom = require("jsdom");
-var mongo = require('mongodb');
+var mongo = require("mongodb");
+var playerMethods = require("../d3_modules/playerMethods");
 
 var MongoClient = mongo.MongoClient;
 
@@ -11,6 +12,13 @@ var apiURL = ".api.battle.net/d3/"
 var locale = "en_US";
 var gRiftCategory= "era/1/rift-";
 var collectionCategory = "normal";
+
+var delayCounter = 0;
+
+function timeToDelay() {
+	delayCounter++;
+	return (1000* (Math.floor(delayCounter/10)));
+}
 
 
 //used to set the griftcategory to know which leaderboard to request from.  used in update, which is called in getCurrentLeaderboard, which is called when updating.
@@ -43,32 +51,53 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 		else  {
 			console.log("Inside getLeaderboard for " + diabloClass + " " + leaderboardType);
 			var collectionName = getCollectionName(diabloClass, leaderboardType);
-			console.log(collectionName);
 			var diabloClassCollection = db.collection(collectionName);
 			//from the collection, get only the Battletags as an array sorted by rank, and create site
-			diabloClassCollection.find({},{"_id" : 0 ,"Greater Rift" : 0,"Heroes" : 0}).sort({"Standing" : 1}).toArray(function (err, leaderboardResults) {
-	    		console.log(leaderboardResults.length)
+			diabloClassCollection.find({},{"_id" : 0 ,"Greater Rift" : 0}).sort({"Standing" : 1}).toArray(function (err, leaderboardResults) {
 	    		
 	    		if (leaderboardResults.length == 0) {
 	    			exports.getGRiftCategory(leaderboardType);
 	    			exports.getCurrentLeaderboard(diabloClass);
+	    			res.redirect('/');
 	    		}
 	    		else {
+
 		    		date = new Date();
 					console.log(diabloClass + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 
 		    		var dpsArray = [];
 		    		//for each battletag from the leaderboard
 		    		leaderboardResults.forEach(function(currentPlayer) {
+		    			delayCounter =0;
+		    			var heroCollection = db.collection("hero");
 		    			//get the correct hero based on class, and add to array
-		    			db.collection("hero").find({"Battletag" : currentPlayer.Battletag.replace("#", "-"), "Class" : getClassNameForDatabase(diabloClass) }).toArray(function (error, heroResults) {
+		    			heroCollection.find({"Battletag" : currentPlayer.Battletag.replace("#", "-"), "Class" : getClassNameForDatabase(diabloClass) }).toArray(function (error, heroResults) {
 		    				//if we found the Hero based on BattleTag and class, add that Hero's Damage to dpsArray, else put 
 		    				if (heroResults[0] != null) {
-		    					console.log(heroResults[0].Stats.damage);
+		    					// console.log(heroResults[0].Stats.damage);
 		    					dpsArray[currentPlayer.Standing-1] = heroResults[0].Stats.damage;
 		    				}
+		    				//else get the heroes from currentPlayer, find the ones that match the current leaderboard class, and add them.
+		    				//currentHero is information from battletag lookup, not hero.
 		    				else {
-		    					dpsArray[currentPlayer.Standing-1] = 500000;
+		    					var currentPlayerHeroes = currentPlayer.Heroes;
+		    					// console.log (currentPlayerHeroes);
+		    					currentPlayerHeroes.forEach(function(currentHero) {
+		    						if (currentHero.level == 70) {
+			    						if (getClassNameForDatabase(diabloClass) == currentHero.class && currentHero.dead == false) {
+			    							console.log(currentHero);
+			    							console.log("before " + delayCounter);
+			    							playerMethods.addHeroData(currentPlayer.Battletag.replace("#", "-"), currentHero.id, timeToDelay());
+			    							console.log("after " + delayCounter);
+			    						}
+			    						else {
+			    							dpsArray[currentPlayer.Standing-1] = 0;
+			    						}
+			    					}
+		    					});
+		    					// heroCollection.insert()
+		    					// playerMethods.addHeroData(currentPlayer.Battletag, currentPlayer.heroID, 200);
+		    					// dpsArray[currentPlayer.Standing-1] = 500000;
 		    				}
 							//if everyone found in hero database that has same class and battletag
 							if (dpsArray.length == leaderboardResults.length) {

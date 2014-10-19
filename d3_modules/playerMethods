@@ -31,8 +31,14 @@ function getRegion(region) {
 }
 
 
+function timeToDelay(delayCounter) {
+	delayCounter++;
+	return (1000* (Math.floor(delayCounter/10)+1));
+}
+
+
 //localhost:3000/player/BATTLETAG
-//for a given Battletag, it makes a request to get all heroes for that tag.  After getting heroes, create the page for that Battletag
+//for a given Battletag, it makes a request to get all heroes for that tag.  After getting heroes, called addHeroData and create the page for that Battletag
 exports.getHeroes = function(battletag, req, res) {
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 		var heroCollection = db.collection("hero");
@@ -48,22 +54,28 @@ exports.getHeroes = function(battletag, req, res) {
 			//request the tag again.
 		}
 		var heroes = jsonData.heroes;
-		for (i=0; i<heroes.length; i++) {
-			if (i < 8) {
-				addHeroData(battletag, heroes[i].id, 0);
-			}
-			else {
-				addHeroData(battletag, heroes[i].id, Math.floor(i/9)*1000);
-			}
+		if (heroes == undefined) {
+			console.log("getHeroes Jsondata.heroes undefined");
+			getHeroes(battletag,req,res);
 		}
-		res.render('player.ejs', { ejs_btag : battletag , ejs_heroes : heroes });
-		date = new Date();
-		console.log(battletag + " Page after request"+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+		else {
+			for (i=0; i<heroes.length; i++) {
+				if (i < 8) {
+					exports.addHeroData(battletag, heroes[i].id, 0);
+				}
+				else {
+					exports.addHeroData(battletag, heroes[i].id, Math.floor(i/9)*1000);
+				}
+			}
+			res.render('player.ejs', { ejs_btag : battletag , ejs_heroes : heroes });
+			date = new Date();
+			console.log(battletag + " Page after request"+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+		}
 	});
 }
 
-//add heroesdata to hero collection.
-function addHeroData(battletag, heroID, delay) {
+//add heroesdata to hero collection if the hero is level 70.
+ exports.addHeroData = function(battletag, heroID, delay) {
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 		if(err) {
 			return console.log("addHeroData error");
@@ -71,30 +83,34 @@ function addHeroData(battletag, heroID, delay) {
 		else {
 			console.log("inside addHeroData for " + battletag + " " + heroID + "delay is " + delay);
 			var requestURL = "https://" + region + apiURL + "profile/" + battletag.replace("#", "-") + "/hero/" + heroID + "?locale=" + locale + "&apikey=" + apiKey;
-			console.log(requestURL);
-			// var requestURL = "https://us.api.battle.net/d3/profile/" + battletag.replace("#","-") + "/hero/" + heroID +"?locale=en_US&apikey=" + apiKey
 			// console.log(requestURL);
 			setTimeout( function() {
 				request(requestURL, function (error, response, data) {
 					if (data == undefined) {
 						console.log("addHeroData data was undefined");
 						//error handling, call again
-						addHeroData(battletag, heroID, 1000);
+						exports.addHeroData(battletag, heroID, 2000);
 					}
 					else {
 						var jsonData = JSON.parse(data);
 						var items = jsonData.items;
+						//account was inactive 
+						if (jsonData.code == "NOTFOUND") {
+							console.log("notfound");
+						}
+
 						//check if data is not null
-						if (items == null) {
+						else if (items == null) {
 							console.log("addHeroData items was null for " + battletag + " " + heroID);
+							console.log(jsonData);
 							//error handling, call again
-							addHeroData(battletag, heroID,1000);
+							exports.addHeroData(battletag, heroID,2000);
 						}					
 						else {
 							if (db == null) {
 								console.log("addHeroData database was null for " + battletag + " " + heroID);
 								//error handling, call again
-								addHeroData(battletag, heroID, 1000);							
+								exports.addHeroData(battletag, heroID, 2000);							
 							}
 							else {
 								if (jsonData.level == 70) {
