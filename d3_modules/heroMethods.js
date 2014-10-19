@@ -97,7 +97,7 @@ function getItemIDsFromHero(heroItems, heroID, delay) {
 		console.log(item.name + " " + i);
 		console.log(delay);
 		itemID = item.tooltipParams.replace("item/" , "");
-		updateItemDB(itemID, heroID, delay);
+		findItemInCollection(itemID, heroID, delay);
 		delay = delay + 100;
 		i++;
 	});
@@ -112,10 +112,10 @@ function getItemType(itemType) {
 	else if (itemType.indexOf("shoulders") != -1) {
 		return "Shoulders";
 	}
-	else if (itemType.indexOf("hand") != -1 || itemType.indexOf("fist") != -1 || itemType.indexOf("mace") != -1 || itemType.indexOf("1h") != -1 || itemType.indexOf("axe") != -1 || itemType.indexOf("wand") != -1) {
+	else if (itemType.indexOf("hand") != -1 || itemType.indexOf("fist") != -1 || itemType.indexOf("mace") != -1 || itemType.indexOf("1h") != -1 || itemType.indexOf("axe") != -1 || itemType.indexOf("wand") != -1 || itemType.indexOf("dagger") != -1) {
 		return "1 Hand";
 	}
-	else if (itemType.indexOf("2h") != -1) {
+	else if (itemType.indexOf("2h") != -1 || itemType.indexOf("staff") != -1) {
 		return "2 Hand";
 	}	
 	else if (itemType.indexOf("boots") != -1) {
@@ -148,10 +148,10 @@ function getItemType(itemType) {
 
 }
 
-function updateItemDB(itemID, heroID, delay){
+function findItemInCollection(itemID, heroID, delay){
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 		if (err) {
-			return console.log("updateItemDB error connecting to db")
+			return console.log("findItem error connecting to db")
 		}
 		else {
 			var itemCollection = db.collection("item");
@@ -160,13 +160,11 @@ function updateItemDB(itemID, heroID, delay){
 				request(itemRequestURL, function (error, response, data) {
 					currentItem = JSON.parse(data);
 					if (currentItem.code == 403) {
-						updateItemDB(itemID,heroID,delay+1000);
+						findItemInCollection(itemID,heroID,delay+1000);
 					}
 					else{
-						console.log(delay + " updateItemDB inrequest " +currentItem.name);
+						console.log(delay + " findItem in request " +currentItem.name + " " + getItemType(currentItem.type.id));
 						(function(currentItem) {
-							// console.log(heroID + " " + currentItem.Hero);
-							console.log( getItemType(currentItem.type.id));
 							//find if hero has an item in that spot.
 							itemCollection.find({"Hero": parseInt(heroID) , "Type" :getItemType(currentItem.type.id)}).toArray(function(err, result) {
 								//if there is item in spot, check if that itemID is same as item to be updated.
@@ -175,24 +173,25 @@ function updateItemDB(itemID, heroID, delay){
 									for (i=0; i<result.length; i++) {
 										//if item is the same
 										if (result[i].itemID == itemID) {
-											
-											//check if item has more gems.  if jewelry check rank of gems.
 
 											//if item is a mainhand, chest, legs, hat
 											if(getItemType(currentItem.type.id) == "1 Hand" || getItemType(currentItem.type.id) == "2 Hand" || getItemType(currentItem.type.id) == "Head" || getItemType(currentItem.type.id) == "Chest" || getItemType(currentItem.type.id) == "Legs") {
-												//if there are more gems or equal, check if overall dps, will increase, then update
+												
+												//check if there are more gems or equal, check if overall dps, will increase, then update
 												if (currentItem.gems.length >= result[i].Gems.length) {
 
 													if (getItemType(currentItem.type.id) == "Head") {
 														//if currently wearing topaz in helm and replacement gem is not a topaz, update
 														if (result[i].Gems[0].item.name.indexOf("Topaz") != -1 && currentItem.gems[0].item.name.indexOf("Topaz") != -1) {
 															//update DB
+															updateInItemCollection(itemCollection, currentItem, heroID);
 														}
 													}//end if a hat
 
 													//if not a helm, update.  assumes not replacing with a lwoer gem
 													else {
 														//UPDATE DB
+														updateInItemCollection(itemCollection, currentItem, heroID);
 													}//end if not a hat
 
 												}//end if same number of gems
@@ -201,34 +200,41 @@ function updateItemDB(itemID, heroID, delay){
 
 											//if jewelry
 											else if (getItemType(currentItem.type.id) == "Ring" || getItemType(currentItem.type.id) == "Neck") {
-												var currentGem = currentItem.gems[0];
-												var equippedGem = result[i].Gems[0];
-												//if gems are same, check rank
-												if (currentGem.item.name == equippedGem.item.name) {
-													//check if gem is legendary.
-													if (currentGem.item.displayColor == "orange") {
-														//if current gem has higher rank replace
-														if (currentGem.jewelRank > equippedGem.jewelRank) {
-															//UPDATE DB
-															console.log("jewel rank upgraded");
+												if (currentItem.gems.length >= result[i].Gems.length && currentItem.gems.length > 0) {
+
+													var currentGem = currentItem.gems[0];
+													var equippedGem = result[i].Gems[0];
+													//if gems are same, check rank
+													if (currentGem.item.name == equippedGem.item.name) {
+														//check if gem is legendary.
+														if (currentGem.item.displayColor == "orange") {
+															//if current gem has higher rank replace
+															if (currentGem.jewelRank > equippedGem.jewelRank) {
+																//UPDATE DB
+																updateInItemCollection(itemCollection, currentItem, heroID);
+																console.log("jewel rank upgraded");
+															}
 														}
-													}
-												}//end if gems have same name
+													}//end if gems have same name
 												
 												//if gem names are not same
-												else {
-													//if currently equipped is boon
-													if (equippedGem.item.name == "Boon of the Hoarder") {
-														//REPLACE IN DB
-														console.log("Switching from boon to " + currentGem.item.name);
-													}
 													else {
-														//if replacement gem has a higher rank update DB and note boon
-														if (currentGem.jewelRank > equippedGem.jewelRank && currentGem.item.name != "Boon of the Hoarder") {
-															//UPDATE DB
+														//if currently equipped is boon
+														if (equippedGem.item.name == "Boon of the Hoarder") {
+															//REPLACE IN DB
+															console.log("Switching from boon to " + currentGem.item.name);
+															updateInItemCollection(itemCollection, currentItem, heroID);
 														}
-													}
-												}//end if gem names are not same
+														else {
+															//if replacement gem has a higher rank update DB and not boon
+															if (currentGem.jewelRank > equippedGem.jewelRank && currentGem.item.name != "Boon of the Hoarder") {
+																//UPDATE DB
+																console.log("Replacement gem has a higher rank and not boon");
+																updateInItemCollection(itemCollection, currentItem, heroID);
+															}
+														}
+													}//end if gem names are not same
+												}//end if jewel has one gem
 											}//end if jewelry
 										}//end if items are the same
 
@@ -243,29 +249,26 @@ function updateItemDB(itemID, heroID, delay){
 
 								//there no item in that spot, update
 								else {
-									//UPDATE
-								}
-							});
-
-
-///update collection
-							itemCollection.find({"itemID" : currentItem.tooltipParams.replace("item/","")}).toArray(function(err, result) {
-								// console.log("finding " + currentItem.tooltipParams.replace("item/","").substring(0,5) + " " + currentItem.name)
-								if (result.length != 1) {
-									itemCollection.insert({"itemID" : currentItem.tooltipParams.replace("item/",""), "Name" : currentItem.name, "Type" : getItemType(currentItem.type.id), "Affixes" : currentItem.attributes, "Random Affixes" : currentItem.randomAffixes, "Gems" : currentItem.gems, "Socket Effects" : currentItem.socketEffects, "Hero" : parseInt(heroID)}, function(err, result) {
-										// console.log("updateItemDB successfully inserted " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
-									});
-								}
-								else {
-									// console.log("updateItemDB already in database " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5) + " " + i);
-								}
-							});//end find in colleciton
-
-
+									insertInItemCollection(itemCollection, currentItem, heroID);
+								}//end insertion
+							
+							});//end itemcollection find
 						})(currentItem);//end self-invoking function
-					}				
+					}//end else json had data				
 				});//end request
 			},delay);//end settimeout
 		}//end if successfully in db
+	});
+}
+
+function updateInItemCollection(itemCollection, currentItem, heroID) {
+	itemCollection.update({"Hero": parseInt(heroID) , "Type" :getItemType(currentItem.type.id)}, {"Name" : currentItem.name, "Type" : getItemType(currentItem.type.id), "Affixes" : currentItem.attributes, "Random Affixes" : currentItem.randomAffixes, "Gems" : currentItem.gems, "Socket Effects" : currentItem.socketEffects, "Hero" : parseInt(heroID), "Equipped" : true}, function(err, result) {
+		console.log("Successfully updated " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
+	});
+}
+
+function insertInItemCollection(itemCollection, currentItem, heroID) {
+	itemCollection.insert({"itemID" : currentItem.tooltipParams.replace("item/",""), "Name" : currentItem.name, "Type" : getItemType(currentItem.type.id), "Affixes" : currentItem.attributes, "Random Affixes" : currentItem.randomAffixes, "Gems" : currentItem.gems, "Socket Effects" : currentItem.socketEffects, "Hero" : parseInt(heroID), "Equipped" : true}, function(err, result) {
+		console.log("Successfully inserted " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
 	});
 }
