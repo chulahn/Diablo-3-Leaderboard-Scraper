@@ -82,8 +82,8 @@ var exports = module.exports = {
 	},
 
 	//currentItem is Requested from API.  equippedItem is item currently in Collection.
-	doesCurrentHaveMoreGems : function (currentItem, equippedItem) {
-		if (currentItem.gems.length > equippedItem.Gems.length) {
+	doesRequestedHaveMoreGems : function (requestedItem, equippedItem) {
+		if (requestedItem.gems.length > equippedItem.Gems.length) {
 			// console.log("has more gems");
 			return true;
 		}
@@ -93,8 +93,8 @@ var exports = module.exports = {
 		}
 	},
 
-	isGemCountZero : function (currentItem) {
-		if (currentItem.gems.length == 0) {
+	isGemCountZero : function (requestedItem) {
+		if (requestedItem.gems.length == 0) {
 			return true;
 		}
 		else {
@@ -103,23 +103,23 @@ var exports = module.exports = {
 		}
 	},
 
-	sameGemCount : function (currentItem, equippedItem) {
-		if (currentItem.gems.length == currentItem.gems.length) {
+	sameGemCount : function (requestedItem, equippedItem) {
+		if (requestedItem.gems.length == requestedItem.gems.length) {
 			return true;
 		}
 		else {
-			console.log("different gem counts current:" + currentItem + " equipped:" + equippedItem );
+			console.log("different gem counts requested:" + requestedItem + " equipped:" + equippedItem );
 			return false;
 		}
 	},
 
-	hasNewEnchant : function (currentItem, equippedItem) {
-		if (JSON.stringify(currentItem.attributes) != JSON.stringify(currentItem.attributes)) {
-			// console.log("----------has new enchant");
+	hasNewEnchant : function (requestedItem, equippedItem) {
+		if (JSON.stringify(requestedItem.attributes) != JSON.stringify(equippedItem.Affixes)) {
+			console.log("----------has new enchant");
 			return true;
 		}
 		else {
-			// console.log("--------had same attributes");
+			console.log("--------had same attributes");
 			return false;
 		}
 	}

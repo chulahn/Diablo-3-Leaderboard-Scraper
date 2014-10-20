@@ -1,7 +1,7 @@
 var exports = module.exports = {
 
-	sameGems : function (currentGems, equippedGems) {
-		if (JSON.stringify(currentGems) == JSON.stringify(equippedGems)) {
+	sameGems : function (requestedGems, equippedGems) {
+		if (JSON.stringify(requestedGems) == JSON.stringify(equippedGems)) {
 			// console.log("has the same gems");
 			return true;
 		}
@@ -29,8 +29,8 @@ var exports = module.exports = {
 		}
 	},
 
-	currentRankHigher : function(currentGem, equippedGem) {
-		if (currentGem.jewelRank > equippedGem.jewelRank) {
+	requestedRankHigher : function(requestedGem, equippedGem) {
+		if (requestedGem.jewelRank > equippedGem.jewelRank) {
 			return true;
 		}
 		else {
@@ -38,8 +38,8 @@ var exports = module.exports = {
 		}
 	},
 
-	sameRank : function(currentGem, equippedGem) {
-		if (currentGem.jewelRank == equippedGem.jewelRank) {
+	sameRank : function(requestedGem, equippedGem) {
+		if (requestedGem.jewelRank == equippedGem.jewelRank) {
 			return true;
 		}
 		else {

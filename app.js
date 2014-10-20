@@ -20,7 +20,6 @@ function getImportantStats(heroID) {
 		else {
 			var itemCollection = db.collection("item");
 			var heroCollection = db.collection("hero");
-
 			var eliteDam = 0;
 			var fireDam = 0;
 			var lightningDam = 0;
@@ -35,21 +34,24 @@ function getImportantStats(heroID) {
 			var rangeDamRed = 0;
 			var eliteDamRed = 0;
 			console.log("getImportantStats " + heroID);
-			itemCollection.find({"Hero" : parseInt(heroID)}).toArray(function(error, results) {
+			itemCollection.find({"Hero" : parseInt(heroID), "Equipped" : true}).toArray(function(error, heroItems) {
 				// console.log(results);
-				for(i=0; i<results.length; i++) {
-					for (j=0; j<results[i].Affixes.primary.length; j++) {
+				//for each item
+
+				heroItems.forEach(function(currentItem) { 
+
+					for (j=0; j<currentItem.Affixes.primary.length; j++) {
 						//get cooldown reduction from every item
-						if (results[i].Affixes.primary[j].text.indexOf("cooldown") != -1) {
+						if (currentItem.Affixes.primary[j].text.indexOf("cooldown") != -1) {
 							// console.log("has cooldown")
-							cooldownString = results[i].Affixes.primary[j].text;
-							// console.log(results[i].Name + " " + cooldownString.substring(cooldownString.lastIndexOf(" ")+1,cooldownString.length-2 )+"%");
+							cooldownString = currentItem.Affixes.primary[j].text;
+							// console.log(currentItem.Name + " " + cooldownString.substring(cooldownString.lastIndexOf(" ")+1,cooldownString.length-2 )+"%");
 							cooldown += parseFloat(cooldownString.substring(cooldownString.lastIndexOf(" ")+1,cooldownString.length-2 ));
 						}
 						//get element damage from every item
-						if (results[i].Affixes.primary[j].text.indexOf("skills deal") != -1) {
-							// console.log(results[i].Affixes.primary[j].text);
-							skillsString = results[i].Affixes.primary[j].text;
+						if (currentItem.Affixes.primary[j].text.indexOf("skills deal") != -1) {
+							// console.log(currentItem.Affixes.primary[j].text);
+							skillsString = currentItem.Affixes.primary[j].text;
 							number = parseInt(skillsString.substring(skillsString.indexOf("deal ")+5, skillsString.indexOf("%")));
 							element = skillsString.substring(0, skillsString.indexOf(" skills"));
 
@@ -82,7 +84,7 @@ function getImportantStats(heroID) {
 							// console.log(element+number);
 						}
 					}//end for affixes
-				}//end for item
+				});//end for each
 
 				//find the highestelement
 				var highestElement = 0;
