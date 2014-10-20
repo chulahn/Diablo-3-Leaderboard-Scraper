@@ -92,17 +92,17 @@ exports.getHeroes = function(battletag, req, res) {
 						exports.addHeroData(battletag, heroID, 2000);
 					}
 					else {
-						var jsonData = JSON.parse(data);
-						var items = jsonData.items;
+						var requestedHeroData = JSON.parse(data);
+						var items = requestedHeroData.items;
 						//account was inactive 
-						if (jsonData.code == "NOTFOUND") {
+						if (requestedHeroData.code == "NOTFOUND") {
 							console.log("notfound");
 						}
 
 						//check if data is not null
 						else if (items == null) {
 							console.log("addHeroData items was null for " + battletag + " " + heroID);
-							console.log(jsonData);
+							console.log(requestedHeroData);
 							//error handling, call again
 							exports.addHeroData(battletag, heroID,2000);
 						}					
@@ -113,18 +113,20 @@ exports.getHeroes = function(battletag, req, res) {
 								exports.addHeroData(battletag, heroID, 2000);							
 							}
 							else {
-								if (jsonData.level == 70) {
+								if (requestedHeroData.level == 70) {
 									var heroCollection = db.collection("hero");
-									heroCollection.find({"heroID" : jsonData.id}).toArray(function(err, results) {
+									heroCollection.find({"heroID" : requestedHeroData.id}).toArray(function(err, results) {
 										//found, just update.  otherwise insert.
 										if (results.length == 1) {
-											heroCollection.update({"heroID" : jsonData.id}, {"heroID" : jsonData.id , "Battletag": battletag,  "Name" : jsonData.name, "Class" : jsonData.class , "Level" : jsonData.level, "Paragon" : jsonData.paragonLevel, "Hardcore" : jsonData.hardcore, "Seasonal" : jsonData.seasonal, "Skills" : jsonData.skills, "Items" : jsonData.items, "Stats" : jsonData.stats}, function(err, results) {
-												console.log("addHeroData found, updating "+ battletag + " " + jsonData.id);
-											});//end update.
+											if (requestedHeroData.stats.damage > 300000){
+												heroCollection.update({"heroID" : requestedHeroData.id}, {"heroID" : requestedHeroData.id , "Battletag": battletag,  "Name" : requestedHeroData.name, "Class" : requestedHeroData.class , "Level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "Hardcore" : requestedHeroData.hardcore, "Seasonal" : requestedHeroData.seasonal, "Skills" : requestedHeroData.skills, "Items" : requestedHeroData.items, "Stats" : requestedHeroData.stats}, function(err, results) {
+												console.log("addHeroData found, updating "+ battletag + " " + requestedHeroData.id);
+												});//end update.
+											}
 										}
 										else {
-											heroCollection.insert({"heroID" : jsonData.id , "Battletag": battletag,  "Name" : jsonData.name, "Class" : jsonData.class , "Level" : jsonData.level, "Paragon" : jsonData.paragonLevel, "Hardcore" : jsonData.hardcore, "Seasonal" : jsonData.seasonal, "Skills" : jsonData.skills, "Items" : jsonData.items, "Stats" : jsonData.stats}, function(err, results) {
-												console.log("addHeroData not found, inserting "+ battletag + " " + jsonData.id);
+											heroCollection.insert({"heroID" : requestedHeroData.id , "Battletag": battletag,  "Name" : requestedHeroData.name, "Class" : requestedHeroData.class , "Level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "Hardcore" : requestedHeroData.hardcore, "Seasonal" : requestedHeroData.seasonal, "Skills" : requestedHeroData.skills, "Items" : requestedHeroData.items, "Stats" : requestedHeroData.stats}, function(err, results) {
+												console.log("addHeroData not found, inserting "+ battletag + " " + requestedHeroData.id);
 											});//end insertion.
 										}
 									});//end update/insert 

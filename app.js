@@ -28,6 +28,7 @@ function getImportantStats(heroID) {
 			var poisonDam = 0;
 			var physDam = 0;
 			var cooldown = 0;
+			var diamondCooldown = 0;
 			//fire,light,cold,arcane,poison,phys
 			var elementalDam = [0,0,0,0,0,0];
 			var meleeDamRed = 0;
@@ -38,7 +39,23 @@ function getImportantStats(heroID) {
 				// console.log(results);
 				//for each item
 
-				heroItems.forEach(function(currentItem) { 
+				heroItems.forEach(function(currentItem) {
+
+					if (currentItem.Type == "Head") {
+						//if it has a diamond
+						if ((currentItem.Gems[0].item.name).indexOf("Diamond") != -1) {
+							diamondText = currentItem.Gems[0].attributes.primary[0].text;
+							diamondCooldown = parseFloat(diamondText.substring(diamondText.indexOf("by ") + 3, diamondText.length-2));
+						}
+
+						if (currentItem.Name == "Leoric's Crown") {
+							currentItem.Affixes.secondary.forEach(function (secondary) {
+								if (secondary.color == "orange") {
+									diamondCooldown = diamondCooldown * (1 + parseFloat(secondary.text.substring(secondary.text.indexOf("by ") + 3, secondary.text.length-2)/100));
+								}
+							});
+						}
+					}
 
 					for (j=0; j<currentItem.Affixes.primary.length; j++) {
 						//get cooldown reduction from every item
@@ -114,14 +131,15 @@ function getImportantStats(heroID) {
 						break;
 				}
 				console.log(elementalDam);
-				console.log("total cooldown " + cooldown);
+				totalCooldown = cooldown + diamondCooldown;
+				console.log("total cooldown " + cooldown + " cooldown from hat " + diamondCooldown + " = " + totalCooldown);
 
 				heroCollection.update(
 					{"heroID" : heroID}, 
 					{$set :
 						{
 							extraItemData: {
-								"cooldown" : cooldown,
+								"cooldown" : totalCooldown,
 								"elementalDam" : elementalDam,
 							}
 						}//end of extraItemData
