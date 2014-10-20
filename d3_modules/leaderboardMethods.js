@@ -73,9 +73,16 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 		    			//get the correct hero based on class, and add to array
 		    			heroCollection.find({"Battletag" : currentPlayer.Battletag.replace("#", "-"), "Class" : getClassNameForDatabase(diabloClass) }).toArray(function (error, heroResults) {
 		    				//if we found the Hero based on BattleTag and class, add that Hero's Damage to dpsArray, else put 
-		    				if (heroResults[0] != null) {
+		    				if (heroResults.length > 0) {
 		    					// console.log(heroResults[0].Stats.damage);
-		    					dpsArray[currentPlayer.Standing-1] = heroResults[0].Stats.damage;
+		    					heroToPush=0;
+		    					heroResults.forEach(function(hero) {
+		    						if (hero.Stats.damage > heroToPush) {
+		    							//store hero later, for now just store damage
+		    							heroToPush = hero.Stats.damage;
+		    						}
+		    					})
+		    					dpsArray[currentPlayer.Standing-1] = heroToPush;
 		    				}
 		    				//else get the heroes from currentPlayer, find the ones that match the current leaderboard class, and add them.
 		    				//currentHero is information from battletag lookup, not hero.

@@ -113,16 +113,17 @@ exports.getHeroes = function(battletag, req, res) {
 								exports.addHeroData(battletag, heroID, 2000);							
 							}
 							else {
-								if (requestedHeroData.level == 70) {
+								//100000 for dh
+								if (requestedHeroData.level == 70 && requestedHeroData.stats.damage > 100000) {
 									var heroCollection = db.collection("hero");
 									heroCollection.find({"heroID" : requestedHeroData.id}).toArray(function(err, results) {
 										//found, just update.  otherwise insert.
 										if (results.length == 1) {
-											if (requestedHeroData.stats.damage > 300000){
+											// if (requestedHeroData.stats.damage > 300000){
 												heroCollection.update({"heroID" : requestedHeroData.id}, {"heroID" : requestedHeroData.id , "Battletag": battletag,  "Name" : requestedHeroData.name, "Class" : requestedHeroData.class , "Level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "Hardcore" : requestedHeroData.hardcore, "Seasonal" : requestedHeroData.seasonal, "Skills" : requestedHeroData.skills, "Items" : requestedHeroData.items, "Stats" : requestedHeroData.stats}, function(err, results) {
 												console.log("addHeroData found, updating "+ battletag + " " + requestedHeroData.id);
 												});//end update.
-											}
+											// }
 										}
 										else {
 											heroCollection.insert({"heroID" : requestedHeroData.id , "Battletag": battletag,  "Name" : requestedHeroData.name, "Class" : requestedHeroData.class , "Level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "Hardcore" : requestedHeroData.hardcore, "Seasonal" : requestedHeroData.seasonal, "Skills" : requestedHeroData.skills, "Items" : requestedHeroData.items, "Stats" : requestedHeroData.stats}, function(err, results) {
