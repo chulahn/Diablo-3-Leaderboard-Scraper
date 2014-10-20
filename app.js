@@ -41,6 +41,7 @@ function getImportantStats(heroID) {
 					for (j=0; j<results[i].Affixes.primary.length; j++) {
 						//get cooldown reduction from every item
 						if (results[i].Affixes.primary[j].text.indexOf("cooldown") != -1) {
+							// console.log("has cooldown")
 							cooldownString = results[i].Affixes.primary[j].text;
 							// console.log(results[i].Name + " " + cooldownString.substring(cooldownString.lastIndexOf(" ")+1,cooldownString.length-2 )+"%");
 							cooldown += parseFloat(cooldownString.substring(cooldownString.lastIndexOf(" ")+1,cooldownString.length-2 ));
