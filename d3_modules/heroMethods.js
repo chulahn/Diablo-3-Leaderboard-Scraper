@@ -45,7 +45,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 		var heroData = JSON.parse(data);
 		var heroItems = heroData.items;
 		if (heroData.level == 70) {
-			getItemIDsFromHero(heroItems,heroID,10);
+			exports.getItemIDsFromHero(heroItems,heroID,10);
 		}
 		res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems})
 		date = new Date();
@@ -53,7 +53,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 	});
 }
 
-function getItemIDsFromHero(heroItems, heroID, delay) {
+exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
 	var allItems = [];
 	if (heroItems.rightFinger != null) {
 		allItems.push(heroItems.rightFinger);

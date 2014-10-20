@@ -1,6 +1,7 @@
 var exports = module.exports = {};
 var request = require("request");
 var express = require("express");
+var heroMethods = require("../d3_modules/heroMethods.js");
 
 var mongo = require('mongodb');
 var MongoClient = mongo.MongoClient;
@@ -30,10 +31,10 @@ function getRegion(region) {
 	}
 }
 
-
-function timeToDelay(delayCounter) {
+var delayCounter = 0;
+function timeToDelay() {
 	delayCounter++;
-	return (1000* (Math.floor(delayCounter/10)+1));
+	return (1000* (Math.floor(delayCounter/10)+1) + 2000);
 }
 
 
@@ -47,27 +48,27 @@ exports.getHeroes = function(battletag, req, res) {
 	var requestURL = "https://" + region + apiURL + "/profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey;
 	date = new Date();
 	console.log(battletag + " Page before request"+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
-	request(requestURL, function (error, response, data) {
-		var jsonData = JSON.parse(data);
-		if (jsonData.code == "NOTFOUND") {
+	request(requestURL, function (error, response, playerInformation) {
+		var playerJSON = JSON.parse(playerInformation);
+		if (playerJSON.code == "NOTFOUND") {
 			res.send("Invalid Battletag");
 			//request the tag again.
 		}
-		var heroes = jsonData.heroes;
-		if (heroes == undefined) {
-			console.log("getHeroes Jsondata.heroes undefined");
+		var playersHeroes = playerJSON.heroes;
+		if (playersHeroes == undefined) {
+			console.log("getHeroes playerJSON.heroes undefined");
 			getHeroes(battletag,req,res);
 		}
 		else {
-			for (i=0; i<heroes.length; i++) {
+			for (i=0; i<playersHeroes.length; i++) {
 				if (i < 8) {
-					exports.addHeroData(battletag, heroes[i].id, 0);
+					exports.addHeroData(battletag, playersHeroes[i].id, 0);
 				}
 				else {
-					exports.addHeroData(battletag, heroes[i].id, Math.floor(i/9)*1000);
+					exports.addHeroData(battletag, playersHeroes[i].id, Math.floor(i/9)*1000);
 				}
 			}
-			res.render('player.ejs', { ejs_btag : battletag , ejs_heroes : heroes });
+			res.render('player.ejs', { ejs_btag : battletag , ejs_heroes : playersHeroes });
 			date = new Date();
 			console.log(battletag + " Page after request"+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 		}
@@ -128,6 +129,9 @@ exports.getHeroes = function(battletag, req, res) {
 										else {
 											heroCollection.insert({"heroID" : requestedHeroData.id , "Battletag": battletag,  "Name" : requestedHeroData.name, "Class" : requestedHeroData.class , "Level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "Hardcore" : requestedHeroData.hardcore, "Seasonal" : requestedHeroData.seasonal, "Skills" : requestedHeroData.skills, "Items" : requestedHeroData.items, "Stats" : requestedHeroData.stats}, function(err, results) {
 												console.log("addHeroData not found, inserting "+ battletag + " " + requestedHeroData.id);
+												console.log("adding items")
+												heroMethods.getItemIDsFromHero(requestedHeroData.items, requestedHeroData.id, timeToDelay());
+
 											});//end insertion.
 										}
 									});//end update/insert 

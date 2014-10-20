@@ -66,6 +66,7 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 					console.log(diabloClass + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 
 		    		var dpsArray = [];
+		    		var allData = [];
 		    		//for each battletag from the leaderboard
 		    		leaderboardResults.forEach(function(currentPlayer) {
 		    			delayCounter =0;
@@ -75,14 +76,15 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 		    				//if we found the Hero based on BattleTag and class, add that Hero's Damage to dpsArray, else put 
 		    				if (heroResults.length > 0) {
 		    					// console.log(heroResults[0].Stats.damage);
-		    					heroToPush=0;
+		    					heroToPush=heroResults[0];
 		    					heroResults.forEach(function(hero) {
-		    						if (hero.Stats.damage > heroToPush) {
+		    						if (hero.Stats.damage > heroToPush.Stats.damage) {
 		    							//store hero later, for now just store damage
-		    							heroToPush = hero.Stats.damage;
+		    							heroToPush = hero;
 		    						}
 		    					})
-		    					dpsArray[currentPlayer.Standing-1] = heroToPush;
+		    					allData[currentPlayer.Standing-1] = heroToPush;
+		    					dpsArray[currentPlayer.Standing-1] = heroToPush.Stats.damage;
 		    				}
 		    				//else get the heroes from currentPlayer, find the ones that match the current leaderboard class, and add them.
 		    				//currentHero is information from battletag lookup, not hero.
@@ -98,6 +100,7 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 			    							// console.log("after " + delayCounter);
 			    						}
 			    						else {
+			    							console.log()
 			    							dpsArray[currentPlayer.Standing-1] = 0;
 			    						}
 			    					}
@@ -120,7 +123,7 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 						    		date = new Date();
 									console.log(diabloClass + " Page rendered "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 
-			    					res.render('ClassLeaderboard.ejs', {title : diabloClass , leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , dpsData : dpsArray });
+			    					res.render('ClassLeaderboard.ejs', {title : diabloClass , leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , dpsData : dpsArray, all:allData });
 								}
 							}
 		    			})//end toArray callback from finding hero.
