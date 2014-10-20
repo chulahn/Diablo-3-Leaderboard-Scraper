@@ -234,6 +234,7 @@ function findItemInCollection(itemID, heroID, delay){
 															if (item.isHat(currentItemType)) {
 																if (!gem.isHatGemUtility(equippedGems) && gem.isHatGemUtility(currentGems)) {
 																	updateInItemCollection(itemCollection, currentItem, heroID);
+																	console.log(result[i]);
 																	unequipItem(itemCollection, result[i], heroID);
 																}
 															}//end if item was hat
@@ -245,6 +246,7 @@ function findItemInCollection(itemID, heroID, delay){
 																	if (gem.isGemBoon(equippedGems[0])) {
 																		//if replacement is not boon or has a higher rank, replace  
 																		if (gem.currentRankHigher(currentGems[0], equippedGems[0]) || !gem.isGemBoon(currentGems[0])) {
+																	console.log(result[i]);
 																			updateInItemCollection(itemCollection, currentItem, heroID);
 																			unequipItem(itemCollection, result[i], heroID);
 
@@ -254,6 +256,7 @@ function findItemInCollection(itemID, heroID, delay){
 																	else {
 																		//if rank was higher, update
 																		if (gem.currentRankHigher(currentGems[0], equippedGems[0])) {
+																	console.log(result[i]);
 																			updateInItemCollection(itemCollection, currentItem, heroID);
 																			unequipItem(itemCollection, result[i], heroID);
 																		}
@@ -262,6 +265,7 @@ function findItemInCollection(itemID, heroID, delay){
 																//equipped gem is not legendary but current is, update
 																else if (!gem.isGemLegendary(equippedGems[0]) && gem.isGemLegendary(currentGems[0])) {
 																	updateInItemCollection(itemCollection, currentItem, heroID);
+																	console.log(result[i]);
 																	unequipItem(itemCollection, result[i], heroID);
 
 																}
@@ -272,6 +276,7 @@ function findItemInCollection(itemID, heroID, delay){
 														//!!!!!
 														//gems were same compare itemstats
 														else {
+																	console.log(result[i]);
 															updateInItemCollection(itemCollection, currentItem, heroID);
 														unequipItem(itemCollection, result[i], heroID);
 														}
@@ -317,7 +322,7 @@ function insertInItemCollection(itemCollection, currentItem, heroID) {
 }
 
 function unequipItem(itemCollection, itemToUnequip, heroID) {
-		itemCollection.update({"Hero": parseInt(heroID) , "Type" :item.getItemType(itemToUnequip.type.id)}, {"itemID" : itemToUnequip.tooltipParams.replace("item/",""), "Name" : itemToUnequip.name, "Type" : item.getItemType(itemToUnequip.type.id), "Affixes" : itemToUnequip.attributes, "Random Affixes" : itemToUnequip.randomAffixes, "Gems" : itemToUnequip.gems, "Socket Effects" : itemToUnequip.socketEffects, "Hero" : parseInt(heroID), "Equipped" : false}, function(err, result) {
-		console.log("Successfully uneqipped " + itemToUnequip.name + " " + itemToUnequip.tooltipParams.replace("item/","").substring(0,5));
+		itemCollection.update({"Hero": parseInt(heroID) , "itemID" : itemToUnequip.itemID },  {$set : {"Equipped" : false}}, function(err, result) {
+		console.log("Successfully unequipped " + itemToUnequip.Name + " " + itemToUnequip.itemID.substring(0,5));
 	});
 }
