@@ -115,11 +115,11 @@ var exports = module.exports = {
 
 	hasNewEnchant : function (requestedItem, equippedItem) {
 		if (JSON.stringify(requestedItem.attributes) != JSON.stringify(equippedItem.Affixes)) {
-			console.log("----------has new enchant");
+			// console.log("----------has new enchant");
 			return true;
 		}
 		else {
-			console.log("--------had same attributes");
+			// console.log("--------had same attributes");
 			return false;
 		}
 	}
