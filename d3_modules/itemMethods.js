@@ -1,6 +1,50 @@
 var exports = module.exports = {
 
-	isJewlery : function(itemType) {
+	//returns the itemType that will be used when searching collection
+	getItemType : function (itemType) {
+		itemType = itemType.toLowerCase();
+		if (itemType.indexOf("helm") != -1 || itemType.indexOf("mask") != -1 || itemType.indexOf("spiritstone") != -1) {
+			return "Head";
+		}
+		else if (itemType.indexOf("shoulders") != -1) {
+			return "Shoulders";
+		}
+		else if (itemType.indexOf("hand") != -1 || itemType.indexOf("fist") != -1 || itemType.indexOf("mace") != -1 || itemType.indexOf("1h") != -1 || itemType.indexOf("axe") != -1 || itemType.indexOf("wand") != -1 || itemType.indexOf("dagger") != -1) {
+			return "1 Hand";
+		}
+		else if (itemType.indexOf("2h") != -1 || itemType.indexOf("staff") != -1) {
+			return "2 Hand";
+		}	
+		else if (itemType.indexOf("boots") != -1) {
+			return "Feet";
+		}
+		else if (itemType.indexOf("chest") != -1) {
+			return "Chest";
+		}
+		else if (itemType.indexOf("bracers") != -1) {
+			return "Bracers";
+		}
+		else if (itemType.indexOf("legs") != -1) {
+			return "Legs";
+		}
+		else if (itemType.indexOf("amulet") != -1) {
+			return "Neck";
+		}
+		else if (itemType.indexOf("belt") != -1) {
+			return "Belt";
+		}
+		else if (itemType.indexOf("gloves") != -1) {
+			return "Hands";
+		}
+		else if (itemType.indexOf("mojo") != -1 || itemType.indexOf("quiver") != -1 || itemType.indexOf("orb") != -1 || itemType.indexOf("shield") != -1) {
+			return "offHand";
+		}
+		else if (itemType.indexOf("ring") != -1) {
+			return "Ring";
+		}
+	},
+
+	isJewlery : function (itemType) {
 		if (itemType == "Ring" || itemType == "Neck") {
 			return true;
 		}
@@ -67,6 +111,17 @@ var exports = module.exports = {
 			console.log("different gem counts current:" + currentItem + " equipped:" + equippedItem );
 			return false;
 		}
+	},
+
+	hasNewEnchant : function (currentItem, equippedItem) {
+		if (JSON.stringify(currentItem.attributes) != JSON.stringify(currentItem.attributes)) {
+			// console.log("----------has new enchant");
+			return true;
+		}
+		else {
+			// console.log("--------had same attributes");
+			return false;
+		}
 	}
-	
+
 }

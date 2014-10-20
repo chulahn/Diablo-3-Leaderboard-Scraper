@@ -22,12 +22,37 @@ var exports = module.exports = {
 
 	isGemBoon : function (jewelryGem) {
 		if (jewelryGem.item.name == "Boon of the Hoarder") {
-			console.log("-------------using boon");
+			return true;
+		}
+		else {
+			return false;
+		}
+	},
+
+	currentRankHigher : function(currentGem, equippedGem) {
+		if (currentGem.jewelRank > equippedGem.jewelRank) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	},
+
+	sameRank : function(currentGem, equippedGem) {
+		if (currentGem.jewelRank == equippedGem.jewelRank) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	},
+
+	isGemLegendary : function (jewelryGem) {
+		if (jewelryGem.item.displayColor == "orange") {
 			return true;
 		}
 		else {
 			return false;
 		}
 	}
-
 };
