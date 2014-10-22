@@ -121,13 +121,13 @@ exports.getHeroes = function(battletag, req, res) {
 										//found, just update.  otherwise insert.
 										if (results.length == 1) {
 											// if (requestedHeroData.stats.damage > 300000){
-												heroCollection.update({"heroID" : requestedHeroData.id}, {"heroID" : requestedHeroData.id , "Battletag": battletag,  "Name" : requestedHeroData.name, "Class" : requestedHeroData.class , "Level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "Hardcore" : requestedHeroData.hardcore, "Seasonal" : requestedHeroData.seasonal, "Skills" : requestedHeroData.skills, "Items" : requestedHeroData.items, "Stats" : requestedHeroData.stats}, function(err, results) {
+												heroCollection.update({"heroID" : requestedHeroData.id}, {"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats}, function(err, results) {
 												console.log("addHeroData found, updating "+ battletag + " " + requestedHeroData.id);
 												});//end update.
 											// }
 										}
 										else {
-											heroCollection.insert({"heroID" : requestedHeroData.id , "Battletag": battletag,  "Name" : requestedHeroData.name, "Class" : requestedHeroData.class , "Level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "Hardcore" : requestedHeroData.hardcore, "Seasonal" : requestedHeroData.seasonal, "Skills" : requestedHeroData.skills, "Items" : requestedHeroData.items, "Stats" : requestedHeroData.stats}, function(err, results) {
+											heroCollection.insert({"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats}, function(err, results) {
 												console.log("addHeroData not found, inserting "+ battletag + " " + requestedHeroData.id);
 												console.log("adding items")
 												heroMethods.getItemIDsFromHero(requestedHeroData.items, requestedHeroData.id, timeToDelay());

@@ -40,6 +40,32 @@ exports.getHeroDetails = function(heroID, req, res) {
 	date = new Date();
 	console.log(heroID + " Page before request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 
+//Takes 200ms.  Only has information from DB.  Not always up to Date
+	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
+		if (err) {
+			return console.log("getHeroDetails error connecting to db")
+		}
+		else {
+			console.log("connected")
+			heroCollection = db.collection('hero');
+
+			heroCollection.find({"heroID" : parseInt(heroID)}).toArray(function(err, matchedHero) {
+				if (matchedHero.length > 0) {
+
+					var heroData = matchedHero[0];
+					var heroItems = heroData.Items;
+					res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems})
+					date = new Date();
+					console.log(heroID + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+				}
+			});
+		}
+
+
+	});
+
+//Takes about same time.  Can crash if too many requests were 
+/*
 	request(heroRequestURL, function (error, response, data) {
 		//string to json
 		var heroData = JSON.parse(data);
@@ -51,6 +77,9 @@ exports.getHeroDetails = function(heroID, req, res) {
 		date = new Date();
 		console.log(heroID + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 	});
+*/
+
+
 }
 
 exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
@@ -95,7 +124,7 @@ exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
 		allItems.push(heroItems.offHand);
 	}
 	allItems.forEach(function(item, i) {
-		console.log(item.name + " " + i + " delay " + delay);
+		// console.log(item.name + " " + i + " delay " + delay);
 		itemID = item.tooltipParams.replace("item/" , "");
 		findItemInCollection(itemID, heroID, delay);
 		delay = delay + 100;
@@ -145,7 +174,7 @@ function findItemInCollection(itemID, heroID, delay){
 										if (equippedItem.itemID == undefined) {
 											console.log(equippedItem[0]);
 										}
-										console.log(requestedItem.name)
+										// console.log(requestedItem.name)
 										// if (requestedItem.name.indexOf("Natalya's Reflection") != -1) {
 										// 	console.log(requestedItem.name + ' called');
 										// }
@@ -258,11 +287,11 @@ function findItemInCollection(itemID, heroID, delay){
 																	}
 																	//gem was not boon
 																	else {
-console.log("here " + matchedItems.length);             
+// console.log("here " + matchedItems.length);             
 																		//gets called before finishes updating
 																		if (item.isRing(requestedItemType)) {
 																			delay += 1000;
-																			console.log(delay);
+																			// console.log(delay);
 																			setTimeout( function() {
 
 																				itemCollection.find( {"itemID" :equippedItem.itemID} ).toArray(function(err, matchedRings) {

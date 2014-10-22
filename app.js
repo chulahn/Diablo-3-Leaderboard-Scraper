@@ -35,7 +35,7 @@ function getImportantStats(heroID) {
 			var rangeDamRed = 0;
 			var eliteDamRed = 0;
 			console.log("getImportantStats " + heroID);
-			itemCollection.find({"Hero" : parseInt(heroID), "Equipped" : true}).toArray(function(error, heroItems) {
+			itemCollection.find({"Hero" : heroID, "Equipped" : true}).toArray(function(error, heroItems) {
 				// console.log(results);
 				//for each item
 
@@ -133,12 +133,13 @@ function getImportantStats(heroID) {
 				console.log(elementalDam);
 				totalCooldown = cooldown + diamondCooldown;
 				console.log("total cooldown " + cooldown + " cooldown from hat " + diamondCooldown + " = " + totalCooldown);
-
+				heroCollection.find({"heroID" : heroID}, function(err, results) {
+				})
 				heroCollection.update(
 					{"heroID" : heroID}, 
 					{$set :
 						{
-							extraItemData: {
+							"extraItemData": {
 								"cooldown" : totalCooldown,
 								"elementalDam" : elementalDam,
 							}
@@ -148,6 +149,7 @@ function getImportantStats(heroID) {
 					if (err) {
 						return console.log(err);
 					}
+					console.log("added extraItemData");
 				});
 
 			});//end  finditem for hero
@@ -178,8 +180,8 @@ app.get('/player/:battletag', function(req,res) {
 });
 
 app.get('/player/:battletag/hero/:heroID', function(req, res) {
-	heroMethods.getHeroDetails(req.params.heroID, req, res);
-	getImportantStats(req.params.heroID);
+	heroMethods.getHeroDetails(parseInt(req.params.heroID), req, res);
+	getImportantStats(parseInt(req.params.heroID));
 });
 
 app.get('/update/:diabloClass', function(req,res) {
