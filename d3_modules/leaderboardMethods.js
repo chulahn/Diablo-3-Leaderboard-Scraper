@@ -17,7 +17,7 @@ var delayCounter = 0;
 
 function timeToDelay() {
 	delayCounter++;
-	return (1000* (Math.floor(delayCounter/10)));
+	return (1500* (Math.floor(delayCounter/10)));
 }
 
 

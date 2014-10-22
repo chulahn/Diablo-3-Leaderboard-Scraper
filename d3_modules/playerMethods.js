@@ -34,7 +34,7 @@ function getRegion(region) {
 var delayCounter = 0;
 function timeToDelay() {
 	delayCounter++;
-	return (1000* (Math.floor(delayCounter/10)+1) + 2000);
+	return (1100* (Math.floor(delayCounter/10)+1) + 2000);
 }
 
 
@@ -61,12 +61,12 @@ exports.getHeroes = function(battletag, req, res) {
 		}
 		else {
 			for (i=0; i<playersHeroes.length; i++) {
-				if (i < 8) {
-					exports.addHeroData(battletag, playersHeroes[i].id, 0,db);
-				}
-				else {
-					exports.addHeroData(battletag, playersHeroes[i].id, Math.floor(i/9)*1000,db);
-				}
+				// if (i < 8) {
+					exports.addHeroData(battletag, playersHeroes[i].id, 0,timeToDelay);
+				// }
+				// else {
+					// exports.addHeroData(battletag, playersHeroes[i].id, Math.floor(i/9)*1000,db);
+				// }
 			}
 			res.render('player.ejs', { ejs_btag : battletag , ejs_heroes : playersHeroes });
 			date = new Date();
@@ -111,7 +111,7 @@ exports.getHeroes = function(battletag, req, res) {
 							}
 							else {
 								//100000 for dh.  if less than this and hero wasnt added to db, visualization will not load.
-								if (requestedHeroData.level == 70 && requestedHeroData.stats.damage > 100000) {
+								if (requestedHeroData.level == 70 && requestedHeroData.stats.damage > 0) {
 									var heroCollection = db.collection("hero");
 									heroCollection.find({"heroID" : requestedHeroData.id}).toArray(function(err, results) {
 										//found, just update.  otherwise insert.
