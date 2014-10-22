@@ -110,7 +110,7 @@ exports.getHeroes = function(battletag, req, res) {
 								exports.addHeroData(battletag, heroID, timeToDelay());							
 							}
 							else {
-								//100000 for dh
+								//100000 for dh.  if less than this and hero wasnt added to db, visualization will not load.
 								if (requestedHeroData.level == 70 && requestedHeroData.stats.damage > 100000) {
 									var heroCollection = db.collection("hero");
 									heroCollection.find({"heroID" : requestedHeroData.id}).toArray(function(err, results) {
