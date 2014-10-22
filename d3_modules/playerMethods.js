@@ -62,10 +62,10 @@ exports.getHeroes = function(battletag, req, res) {
 		else {
 			for (i=0; i<playersHeroes.length; i++) {
 				if (i < 8) {
-					exports.addHeroData(battletag, playersHeroes[i].id, 0);
+					exports.addHeroData(battletag, playersHeroes[i].id, 0,db);
 				}
 				else {
-					exports.addHeroData(battletag, playersHeroes[i].id, Math.floor(i/9)*1000);
+					exports.addHeroData(battletag, playersHeroes[i].id, Math.floor(i/9)*1000,db);
 				}
 			}
 			res.render('player.ejs', { ejs_btag : battletag , ejs_heroes : playersHeroes });
@@ -76,12 +76,8 @@ exports.getHeroes = function(battletag, req, res) {
 }
 
 //add heroesdata to hero collection if the hero is level 70.
- exports.addHeroData = function(battletag, heroID, delay) {
-	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
-		if(err) {
-			return console.log("addHeroData error");
-		}
-		else {
+ exports.addHeroData = function(battletag, heroID, delay,db) {
+
 			console.log("inside addHeroData for " + battletag + " " + heroID + "delay is " + delay);
 			var requestURL = "https://" + region + apiURL + "profile/" + battletag.replace("#", "-") + "/hero/" + heroID + "?locale=" + locale + "&apikey=" + apiKey;
 			// console.log(requestURL);
@@ -103,15 +99,15 @@ exports.getHeroes = function(battletag, req, res) {
 						//check if data is not null
 						else if (items == null) {
 							console.log("addHeroData items was null for " + battletag + " " + heroID);
+							exports.addHeroData(battletag, heroID,timeToDelay());
 							console.log(requestedHeroData);
 							//error handling, call again
-							exports.addHeroData(battletag, heroID,2000);
 						}					
 						else {
 							if (db == null) {
 								console.log("addHeroData database was null for " + battletag + " " + heroID);
 								//error handling, call again
-								exports.addHeroData(battletag, heroID, 2000);							
+								exports.addHeroData(battletag, heroID, timeToDelay());							
 							}
 							else {
 								//100000 for dh
@@ -129,8 +125,8 @@ exports.getHeroes = function(battletag, req, res) {
 										else {
 											heroCollection.insert({"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats}, function(err, results) {
 												console.log("addHeroData not found, inserting "+ battletag + " " + requestedHeroData.id);
-												console.log("adding items")
-												heroMethods.getItemIDsFromHero(requestedHeroData.items, requestedHeroData.id, timeToDelay());
+												// console.log("adding items")
+												// heroMethods.getItemIDsFromHero(requestedHeroData.items, requestedHeroData.id, timeToDelay());
 
 											});//end insertion.
 										}
@@ -141,6 +137,5 @@ exports.getHeroes = function(battletag, req, res) {
 					}
 				});//end api request for heroID
 			},delay);//end setTimeout
-		}//end no error when connecting to DB
-	});//end mongoclien connect
+
 }

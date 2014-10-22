@@ -32,10 +32,10 @@ svg.selectAll("rect").data(currentArray).enter().append("rect")
 	.attr("x" , function(d,i) {
 		return i * (width/currentArray.length); })
 	.attr("y" , function(d) { 
-		return height-d.Stats.damage/10000;})
+		return height-d.stats.damage/10000;})
 	.attr("width", width / currentArray.length - barPadding)
 	.attr("height", function(d) {
-		return d.Stats.damage/10000
+		return d.stats.damage/10000
 	})
 	.attr("class" , "enter");
 
@@ -46,10 +46,10 @@ svg.selectAll("rect")
 		return i * (width / currentArray.length) + (width / currentArray.length - barPadding) /2;
 	})
 	.attr("y" , function(d) {
-		return (height)-(d.Stats.damage/10000);
+		return (height)-(d.stats.damage/10000);
 	})
 	.text(function (d) {
-		return (d.Stats.damage/1000000).toFixed(2)+"m";
+		return (d.stats.damage/1000000).toFixed(2)+"m";
 	})
 	.attr("font-family", "sans-serif")
    .attr("font-size", "11px")
@@ -67,7 +67,7 @@ svg.selectAll("rect")
 		return i * (width / currentArray.length) + (width / currentArray.length - barPadding) /2;
 	})
 	.attr("y" , function(d) {
-		return (height)-(d.Stats.damage/10000 + 10);
+		return (height)-(d.stats.damage/10000 + 10);
 	})
 	.text(function (d) {
 		return d.Battletag;
@@ -94,10 +94,10 @@ d3.select("#ten").on("click",function() {
 	.attr("x" , function(d,i) {
 		return i * (width/currentArray.length); })
 	.attr("y" , function(d) { 
-		return height-d.Stats.damage/10000;})
+		return height-d.stats.damage/10000;})
 	.attr("width", width / currentArray.length - barPadding)
 	.attr("height", function(d) {
-		return d.Stats.damage/10000;
+		return d.stats.damage/10000;
 	})
 	.attr("class" , "enter")
 	.style("opacity" , 1);
@@ -131,10 +131,10 @@ d3.select("#twenty").on("click",function() {
 	.attr("x" , function(d,i) {
 		return i * (width/currentArray.length); })
 	.attr("y" , function(d) { 
-		return height-d.Stats.damage/10000;})
+		return height-d.stats.damage/10000;})
 	.attr("width", width / currentArray.length - barPadding)
 	.attr("height", function(d) {
-		return d.Stats.damage/10000;
+		return d.stats.damage/10000;
 	})
 	.attr("class" , "enter")
 	.style("opacity" , 1);
@@ -150,10 +150,10 @@ d3.select("#fifty").on("click",function() {
 	.attr("x" , function(d,i) {
 		return i * (width/currentArray.length); })
 	.attr("y" , function(d) { 
-		return height-d.Stats.damage/10000;})
+		return height-d.stats.damage/10000;})
 	.attr("width", width / currentArray.length - barPadding)
 	.attr("height", function(d) {
-		return d.Stats.damage/10000;
+		return d.stats.damage/10000;
 	})
 	.attr("class" , "enter")
 	.style("opacity" , 1);
@@ -168,10 +168,10 @@ d3.select("#hundred").on("click",function() {
 	.attr("x" , function(d,i) {
 		return i * (width/currentArray.length); })
 	.attr("y" , function(d) { 
-		return height-d.Stats.damage/10000;})
+		return height-d.stats.damage/10000;})
 	.attr("width", width / currentArray.length - barPadding)
 	.attr("height", function(d) {
-		return d.Stats.damage/10000;
+		return d.stats.damage/10000;
 	})
 	.attr("class" , "enter")
 	.style("opacity" , 1);

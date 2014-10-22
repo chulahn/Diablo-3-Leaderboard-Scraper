@@ -72,19 +72,20 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 		    			delayCounter =0;
 		    			var heroCollection = db.collection("hero");
 		    			//get the correct hero based on class, and add to array
-		    			heroCollection.find({"Battletag" : currentPlayer.Battletag.replace("#", "-"), "Class" : getClassNameForDatabase(diabloClass) }).toArray(function (error, heroResults) {
+		    			heroCollection.find({"battletag" : currentPlayer.Battletag.replace("#", "-"), "class" : getClassNameForDatabase(diabloClass) }).toArray(function (error, heroResults) {
 		    				//if we found the Hero based on BattleTag and class, add that Hero's Damage to dpsArray, else put 
 		    				if (heroResults.length > 0) {
+		    					console.log('result was found')
 		    					// console.log(heroResults[0].Stats.damage);
 		    					heroToPush=heroResults[0];
 		    					heroResults.forEach(function(hero) {
-		    						if (hero.Stats.damage > heroToPush.Stats.damage) {
+		    						if (hero.stats.damage > heroToPush.stats.damage) {
 		    							//store hero later, for now just store damage
 		    							heroToPush = hero;
 		    						}
 		    					})
 		    					allData[currentPlayer.Standing-1] = heroToPush;
-		    					dpsArray[currentPlayer.Standing-1] = heroToPush.Stats.damage;
+		    					dpsArray[currentPlayer.Standing-1] = heroToPush.stats.damage;
 		    				}
 		    				//else get the heroes from currentPlayer, find the ones that match the current leaderboard class, and add them.
 		    				//currentHero is information from battletag lookup, not hero.
@@ -96,18 +97,15 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 			    						if (getClassNameForDatabase(diabloClass) == currentHero.class && currentHero.dead == false) {
 			    							// console.log(currentHero);
 			    							// console.log("before " + delayCounter);
-			    							playerMethods.addHeroData(currentPlayer.Battletag.replace("#", "-"), currentHero.id, timeToDelay());
+			    							playerMethods.addHeroData(currentPlayer.Battletag.replace("#", "-"), currentHero.id, timeToDelay(),db);
 			    							// console.log("after " + delayCounter);
 			    						}
 			    						else {
-			    							console.log()
 			    							dpsArray[currentPlayer.Standing-1] = 0;
 			    						}
 			    					}
 		    					});
 		    					// heroCollection.insert()
-		    					// playerMethods.addHeroData(currentPlayer.Battletag, currentPlayer.heroID, 200);
-		    					// dpsArray[currentPlayer.Standing-1] = 500000;
 		    				}
 							//if everyone found in hero database that has same class and battletag
 							if (dpsArray.length == leaderboardResults.length) {
