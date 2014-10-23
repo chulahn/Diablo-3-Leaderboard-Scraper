@@ -4,6 +4,17 @@
 	<meta charset="UTF-8">
 	<title><%= ejs_btag %> <%= ejs_heroData.name %>s Page</title>
 	<link rel="stylesheet" type="text/css" href="../../../styles/hero.css">
+	<script src="http://us.battle.net/d3/static/js/tooltips.js"></script>
+	<!-- credit to davem on battle.net forums -->
+	<script>
+		var b = Bnet.D3.Tooltips;
+		b.registerDataOld = b.registerData;
+		b.registerData = function(data) {
+		 var c = document.body.children, s = c[c.length-1].src;
+		 data.params.key=s.substr(0,s.indexOf('?')).substr(s.lastIndexOf('/')+1);
+		 this.registerDataOld(data);
+		}
+</script>
 </head>
 
 
@@ -37,18 +48,22 @@
 		<% if (ejs_heroData.extraItemData != undefined) { %>
 			<% ejs_heroData.extraItemData.elementalDam.forEach(function (element) { %>
 				<% if (element[1] != 0) { %> 
-					<li><%= element[0] %> Skills Damage Increase : <%= element[1] %>%</li>
+					<li>+<%= element[0] %> Skills Damage : <%= element[1] %>%</li>
 				<% } %>
 			<% }) %>
-			<% if (ejs_heroData.extraItemData.eliteDam != undefined) { %>
-				<li>Elite Damage Increase : <%= ejs_heroData.extraItemData.eliteDam %>%</li>
+			<% if (ejs_heroData.extraItemData.eliteDam != undefined && ejs_heroData.extraItemData.eliteDam != 0) { %>
+				<li>+Elite Damage : <%= ejs_heroData.extraItemData.eliteDam %>%</li>
 			<% } %>
-			<li>Elemental DPS : <%= ejs_heroData.extraItemData.elementalDam[0][1] * ejs_heroData.stats.damage %></li>
-			<% if (ejs_heroData.extraItemData.eliteDam != undefined) { %>
+			<% if (ejs_heroData.extraItemData.elementalDam[0][1] != 0)  { %>
+				<li>Elemental DPS : <%= ejs_heroData.extraItemData.elementalDam[0][1] * ejs_heroData.stats.damage %></li>
+			<% } %>
+			<% if (ejs_heroData.extraItemData.eliteDam != undefined && ejs_heroData.extraItemData.eliteDam != 0) { %>
 				<li> Elite DPS : <%= ejs_heroData.extraItemData.eliteDam * ejs_heroData.stats.damage %></li>
 				<li> Elite Elemental DPS : <%= ejs_heroData.extraItemData.elementalDam[0][1] * ejs_heroData.extraItemData.eliteDam * ejs_heroData.stats.damage %></li>
 			<% } %>
-			<li>CDR from Items : <%= ejs_heroData.extraItemData.cooldown %>%</li>
+			<% if (ejs_heroData.extraItemData.cooldown != 0) { %>
+				<li>CDR from Items : <%= ejs_heroData.extraItemData.cooldown %>%</li>
+			<% } %>
 		<% }%>
 		<li>Toughness : <%= ejs_heroData.stats.toughness %></li>
 			<ul>
@@ -96,47 +111,47 @@
 		<li> Items : 
 			<ul>
 				<% if (ejs_heroData.items.head != undefined) { %>
-				<li title="Insert data from tooltip params">Head : <%= ejs_heroData.items.head.name %></li>
+				<li>Head : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.head.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.head.name %></a></li>
 <!--				<ul>
 					<li>  -->
 				<% } %>
 				<% if (ejs_heroData.items.torso != undefined) { %>
-				<li title="Insert data from tooltip params">Torso : <%= ejs_heroData.items.torso.name %></li>
+				<li title="Insert data from tooltip params">Torso : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.torso.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.torso.name %></a></li>
 				<% } %>
 
 				<% if (ejs_heroData.items.neck != undefined) { %>
-				<li title="Insert data from tooltip params">Amulet : <%= ejs_heroData.items.neck.name %></li>
+				<li title="Insert data from tooltip params">Amulet : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.neck.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.neck.name %></a></li>
 				<% } %>		
 				<% if (ejs_heroData.items.shoulders != undefined) { %>
-				<li title="Insert data from tooltip params">Shoulders : <%= ejs_heroData.items.shoulders.name %></li>
+				<li title="Insert data from tooltip params">Shoulders : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.shoulders.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.shoulders.name %></a></li>
 				<% } %>
 				<% if (ejs_heroData.items.hands != undefined) { %>
-				<li title="Insert data from tooltip params">Hands : <%= ejs_heroData.items.hands.name %></li>
+				<li title="Insert data from tooltip params">Hands : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.hands.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.hands.name %></a></li>
 				<% } %>
 
 				<% if (ejs_heroData.items.bracers != undefined) { %>
-				<li title="Insert data from tooltip params">Bracers : <%= ejs_heroData.items.bracers.name %></li>
+				<li title="Insert data from tooltip params">Bracers : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.bracers.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.bracers.name %></a></li>
 				<% } %>		
 				<% if (ejs_heroData.items.waist != undefined) { %>
-				<li title="Insert data from tooltip params">Belt : <%= ejs_heroData.items.waist.name %></li>
+				<li title="Insert data from tooltip params">Belt : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.waist.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.waist.name %></a></li>
 				<% } %>						
 				<% if (ejs_heroData.items.rightFinger != undefined) { %>
-				<li title="Insert data from tooltip params">Right Finger : <%= ejs_heroData.items.rightFinger.name %></li>
+				<li title="Insert data from tooltip params">Right Finger : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.rightFinger.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.rightFinger.name %></a></li>
 				<% } %>
 				<% if (ejs_heroData.items.leftFinger != undefined) { %>
-				<li title="Insert data from tooltip params">Left Finger : <%= ejs_heroData.items.leftFinger.name %></li>
+				<li title="Insert data from tooltip params">Left Finger : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.leftFinger.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.leftFinger.name %></a></li>
 				<% } %>			
 				<% if (ejs_heroData.items.legs != undefined) { %>
-				<li title="Insert data from tooltip params">Legs : <%= ejs_heroData.items.legs.name %></li>
+				<li title="Insert data from tooltip params">Legs : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.legs.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.legs.name %></a></li>
 				<% } %>
 				<% if (ejs_heroData.items.feet != undefined) { %>
-				<li title="Insert data from tooltip params">Feet : <%= ejs_heroData.items.feet.name %></li>
+				<li title="Insert data from tooltip params">Feet : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.feet.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.feet.name %></a></li>
 				<% } %>				
 				<% if (ejs_heroData.items.mainHand != undefined) { %>
-				<li title="Insert data from tooltip params">Main Hand : <%= ejs_heroData.items.mainHand.name %></li>
+				<li title="Insert data from tooltip params">Main Hand : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.mainHand.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.mainHand.name %></a></li>
 				<% } %>		
 				<% if (ejs_heroData.items.offHand != undefined) { %>
-				<li title="Insert data from tooltip params">Off Hand : <%= ejs_heroData.items.offHand.name %></li>
+				<li title="Insert data from tooltip params">Off Hand : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.offHand.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.offHand.name %></a></li>
 				<% } %>		
 			</ul>
 		</li>
