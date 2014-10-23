@@ -62,7 +62,7 @@ exports.getHeroes = function(battletag, req, res) {
 		else {
 			for (i=0; i<playersHeroes.length; i++) {
 				// if (i < 8) {
-					exports.addHeroData(battletag, playersHeroes[i].id, 0,timeToDelay);
+					// exports.addHeroData(battletag, playersHeroes[i].id, 0,timeToDelay());
 				// }
 				// else {
 					// exports.addHeroData(battletag, playersHeroes[i].id, Math.floor(i/9)*1000,db);

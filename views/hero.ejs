@@ -13,6 +13,8 @@
 <!-- Shows information for a Hero -->
 <div id="profile">
 	<ul><h2><%= ejs_heroData.name %></h2>
+		<li>Hardcore : <%= ejs_heroData.hardcore %></li>
+		<li>Seasonal : <%= ejs_heroData.seasonal %></li>
 		<li>Class : <%= ejs_heroData.class %></li>
 		<li>Level : <%= ejs_heroData.level %></li>
 		<li>Damage : <%= ejs_heroData.stats.damage %></li>
@@ -29,6 +31,11 @@
 				<li>Crit Chance : <%= (ejs_heroData.stats.critChance*100).toFixed(2)+"%" %></li>
 				<li>Crit Damage : <%= (ejs_heroData.stats.critDamage*100).toFixed(2)+"%" %></li>
 			</ul>
+		<% if (ejs_heroData.extraItemData != undefined) { %>
+			<li>Elemental DPS : <%= ejs_heroData.extraItemData.elementalDam[1] * ejs_heroData.stats.damage %></li>
+			<li><%= ejs_heroData.extraItemData.elementalDam[0] %> Skills Damage Increase : <%= ejs_heroData.extraItemData.elementalDam[1] %>%</li>
+			<li>CDR from Items : <%= ejs_heroData.extraItemData.cooldown %>%</li>
+		<% }%>
 		<li>Toughness : <%= ejs_heroData.stats.toughness %></li>
 			<ul>
 				<li>Vitality : <%= ejs_heroData.stats.vitality %></li>

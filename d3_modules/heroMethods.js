@@ -53,10 +53,27 @@ exports.getHeroDetails = function(heroID, req, res) {
 				if (matchedHero.length > 0) {
 
 					var heroData = matchedHero[0];
-					var heroItems = heroData.Items;
+					var heroItems = heroData.items;
+					// if (heroData.level == 70) {
+					// 		exports.getItemIDsFromHero(heroItems,heroID,10);
+					// }
 					res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems})
 					date = new Date();
 					console.log(heroID + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+				}
+				//not in database.  must request data from Blizzard site.
+				else {
+						request(heroRequestURL, function (error, response, data) {
+							//string to json
+							var heroData = JSON.parse(data);
+							var heroItems = heroData.items;
+							if (heroData.level == 70) {
+								exports.getItemIDsFromHero(heroItems,heroID,10);
+							}
+							res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems})
+							date = new Date();
+							console.log(heroID + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+						});
 				}
 			});
 		}

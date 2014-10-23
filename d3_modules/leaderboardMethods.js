@@ -15,9 +15,34 @@ var collectionCategory = "normal";
 
 var delayCounter = 0;
 
+var searchParamHC;
+var searchParamSeason;
+
+
 function timeToDelay() {
 	delayCounter++;
 	return (1500* (Math.floor(delayCounter/10)));
+}
+
+function setSearchParams(leaderboardType) {
+	switch (leaderboardType) {
+		case "normal" :
+			searchParamHC = false;
+			searchParamSeason = false;
+			return;
+		case "hc" :
+			searchParamHC = true;
+			searchParamSeason = false;
+			return;
+		case "season" :
+			searchParamHC = false;
+			searchParamSeason = true;
+			return;
+		case "seasonhc" :
+			searchParamHC = true;
+			searchParamSeason = true;
+			return;
+	}	
 }
 
 
@@ -64,20 +89,25 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 
 		    		date = new Date();
 					console.log(diabloClass + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
-
-		    		var dpsArray = [];
+					console.log(leaderboardType);
 		    		var allData = [];
+
+		    		setSearchParams(leaderboardType);
+		    		console.log(searchParamHC,searchParamSeason);
 		    		//for each battletag from the leaderboard
 		    		leaderboardResults.forEach(function(currentPlayer) {
 		    			delayCounter =0;
 		    			var heroCollection = db.collection("hero");
-		    			//get the correct hero based on class, and add to array
-		    			heroCollection.find({"battletag" : currentPlayer.Battletag.replace("#", "-"), "class" : getClassNameForDatabase(diabloClass) }).toArray(function (error, heroResults) {
-		    				//if we found the Hero based on BattleTag and class, add that Hero's Damage to dpsArray, else put 
+
+		    			//get the correct hero based on class, and add to array.  need to check if season, or hardcore
+		    			heroCollection.find({"battletag" : currentPlayer.Battletag.replace("#", "-"), "class" : getClassNameForDatabase(diabloClass), "seasonal" : searchParamSeason, "hardcore" : searchParamHC }).toArray(function (error, heroResults) {
+
+		    				//if we found the Hero based on BattleTag and class, find the hero with the highest dps. 
 		    				if (heroResults.length > 0) {
-		    					console.log('result was found')
-		    					// console.log(heroResults[0].Stats.damage);
+		    					console.log('result was found ',heroResults[0].hardcore);
+		    					
 		    					heroToPush=heroResults[0];
+
 		    					heroResults.forEach(function(hero) {
 		    						if (hero.stats.damage > heroToPush.stats.damage) {
 		    							//store hero later, for now just store damage
@@ -85,43 +115,44 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 		    						}
 		    					})
 		    					allData[currentPlayer.Standing-1] = heroToPush;
-		    					dpsArray[currentPlayer.Standing-1] = heroToPush.stats.damage;
 		    				}
-		    				//else get the heroes from currentPlayer, find the ones that match the current leaderboard class, and add them.
-		    				//currentHero is information from battletag lookup, not hero.
+
+		    				//hero was not in the heroCollection.  currentPlayer(battletag API request information) in classCollection, get heroes and find the ones that match class and add.
 		    				else {
 		    					var currentPlayerHeroes = currentPlayer.Heroes;
-		    					// console.log (currentPlayerHeroes);
 		    					currentPlayerHeroes.forEach(function(currentHero) {
+		    						//the currentHero must be level 70, match the class and not be dead to be added to the array.
 		    						if (currentHero.level == 70) {
-			    						if (getClassNameForDatabase(diabloClass) == currentHero.class && currentHero.dead == false) {
+			    						if (getClassNameForDatabase(diabloClass) == currentHero.class && currentHero.dead == false && currentHero.hardcore == searchParamHC && currentHero.seasonal == searchParamSeason) {
 			    							// console.log(currentHero);
-			    							// console.log("before " + delayCounter);
+			    							console.log("before " + delayCounter);
 			    							playerMethods.addHeroData(currentPlayer.Battletag.replace("#", "-"), currentHero.id, timeToDelay(),db);
-			    							// console.log("after " + delayCounter);
+			    							console.log("after " + delayCounter);
 			    						}
+			    						//error handling for hc players.  id is in battleTag jsonData, but was dead
 			    						else {
-			    							dpsArray[currentPlayer.Standing-1] = 0;
+			    							// console.log(currentPlayer.Battletag , currentHero);
+			    							allData[currentPlayer.Standing-1] = 0;
 			    						}
 			    					}
 		    					});
 		    					// heroCollection.insert()
 		    				}
 							//if everyone found in hero database that has same class and battletag
-							if (dpsArray.length == leaderboardResults.length) {
+							if (allData.length == leaderboardResults.length) {
 								var count = 0;
 								for (i = 0 ; i < leaderboardResults.length ; i++) {
-									if (dpsArray[i] != undefined) {
+									if (allData[i] != undefined) {
 										count++;
 									}
 								}
 								if (count ==  leaderboardResults.length) {
-									// console.log(dpsArray);
-									//page renders when dpsArray has not been completely filled
+									// console.log(allData);
+									//page renders when allData has not been completely filled
 						    		date = new Date();
 									console.log(diabloClass + " Page rendered "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 
-			    					res.render('ClassLeaderboard.ejs', {title : diabloClass , leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , dpsData : dpsArray, all:allData });
+			    					res.render('ClassLeaderboard.ejs', {title : diabloClass , leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , all:allData });
 								}
 							}
 		    			})//end toArray callback from finding hero.

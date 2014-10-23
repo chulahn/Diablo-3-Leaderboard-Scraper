@@ -17,7 +17,6 @@
 <script>
 var height = 300, width = 500;
 var barPadding = 1;
-var dpsArray = <%= JSON.stringify(dpsData) %>;
 var svg= d3.select("body")
 	.append("svg")
 	.attr("height", 300)
@@ -32,7 +31,7 @@ svg.selectAll("rect").data(currentArray).enter().append("rect")
 	.attr("x" , function(d,i) {
 		return i * (width/currentArray.length); })
 	.attr("y" , function(d) { 
-		if (d == null) {
+		if (d == null || d == 0) {
 			return 0;
 		}
 		else {
@@ -41,7 +40,7 @@ svg.selectAll("rect").data(currentArray).enter().append("rect")
 	})
 	.attr("width", width / currentArray.length - barPadding)
 	.attr("height", function(d) {
-		if (d == null) {
+		if (d == null || d == 0) {
 			return 0;
 		}
 		else {
@@ -57,7 +56,7 @@ svg.selectAll("rect")
 		return i * (width / currentArray.length) + (width / currentArray.length - barPadding) /2;
 	})
 	.attr("y" , function(d) {
-		if (d == null) {
+		if (d == null || d == 0) {
 			return 0;
 		}
 		else {
@@ -65,7 +64,7 @@ svg.selectAll("rect")
 		}
 	})
 	.text(function (d) {
-		if (d == null) {
+		if (d == null || d == 0) {
 			return 0;
 		}
 		else {
@@ -88,7 +87,7 @@ svg.selectAll("rect")
 		return i * (width / currentArray.length) + (width / currentArray.length - barPadding) /2;
 	})
 	.attr("y" , function(d) {
-		if (d == null) {
+		if (d == null || d == 0) {
 			return (0+10);
 		}
 		else {
@@ -96,7 +95,7 @@ svg.selectAll("rect")
 		}
 	})
 	.text(function (d) {
-		if (d == null) {
+		if (d == null || d == 0) {
 			return('NO BATTLETAG');
 		}
 		else {
@@ -125,7 +124,7 @@ d3.select("#ten").on("click",function() {
 	.attr("x" , function(d,i) {
 		return i * (width/currentArray.length); })
 	.attr("y" , function(d) { 
-		if (d == null) {
+		if (d == null || d == 0) {
 			return 0;
 		}
 		else {
@@ -134,7 +133,7 @@ d3.select("#ten").on("click",function() {
 	})
 	.attr("width", width / currentArray.length - barPadding)
 	.attr("height", function(d) {
-		if (d == null) {
+		if (d == null || d == 0) {
 			return 0;
 		}
 		else {
@@ -173,7 +172,7 @@ d3.select("#twenty").on("click",function() {
 	.attr("x" , function(d,i) {
 		return i * (width/currentArray.length); })
 	.attr("y" , function(d) { 
-		if (d == null) {
+		if (d == null || d == 0) {
 			return 0;
 		}
 		else {
@@ -182,7 +181,7 @@ d3.select("#twenty").on("click",function() {
 	})
 	.attr("width", width / currentArray.length - barPadding)
 	.attr("height", function(d) {
-		if (d == null) {
+		if (d == null || d == 0) {
 			return 0;
 		}
 		else {
@@ -203,7 +202,7 @@ d3.select("#fifty").on("click",function() {
 	.attr("x" , function(d,i) {
 		return i * (width/currentArray.length); })
 	.attr("y" , function(d) { 
-		if (d == null) {
+		if (d == null || d == 0) {
 			return 0;
 		}
 		else {
@@ -212,7 +211,7 @@ d3.select("#fifty").on("click",function() {
 	})
 	.attr("width", width / currentArray.length - barPadding)
 	.attr("height", function(d) {
-		if (d == null) {
+		if (d == null || d == 0) {
 			return 0;
 		}
 		else {
@@ -232,7 +231,7 @@ d3.select("#hundred").on("click",function() {
 	.attr("x" , function(d,i) {
 		return i * (width/currentArray.length); })
 	.attr("y" , function(d) { 
-		if (d == null) {
+		if (d == null || d == 0) {
 			return 0;
 		}
 		else {
@@ -241,7 +240,7 @@ d3.select("#hundred").on("click",function() {
 	})
 	.attr("width", width / currentArray.length - barPadding)
 	.attr("height", function(d) {
-		if (d == null) {
+		if (d == null || d == 0) {
 			return 0;
 		}
 		else {
