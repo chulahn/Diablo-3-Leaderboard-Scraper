@@ -54,9 +54,9 @@ exports.getHeroDetails = function(heroID, req, res) {
 
 					var heroData = matchedHero[0];
 					var heroItems = heroData.items;
-					// if (heroData.level == 70) {
-					// 		exports.getItemIDsFromHero(heroItems,heroID,10);
-					// }
+					if (heroData.level == 70) {
+							exports.getItemIDsFromHero(heroItems,heroID,10);
+					}
 					res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems})
 					date = new Date();
 					console.log(heroID + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());

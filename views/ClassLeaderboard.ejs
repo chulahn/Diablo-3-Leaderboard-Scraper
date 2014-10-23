@@ -15,15 +15,13 @@
 <p id='hundred'> 100 values </p>
 
 <script>
-var height = 300, width = 500;
+var height = 300, width = 800;
 var barPadding = 1;
 var svg= d3.select("body")
 	.append("svg")
-	.attr("height", 300)
-	.attr("width" , 500);
+	.attr("height", height)
+	.attr("width" , width);
 var allData = <%-JSON.stringify(all)%>;
-
-console.log
 
 var currentArray = allData;
 

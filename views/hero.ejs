@@ -10,6 +10,9 @@
 <body>
 <h1><%= ejs_btag %> <%= ejs_heroData.name %>  </h1>
 
+<p><a href = "http://us.battle.net/d3/en/profile/<%= ejs_heroData.battletag %>/hero/<%= ejs_heroData.heroID %>" > Battle.net Profile </a>
+
+
 <!-- Shows information for a Hero -->
 <div id="profile">
 	<ul><h2><%= ejs_heroData.name %></h2>
@@ -32,8 +35,19 @@
 				<li>Crit Damage : <%= (ejs_heroData.stats.critDamage*100).toFixed(2)+"%" %></li>
 			</ul>
 		<% if (ejs_heroData.extraItemData != undefined) { %>
-			<li>Elemental DPS : <%= ejs_heroData.extraItemData.elementalDam[1] * ejs_heroData.stats.damage %></li>
-			<li><%= ejs_heroData.extraItemData.elementalDam[0] %> Skills Damage Increase : <%= ejs_heroData.extraItemData.elementalDam[1] %>%</li>
+			<% ejs_heroData.extraItemData.elementalDam.forEach(function (element) { %>
+				<% if (element[1] != 0) { %> 
+					<li><%= element[0] %> Skills Damage Increase : <%= element[1] %>%</li>
+				<% } %>
+			<% }) %>
+			<% if (ejs_heroData.extraItemData.eliteDam != undefined) { %>
+				<li>Elite Damage Increase : <%= ejs_heroData.extraItemData.eliteDam %>%</li>
+			<% } %>
+			<li>Elemental DPS : <%= ejs_heroData.extraItemData.elementalDam[0][1] * ejs_heroData.stats.damage %></li>
+			<% if (ejs_heroData.extraItemData.eliteDam != undefined) { %>
+				<li> Elite DPS : <%= ejs_heroData.extraItemData.eliteDam * ejs_heroData.stats.damage %></li>
+				<li> Elite Elemental DPS : <%= ejs_heroData.extraItemData.elementalDam[0][1] * ejs_heroData.extraItemData.eliteDam * ejs_heroData.stats.damage %></li>
+			<% } %>
 			<li>CDR from Items : <%= ejs_heroData.extraItemData.cooldown %>%</li>
 		<% }%>
 		<li>Toughness : <%= ejs_heroData.stats.toughness %></li>

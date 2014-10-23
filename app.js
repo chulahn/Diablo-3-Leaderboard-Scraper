@@ -21,26 +21,20 @@ function getImportantStats(heroID) {
 			var itemCollection = db.collection("item");
 			var heroCollection = db.collection("hero");
 			var eliteDam = 0;
-			var fireDam = 0;
-			var lightningDam = 0;
-			var coldDam = 0;
-			var arcaneDam = 0;
-			var poisonDam = 0;
-			var physDam = 0;
 			var cooldown = 0;
 			var diamondCooldown = 0;
 			//fire,light,cold,arcane,poison,phys
-			var elementalDam = [0,0,0,0,0,0];
+			var elementalDam = [
+			["Fire", 0], ["Lightning", 0], ["Cold", 0], ["Arcane", 0], ["Poison", 0], ["Physical", 0]
+			];
 			var meleeDamRed = 0;
 			var rangeDamRed = 0;
 			var eliteDamRed = 0;
 			console.log("getImportantStats " + heroID);
 			itemCollection.find({"Hero" : heroID, "Equipped" : true}).toArray(function(error, heroItems) {
-				// console.log(results);
-				//for each item
 
 				heroItems.forEach(function(currentItem) {
-
+					//get CDR from hat
 					if (currentItem.Type == "Head") {
 						//if it has a diamond
 						if ((currentItem.Gems[0].item.name).indexOf("Diamond") != -1) {
@@ -56,83 +50,70 @@ function getImportantStats(heroID) {
 							});
 						}
 					}
-
+					//get eliteDam from Furnace
+					if (currentItem.Name == "The Furnace") {
+						furnaceElite = currentItem.Affixes.passive[0].text;
+						furnaceElite = parseFloat(furnaceElite.substring(furnaceElite.indexOf("by ")+3, furnaceElite.length-2));
+						console.log(furnaceElite);
+						eliteDam += furnaceElite;
+					}
+					//get CDR and elementalDam
 					for (j=0; j<currentItem.Affixes.primary.length; j++) {
 						//get cooldown reduction from every item
 						if (currentItem.Affixes.primary[j].text.indexOf("cooldown") != -1) {
-							// console.log("has cooldown")
 							cooldownString = currentItem.Affixes.primary[j].text;
 							// console.log(currentItem.Name + " " + cooldownString.substring(cooldownString.lastIndexOf(" ")+1,cooldownString.length-2 )+"%");
 							cooldown += parseFloat(cooldownString.substring(cooldownString.lastIndexOf(" ")+1,cooldownString.length-2 ));
 						}
 						//get element damage from every item
 						if (currentItem.Affixes.primary[j].text.indexOf("skills deal") != -1) {
-							// console.log(currentItem.Affixes.primary[j].text);
+
 							skillsString = currentItem.Affixes.primary[j].text;
 							number = parseInt(skillsString.substring(skillsString.indexOf("deal ")+5, skillsString.indexOf("%")));
 							element = skillsString.substring(0, skillsString.indexOf(" skills"));
 
 							switch (element) {
 								case "Fire" :
-									elementalDam[0] += number;
-									fireDam += number;
+									elementalDam[0][1] += number;
 									break;
 								case "Cold" :
-									elementalDam[1] += number;
-									coldDam += number;
+									elementalDam[1][1] += number;
 									break;
 								case "Lightning" :
-									elementalDam[2] += number;
-									lightningDam += number;
+									elementalDam[2][1] += number;
 									break;
 								case "Poison" :
-									elementalDam[3] += number;
-									poisonDam += number;
+									elementalDam[3][1] += number;
 									break;
 								case "Arcane" :
-									elementalDam[4] += number;
-									arcaneDam += number;
+									elementalDam[4][1] += number;
 									break;
 								case "Physical" :
-									elementalDam[5] += number;
-									poisonDam += number;
+									elementalDam[5][1] += number;
 									break;
 							}
-							// console.log(element+number);
 						}
+						//get elite damage
+						if (currentItem.Affixes.primary[j].text.indexOf("Increases damage against elites by") != -1) {
+							eliteString = currentItem.Affixes.primary[j].text;
+							eliteString = parseFloat(eliteString.substring(eliteString.indexOf("Increases damage against elites by")+35, eliteString.length-1));
+							eliteDam += eliteString;
+						}
+
 					}//end for affixes
 				});//end for each
 
-				//find the highestelement
-				var highestElement = 0;
-				for (i=0; i<elementalDam.length;i++) {
-					if (elementalDam[i] > highestElement) {
-						highestElement = elementalDam[i];
-					}
-				}
-				switch (elementalDam.indexOf(highestElement)) {
-					case 0 :
-						elementalDam = ["Fire" , elementalDam[0]];
-						break;
-					case 1 :
-						elementalDam = ["Cold" , elementalDam[1]];
-						break;
-					case 2 :
-						elementalDam = ["Lightning" , elementalDam[2]];
-						break;
-					case 3 :
-						elementalDam = ["Poison" , elementalDam[3]];
-						break;
-					case 4 :
-						elementalDam = ["Arcane" , elementalDam[4]];
-						break;
-					case 5 :
-						elementalDam = ["Physical" , elementalDam[5]];
-						break;
-				}
-				console.log(elementalDam);
+				//sorts elemental damages from highest to lowest
+				elementalDam.sort(function(a,b) {
+					return b[1]-a[1];
+				});
+
+				// console.log(JSON.stringify(elementalDam));
+
+				// console.log(elementalDam);
 				totalCooldown = cooldown + diamondCooldown;
 				console.log("total cooldown " + cooldown + " cooldown from hat " + diamondCooldown + " = " + totalCooldown);
+				console.log("elite Damage " + eliteDam);
 				heroCollection.find({"heroID" : heroID}, function(err, results) {
 				})
 				heroCollection.update(
@@ -141,7 +122,8 @@ function getImportantStats(heroID) {
 						{
 							"extraItemData": {
 								"cooldown" : totalCooldown,
-								"elementalDam" : elementalDam,
+								"elementalDam" : JSON.parse(JSON.stringify(elementalDam)),
+								"eliteDam" : eliteDam
 							}
 						}//end of extraItemData
 					}//end of set 
@@ -151,7 +133,6 @@ function getImportantStats(heroID) {
 					}
 					console.log("added extraItemData");
 				});
-
 			});//end  finditem for hero
 		}//end else
 	});	//end connection
