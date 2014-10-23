@@ -253,15 +253,18 @@ d3.select("#hundred").on("click",function() {
 
 </script>
 
-//List of all the BattleTags for the corresponding Leaderboard
-<ol>
+<!-- List of all the BattleTags for the corresponding Leaderboard -->
+<table>
 <% ejs_battletags.forEach(function (tag) { %>
-
-	<li><a href = "/player/<%= tag.Battletag.replace("#","-") %>" >  <%= tag.Battletag %></a></li>
-<!-- //if using requestURL.
-// 	<li><a href = "/player/<%= tag %>" >  <%= tag %></a></li>
--->
+	
+	<tr>
+	<td><%= tag.Standing %></td>
+	<td><a href = "/player/<%= tag.Battletag.replace("#","-") %>" >  <%= tag.Battletag %></a></td>
+	<td><%= tag["Greater Rift"] %></td>
+	<td><%= tag["Time Spent"] %></td>
+	<td><%= tag["Date Completed"] %></td>
+	</tr>
 
 <% }) %>
-</ol>
+</table>
 </body>

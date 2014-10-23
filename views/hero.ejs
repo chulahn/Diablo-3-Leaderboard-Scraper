@@ -22,6 +22,9 @@
 <h1><%= ejs_btag %> <%= ejs_heroData.name %>  </h1>
 
 <p><a href = "http://us.battle.net/d3/en/profile/<%= ejs_heroData.battletag %>/hero/<%= ejs_heroData.heroID %>" > Battle.net Profile </a>
+<% if (ejs_heroData.extraItemData == undefined) { %>
+	<p>Referesh to show more data</p>
+<% } %>
 
 
 <!-- Shows information for a Hero -->
