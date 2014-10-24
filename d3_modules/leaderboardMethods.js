@@ -107,7 +107,7 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 
 		    				//if we found the Hero based on BattleTag and class, find the hero with the highest dps. 
 		    				if (heroResults.length > 0) {
-		    					console.log('result was found ',heroResults[0].hardcore,leaderboardResults.length ,allData.length);
+		    					// console.log('result was found ',heroResults[0].hardcore,leaderboardResults.length ,allData.length);
 		    					heroToPush=heroResults[0];
 		    					heroResults.forEach(function(hero) {
 		    						if (hero.stats.damage > heroToPush.stats.damage) {
@@ -149,13 +149,14 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 										count++;
 									}
 									else {
-										console.log(allData[i] + " " + i);
+										// console.log(allData[i] + " " + i);
 									}
 								}
 								console.log("alldata length " + allData.length + " count " + count);
 								if (count ==  leaderboardResults.length) {
 						    		date = new Date();
 									console.log(diabloClass + " Page rendered "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+									//Takes about half a minute to render.
 			    					res.render('ClassLeaderboard.ejs', {title : diabloClass , leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , all:allData });
 								}//end rendering page
 							}

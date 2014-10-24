@@ -83,7 +83,7 @@ var exports = module.exports = {
 
 	//currentItem is Requested from API.  equippedItem is item currently in Collection.
 	doesRequestedHaveMoreGems : function (requestedItem, equippedItem) {
-		if (requestedItem.gems.length > equippedItem.Gems.length) {
+		if (requestedItem.gems.length > equippedItem.gems.length) {
 			// console.log("has more gems");
 			return true;
 		}
@@ -114,7 +114,7 @@ var exports = module.exports = {
 	},
 
 	hasNewEnchant : function (requestedItem, equippedItem) {
-		if (JSON.stringify(requestedItem.attributes) != JSON.stringify(equippedItem.Affixes)) {
+		if (JSON.stringify(requestedItem.attributes) != JSON.stringify(equippedItem.affixes)) {
 			// console.log("----------has new enchant");
 			return true;
 		}
