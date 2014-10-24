@@ -107,7 +107,7 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 
 		    				//if we found the Hero based on BattleTag and class, find the hero with the highest dps. 
 		    				if (heroResults.length > 0) {
-		    					console.log('result was found ',heroResults[0].hardcore);
+		    					console.log('result was found ',heroResults[0].hardcore,leaderboardResults.length ,allData.length);
 		    					heroToPush=heroResults[0];
 		    					heroResults.forEach(function(hero) {
 		    						if (hero.stats.damage > heroToPush.stats.damage) {
@@ -118,8 +118,13 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 		    				}
 
 		    				//hero was not in the heroCollection.  get heroes from currentPlayer (in leaderboardCollection), and find the ones that match searchParams.
+		    				//if no heroes, or hero is dead, set to 0
 		    				else {
 		    					var currentPlayerHeroes = currentPlayer.Heroes;
+		    					//player deleted heroes
+		    					if (currentPlayerHeroes.length == 0) {
+	    							allData[currentPlayer.Standing-1] = 0;
+		    					}
 		    					currentPlayerHeroes.forEach(function(currentHero) {
 		    						if (currentHero.level == 70) {
 			    						if (getClassNameForDatabase(diabloClass) == currentHero.class && currentHero.dead == false && currentHero.hardcore == searchParamHC && currentHero.seasonal == searchParamSeason) {
@@ -143,7 +148,11 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 									if (allData[i] != undefined) {
 										count++;
 									}
+									else {
+										console.log(allData[i] + " " + i);
+									}
 								}
+								console.log("alldata length " + allData.length + " count " + count);
 								if (count ==  leaderboardResults.length) {
 						    		date = new Date();
 									console.log(diabloClass + " Page rendered "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());

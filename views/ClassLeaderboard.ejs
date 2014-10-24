@@ -23,7 +23,7 @@ var svg= d3.select("body")
 	.attr("width" , width);
 var allData = <%-JSON.stringify(all)%>;
 
-var currentArray = allData;
+var currentArray = allData.slice(0,100);
 
 svg.selectAll("rect").data(currentArray).enter().append("rect")
 	.attr("x" , function(d,i) {
