@@ -55,19 +55,21 @@ exports.getHeroDetails = function(heroID, req, res) {
 					if (heroData.level == 70) {
 						exports.getItemIDsFromHero(heroItems,heroID,10);
 					}
-					res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems})
+					res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
 					date = new Date();
 					console.log(heroID + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 				}
 				//not in database.  must request data from Blizzard site.
 				else {
 					request(heroRequestURL, function (error, response, data) {
+						console.log(data);
+						console.log(heroRequestURL);
 						var heroData = JSON.parse(data);
 						var heroItems = heroData.items;
 						if (heroData.level == 70) {
 							exports.getItemIDsFromHero(heroItems,heroID,10);
 						}
-						res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems})
+						res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
 						date = new Date();
 						console.log(heroID + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 					});

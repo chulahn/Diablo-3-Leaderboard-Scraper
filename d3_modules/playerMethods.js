@@ -46,7 +46,7 @@ exports.getHeroes = function(battletag, req, res) {
 		var heroCollection = db.collection("hero");
 	});
 
-	var requestURL = "https://" + region + apiURL + "/profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey;
+	var requestURL = "https://" + region + apiURL + "profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey;
 	date = new Date();
 	console.log(battletag + " Page before request"+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 	request(requestURL, function (error, response, playerInformation) {

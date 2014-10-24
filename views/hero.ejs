@@ -17,13 +17,14 @@
 </script>
 </head>
 
-
 <body>
 <h1><%= ejs_btag %> <%= ejs_heroData.name %>  </h1>
 
 <p><a href = "http://us.battle.net/d3/en/profile/<%= ejs_heroData.battletag %>/hero/<%= ejs_heroData.heroID %>" > Battle.net Profile </a>
+/update/player/:battletag/hero/:heroID
+<p><a href = "/update/player/<%= ejs_btag %>/hero/<%= ejs_heroID %>">Update </a>
 <% if (ejs_heroData.extraItemData == undefined) { %>
-	<p>Referesh to show more data</p>
+	<p>Refresh to show more data</p>
 <% } %>
 
 
@@ -114,47 +115,47 @@
 		<li> Items : 
 			<ul>
 				<% if (ejs_heroData.items.head != undefined) { %>
-				<li>Head : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.head.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.head.name %></a></li>
+				<li>Head : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.head.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.head.displayColor %>"><%= ejs_heroData.items.head.name %></a></li>
 <!--				<ul>
 					<li>  -->
 				<% } %>
 				<% if (ejs_heroData.items.torso != undefined) { %>
-				<li title="Insert data from tooltip params">Torso : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.torso.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.torso.name %></a></li>
+				<li title="Insert data from tooltip params">Torso : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.torso.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.torso.displayColor %>"><%= ejs_heroData.items.torso.name %></a></li>
 				<% } %>
 
 				<% if (ejs_heroData.items.neck != undefined) { %>
-				<li title="Insert data from tooltip params">Amulet : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.neck.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.neck.name %></a></li>
+				<li title="Insert data from tooltip params">Amulet : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.neck.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.neck.displayColor %>"><%= ejs_heroData.items.neck.name %></a></li>
 				<% } %>		
 				<% if (ejs_heroData.items.shoulders != undefined) { %>
-				<li title="Insert data from tooltip params">Shoulders : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.shoulders.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.shoulders.name %></a></li>
+				<li title="Insert data from tooltip params">Shoulders : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.shoulders.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.shoulders.displayColor %>"><%= ejs_heroData.items.shoulders.name %></a></li>
 				<% } %>
 				<% if (ejs_heroData.items.hands != undefined) { %>
-				<li title="Insert data from tooltip params">Hands : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.hands.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.hands.name %></a></li>
+				<li title="Insert data from tooltip params">Hands : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.hands.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.hands.displayColor %>"><%= ejs_heroData.items.hands.name %></a></li>
 				<% } %>
 
 				<% if (ejs_heroData.items.bracers != undefined) { %>
-				<li title="Insert data from tooltip params">Bracers : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.bracers.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.bracers.name %></a></li>
+				<li title="Insert data from tooltip params">Bracers : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.bracers.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.bracers.displayColor %>"><%= ejs_heroData.items.bracers.name %></a></li>
 				<% } %>		
 				<% if (ejs_heroData.items.waist != undefined) { %>
-				<li title="Insert data from tooltip params">Belt : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.waist.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.waist.name %></a></li>
+				<li title="Insert data from tooltip params">Belt : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.waist.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.waist.displayColor %>"><%= ejs_heroData.items.waist.name %></a></li>
 				<% } %>						
 				<% if (ejs_heroData.items.rightFinger != undefined) { %>
-				<li title="Insert data from tooltip params">Right Finger : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.rightFinger.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.rightFinger.name %></a></li>
+				<li title="Insert data from tooltip params">Right Finger : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.rightFinger.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.rightFinger.displayColor %>"><%= ejs_heroData.items.rightFinger.name %></a></li>
 				<% } %>
 				<% if (ejs_heroData.items.leftFinger != undefined) { %>
-				<li title="Insert data from tooltip params">Left Finger : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.leftFinger.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.leftFinger.name %></a></li>
+				<li title="Insert data from tooltip params">Left Finger : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.leftFinger.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.leftFinger.displayColor %>"><%= ejs_heroData.items.leftFinger.name %></a></li>
 				<% } %>			
 				<% if (ejs_heroData.items.legs != undefined) { %>
-				<li title="Insert data from tooltip params">Legs : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.legs.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.legs.name %></a></li>
+				<li title="Insert data from tooltip params">Legs : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.legs.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.legs.displayColor %>"><%= ejs_heroData.items.legs.name %></a></li>
 				<% } %>
 				<% if (ejs_heroData.items.feet != undefined) { %>
-				<li title="Insert data from tooltip params">Feet : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.feet.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.feet.name %></a></li>
+				<li title="Insert data from tooltip params">Feet : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.feet.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.feet.displayColor %>"><%= ejs_heroData.items.feet.name %></a></li>
 				<% } %>				
 				<% if (ejs_heroData.items.mainHand != undefined) { %>
-				<li title="Insert data from tooltip params">Main Hand : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.mainHand.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.mainHand.name %></a></li>
+				<li title="Insert data from tooltip params">Main Hand : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.mainHand.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.mainHand.displayColor %>"><%= ejs_heroData.items.mainHand.name %></a></li>
 				<% } %>		
 				<% if (ejs_heroData.items.offHand != undefined) { %>
-				<li title="Insert data from tooltip params">Off Hand : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.offHand.tooltipParams %>"onclick="return false"><%= ejs_heroData.items.offHand.name %></a></li>
+				<li title="Insert data from tooltip params">Off Hand : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.offHand.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.offHand.displayColor %>"><%= ejs_heroData.items.offHand.name %></a></li>
 				<% } %>		
 			</ul>
 		</li>

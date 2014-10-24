@@ -165,6 +165,19 @@ app.get('/player/:battletag/hero/:heroID', function(req, res) {
 	getImportantStats(parseInt(req.params.heroID));
 });
 
+app.get('/update/player/:battletag/hero/:heroID', function(req, res) {
+	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
+		if (err) {
+			return console.log(err);
+		}
+		else {
+			console.log(req.params.battletag)
+			playerMethods.addHeroData(req.params.battletag, parseInt(req.params.heroID), 50, db);
+			res.redirect('/player/'+req.params.battletag+'/hero/'+req.params.heroID);
+		}	
+	});
+});
+
 app.get('/update/:diabloClass', function(req,res) {
 	leaderboardMethods.getCurrentLeaderboard(req.params.diabloClass);
 	res.redirect('/');

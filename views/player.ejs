@@ -13,11 +13,11 @@
 
 
 
-//Shows all the heroes for a Battletag
+<!-- Shows all the heroes for a Battletag -->
 <ul>
 <% ejs_heroes.forEach(function (hero) { %>
-	<li ><a class = <%= hero.class %> href = "/player/<%= ejs_btag %>/hero/<%= hero.id %>"> <%= hero.name %> </a> -----  <a href = "http://us.battle.net/d3/en/profile/<%= ejs_btag %>/hero/<%= hero.id %>" > Battle.net Profile </a></li>
-<% }) %>
+	<li><a class = <%= hero.class %> href = "/player/<%= ejs_btag %>/hero/<%= hero.id %>"> <%= hero.name %> </a> -----  <a href = "http://us.battle.net/d3/en/profile/<%= ejs_btag %>/hero/<%= hero.id %>" > Battle.net Profile </a></li>
+<% }); %>
 </ul>
 
 </body>
