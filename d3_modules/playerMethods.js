@@ -39,7 +39,8 @@ function timeToDelay() {
 
 
 //localhost:3000/player/BATTLETAG
-//for a given Battletag, it makes a request to get all heroes for that tag.  After getting heroes, called addHeroData and create the page for that Battletag
+//for a given Battletag, it makes a request to get all heroes for that tag.  After getting heroes, call addHeroData and create the page for that Battletag
+//addHeroData is currently uncommented until it has been updated.
 exports.getHeroes = function(battletag, req, res) {
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 		var heroCollection = db.collection("hero");
@@ -53,6 +54,7 @@ exports.getHeroes = function(battletag, req, res) {
 		if (playerJSON.code == "NOTFOUND") {
 			res.send("Invalid Battletag");
 			//request the tag again.
+			getHeroes(battletag,req,res);
 		}
 		var playersHeroes = playerJSON.heroes;
 		if (playersHeroes == undefined) {
@@ -61,12 +63,7 @@ exports.getHeroes = function(battletag, req, res) {
 		}
 		else {
 			for (i=0; i<playersHeroes.length; i++) {
-				// if (i < 8) {
-					// exports.addHeroData(battletag, playersHeroes[i].id, 0,timeToDelay());
-				// }
-				// else {
-					// exports.addHeroData(battletag, playersHeroes[i].id, Math.floor(i/9)*1000,db);
-				// }
+				// exports.addHeroData(battletag, playersHeroes[i].id, 0,timeToDelay());
 			}
 			res.render('player.ejs', { ejs_btag : battletag , ejs_heroes : playersHeroes });
 			date = new Date();
@@ -75,67 +72,68 @@ exports.getHeroes = function(battletag, req, res) {
 	});
 }
 
-//add heroesdata to hero collection if the hero is level 70.
+//add hero's data to hero collection if the hero is level 70 and has certain damage.  damageFiler currently set to 0 for instance hero probably unequipped weapon
  exports.addHeroData = function(battletag, heroID, delay,db) {
 
-			console.log("inside addHeroData for " + battletag + " " + heroID + "delay is " + delay);
-			var requestURL = "https://" + region + apiURL + "profile/" + battletag.replace("#", "-") + "/hero/" + heroID + "?locale=" + locale + "&apikey=" + apiKey;
-			// console.log(requestURL);
-			setTimeout( function() {
-				request(requestURL, function (error, response, data) {
-					if (data == undefined) {
-						console.log("addHeroData data was undefined");
-						//error handling, call again
-						exports.addHeroData(battletag, heroID, 2000);
+	console.log("inside addHeroData for " + battletag + " " + heroID + "delay is " + delay);
+	var requestURL = "https://" + region + apiURL + "profile/" + battletag.replace("#", "-") + "/hero/" + heroID + "?locale=" + locale + "&apikey=" + apiKey;
+	setTimeout( function() {
+		request(requestURL, function (error, response, data) {
+			if (data == undefined) {
+				console.log("addHeroData data was undefined");
+				//error handling, call again
+				exports.addHeroData(battletag, heroID, 2000);
+			}
+			else {
+				var requestedHeroData = JSON.parse(data);
+				var items = requestedHeroData.items;
+				//start error Handling
+				//account was inactive 
+				if (requestedHeroData.code == "NOTFOUND") {
+					console.log("notfound");
+				}
+				//check if data is not null
+				else if (items == null) {
+					console.log("addHeroData items was null for " + battletag + " " + heroID);
+					exports.addHeroData(battletag, heroID,timeToDelay());
+					console.log(requestedHeroData);
+				}					
+				else {
+					//database was null
+					if (db == null) {
+						console.log("addHeroData database was null for " + battletag + " " + heroID);
+						exports.addHeroData(battletag, heroID, timeToDelay());							
 					}
+					//end error handling
+					//If the Hero is level 70 and has damage > than CURRENTLY 0, search heroCollection.  If hero is there, determine whether or not to update, else add hero.
+					//TODO: add heroes item, and importantInfo
 					else {
-						var requestedHeroData = JSON.parse(data);
-						var items = requestedHeroData.items;
-						//account was inactive 
-						if (requestedHeroData.code == "NOTFOUND") {
-							console.log("notfound");
-						}
-
-						//check if data is not null
-						else if (items == null) {
-							console.log("addHeroData items was null for " + battletag + " " + heroID);
-							exports.addHeroData(battletag, heroID,timeToDelay());
-							console.log(requestedHeroData);
-							//error handling, call again
-						}					
-						else {
-							if (db == null) {
-								console.log("addHeroData database was null for " + battletag + " " + heroID);
-								//error handling, call again
-								exports.addHeroData(battletag, heroID, timeToDelay());							
-							}
-							else {
-								//100000 for dh.  if less than this and hero wasnt added to db, visualization will not load.
-								if (requestedHeroData.level == 70 && requestedHeroData.stats.damage > 0) {
-									var heroCollection = db.collection("hero");
-									heroCollection.find({"heroID" : requestedHeroData.id}).toArray(function(err, results) {
-										//found, just update.  otherwise insert.
-										if (results.length == 1) {
-											// if (requestedHeroData.stats.damage > 300000){
-												heroCollection.update({"heroID" : requestedHeroData.id}, {"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats}, function(err, results) {
-												console.log("addHeroData found, updating "+ battletag + " " + requestedHeroData.id);
-												});//end update.
-											// }
-										}
-										else {
-											heroCollection.insert({"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats}, function(err, results) {
-												console.log("addHeroData not found, inserting "+ battletag + " " + requestedHeroData.id);
-												// console.log("adding items")
-												// heroMethods.getItemIDsFromHero(requestedHeroData.items, requestedHeroData.id, timeToDelay());
-
-											});//end insertion.
-										}
-									});//end update/insert 
+						//100000 for dh.  if less than this and hero wasnt added to db, visualization will not load.
+						if (requestedHeroData.level == 70 && requestedHeroData.stats.damage > 0) {
+							var heroCollection = db.collection("hero");
+							heroCollection.find({"heroID" : requestedHeroData.id}).toArray(function(err, results) {
+								//found, just update.  otherwise insert.
+								if (results.length == 1) {
+//!!!!!!!							//check if there is damage increase, check if all items are equipped and call get Important INFO
+									// if (requestedHeroData.stats.damage > 300000){
+										heroCollection.update({"heroID" : requestedHeroData.id}, {"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats}, function(err, results) {
+										console.log("addHeroData found, updating "+ battletag + " " + requestedHeroData.id);
+										});//end update.
+									// }
 								}
-							}
-						}//end else for when data was not null
-					}
-				});//end api request for heroID
-			},delay);//end setTimeout
+								else {
+									heroCollection.insert({"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats}, function(err, results) {
+										console.log("addHeroData not found, inserting "+ battletag + " " + requestedHeroData.id);
+										// console.log("adding items")
+										// heroMethods.getItemIDsFromHero(requestedHeroData.items, requestedHeroData.id, timeToDelay());
 
+									});//end insertion.
+								}
+							});//end update/insert 
+						}//end else DB not null
+					}//end jsonData had no errors
+				}//end else for when data was not null
+			}
+		});//end api request for heroID
+	},delay);//end setTimeout
 }

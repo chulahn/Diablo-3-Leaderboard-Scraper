@@ -63,7 +63,12 @@ exports.getGRiftCategory = function(category) {
 			return;
 	}
 }
-
+//called on localhost:/:category/:diabloClass
+//If leaderboardCollection has no data or not 1000 call getCurrentLeaderboard
+//For each player in that leaderboard, find the heroes (if it is hardcore/season and matches class) in heroCollection 
+//and get the one that has the highest dps, add to allData which is used for d3 visualization
+	//If not found in heroCollection, attempt to add by getting the heroID from searching the leaderboardCollection
+//Once allData reaches 1000 and data is not undefined, renderpage
 exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {    
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 	//Takes about 1/10th second
@@ -76,52 +81,46 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 		else  {
 			console.log("Inside getLeaderboard for " + diabloClass + " " + leaderboardType);
 			var collectionName = getCollectionName(diabloClass, leaderboardType);
-			var diabloClassCollection = db.collection(collectionName);
-			//from the collection, get only the Battletags as an array sorted by rank, and create site
-			diabloClassCollection.find({},{"_id" : 0 }).sort({"Standing" : 1}).toArray(function (err, leaderboardResults) {
+			var leaderboardCollection = db.collection(collectionName);
+			//get all from collection, sort by rank
+			leaderboardCollection.find({},{"_id" : 0 }).sort({"Standing" : 1}).toArray(function (err, leaderboardResults) {
 	    		
-	    		if (leaderboardResults.length == 0) {
+	    		if (leaderboardResults.length == 0 || leaderboardResults.length != 1000) {
 	    			exports.getGRiftCategory(leaderboardType);
 	    			exports.getCurrentLeaderboard(diabloClass);
 	    			res.redirect('/');
 	    		}
+	    		//leaderboard has 1000
 	    		else {
-
 		    		date = new Date();
 					console.log(diabloClass + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 					console.log(leaderboardType);
+					//array for storing all heroes in DB
 		    		var allData = [];
-
 		    		setSearchParams(leaderboardType);
-		    		console.log(searchParamHC,searchParamSeason);
-		    		//for each battletag from the leaderboard
 		    		leaderboardResults.forEach(function(currentPlayer) {
 		    			delayCounter =0;
 		    			var heroCollection = db.collection("hero");
 
-		    			//get the correct hero based on class, and add to array.  need to check if season, or hardcore
+		    			//get the hero that matches searchParams
 		    			heroCollection.find({"battletag" : currentPlayer.Battletag.replace("#", "-"), "class" : getClassNameForDatabase(diabloClass), "seasonal" : searchParamSeason, "hardcore" : searchParamHC }).toArray(function (error, heroResults) {
 
 		    				//if we found the Hero based on BattleTag and class, find the hero with the highest dps. 
 		    				if (heroResults.length > 0) {
 		    					console.log('result was found ',heroResults[0].hardcore);
-		    					
 		    					heroToPush=heroResults[0];
-
 		    					heroResults.forEach(function(hero) {
 		    						if (hero.stats.damage > heroToPush.stats.damage) {
-		    							//store hero later, for now just store damage
 		    							heroToPush = hero;
 		    						}
-		    					})
+		    					});
 		    					allData[currentPlayer.Standing-1] = heroToPush;
 		    				}
 
-		    				//hero was not in the heroCollection.  currentPlayer(battletag API request information) in classCollection, get heroes and find the ones that match class and add.
+		    				//hero was not in the heroCollection.  get heroes from currentPlayer (in leaderboardCollection), and find the ones that match searchParams.
 		    				else {
 		    					var currentPlayerHeroes = currentPlayer.Heroes;
 		    					currentPlayerHeroes.forEach(function(currentHero) {
-		    						//the currentHero must be level 70, match the class and not be dead to be added to the array.
 		    						if (currentHero.level == 70) {
 			    						if (getClassNameForDatabase(diabloClass) == currentHero.class && currentHero.dead == false && currentHero.hardcore == searchParamHC && currentHero.seasonal == searchParamSeason) {
 			    							// console.log(currentHero);
@@ -129,16 +128,15 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 			    							playerMethods.addHeroData(currentPlayer.Battletag.replace("#", "-"), currentHero.id, timeToDelay(),db);
 			    							console.log("after " + delayCounter);
 			    						}
-			    						//error handling for hc players.  id is in battleTag jsonData, but was dead
+			    						//error handling for hc players.  heroID is in currentPlayer.Heroes, but was dead
 			    						else {
 			    							// console.log(currentPlayer.Battletag , currentHero);
 			    							allData[currentPlayer.Standing-1] = 0;
 			    						}
 			    					}
 		    					});
-		    					// heroCollection.insert()
 		    				}
-							//if everyone found in hero database that has same class and battletag
+							//Make sure allData has data at each point in array before rendering page
 							if (allData.length == leaderboardResults.length) {
 								var count = 0;
 								for (i = 0 ; i < leaderboardResults.length ; i++) {
@@ -147,13 +145,10 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 									}
 								}
 								if (count ==  leaderboardResults.length) {
-									// console.log(allData);
-									//page renders when allData has not been completely filled
 						    		date = new Date();
 									console.log(diabloClass + " Page rendered "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
-
 			    					res.render('ClassLeaderboard.ejs', {title : diabloClass , leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , all:allData });
-								}
+								}//end rendering page
 							}
 		    			})//end toArray callback from finding hero.
 		    		})//end for each result from Leaderboard search
@@ -282,7 +277,7 @@ exports.getCurrentLeaderboard = function(diabloClass) {
 						date = new Date();					
 						var currentTime = new Date();
 						currentTime = currentTime.getSeconds()*1000 + currentTime.getMilliseconds();
-						//only update if greater than 100
+						//only update if greater than 100  REMOVE THIS LATER
 						if (i >= 100) {
 						//Not the 10th call
 						if (i % 10 != 9) {
@@ -333,7 +328,7 @@ exports.getCurrentLeaderboard = function(diabloClass) {
 								updateLeaderboardCollectForPlayer(battletagRequestURL,playerData,timeDifference+800,db,diabloClass,0);
 							}	
 						}
-						}
+						}//REMOVE LATER
 						currentCallNum++;
 					});//end battletag forloop
 				});//end jsdom
