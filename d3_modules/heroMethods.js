@@ -55,7 +55,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 					var heroData = matchedHero[0];
 					var heroItems = heroData.items;
 					if (heroData.level == 70) {
-							exports.getItemIDsFromHero(heroItems,heroID,10);
+						exports.getItemIDsFromHero(heroItems,heroID,10);
 					}
 					res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems})
 					date = new Date();
@@ -63,24 +63,21 @@ exports.getHeroDetails = function(heroID, req, res) {
 				}
 				//not in database.  must request data from Blizzard site.
 				else {
-						request(heroRequestURL, function (error, response, data) {
-							//string to json
-							var heroData = JSON.parse(data);
-							var heroItems = heroData.items;
-							if (heroData.level == 70) {
-								exports.getItemIDsFromHero(heroItems,heroID,10);
-							}
-							res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems})
-							date = new Date();
-							console.log(heroID + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
-						});
+					request(heroRequestURL, function (error, response, data) {
+						//string to json
+						var heroData = JSON.parse(data);
+						var heroItems = heroData.items;
+						if (heroData.level == 70) {
+							exports.getItemIDsFromHero(heroItems,heroID,10);
+						}
+						res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems})
+						date = new Date();
+						console.log(heroID + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+					});
 				}
 			});
 		}
-
-
 	});
-
 //Takes about same time.  Can crash if too many requests were 
 /*
 	request(heroRequestURL, function (error, response, data) {
@@ -95,8 +92,6 @@ exports.getHeroDetails = function(heroID, req, res) {
 		console.log(heroID + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 	});
 */
-
-
 }
 
 exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
@@ -170,7 +165,6 @@ function findItemInCollection(itemID, heroID, delay){
 							//find if hero has an item in that spot.
 							itemCollection.find({"Hero": parseInt(heroID) , "Type" :requestedItemType}).toArray(function(err, matchedItems) {
 								//if there is item in spot, check if that itemID is same as item to be updated.
-
 								if (matchedItems.length != 0) {
 									//check to see if player has only one ring
 									if (item.isRing(requestedItemType)) {
@@ -186,7 +180,7 @@ function findItemInCollection(itemID, heroID, delay){
 										//if onehanded weapon
 										//if class is DH, if no quiver, add second bow.
 										//if class is barb or monk, check offhand
-
+																		// updateInItemCollection(itemCollection, requestedItem, heroID);
 										//this check was put here because some items did not have itemID after being updated.
 										if (equippedItem.itemID == undefined) {
 											console.log(equippedItem[0]);
@@ -380,19 +374,19 @@ function findItemInCollection(itemID, heroID, delay){
 }
 
 function updateInItemCollection(itemCollection, currentItem, heroID) {
-	itemCollection.update({"Hero": parseInt(heroID) , "Type" :item.getItemType(currentItem.type.id)}, {"itemID" : currentItem.tooltipParams.replace("item/",""), "Name" : currentItem.name, "Type" : item.getItemType(currentItem.type.id), "Affixes" : currentItem.attributes, "Random Affixes" : currentItem.randomAffixes, "Gems" : currentItem.gems, "Socket Effects" : currentItem.socketEffects, "Hero" : parseInt(heroID), "Equipped" : true}, function(err, result) {
+	itemCollection.update({"heroID": parseInt(heroID) , "Type" :item.getItemType(currentItem.type.id)}, {"itemID" : currentItem.tooltipParams.replace("item/",""), "name" : currentItem.name, "displayColor" : currentItem.displayColor, "type" : item.getItemType(currentItem.type.id), "affixes" : currentItem.attributes, "randomAffixes" : currentItem.randomAffixes, "gems" : currentItem.gems, "socketEffects" : currentItem.socketEffects, "heroID" : parseInt(heroID), "equipped" : true}, function(err, result) {
 		console.log("Successfully updated " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
 	});
 }
 
 function insertInItemCollection(itemCollection, currentItem, heroID) {
-	itemCollection.insert({"itemID" : currentItem.tooltipParams.replace("item/",""), "Name" : currentItem.name, "Type" : item.getItemType(currentItem.type.id), "Affixes" : currentItem.attributes, "Random Affixes" : currentItem.randomAffixes, "Gems" : currentItem.gems, "Socket Effects" : currentItem.socketEffects, "Hero" : parseInt(heroID), "Equipped" : true}, function(err, result) {
+	itemCollection.insert({"itemID" : currentItem.tooltipParams.replace("item/",""), "name" : currentItem.name, "displayColor" : currentItem.displayColor, "type" : item.getItemType(currentItem.type.id), "affixes" : currentItem.attributes, "randomAffixes" : currentItem.randomAffixes, "gems" : currentItem.gems, "socketEffects" : currentItem.socketEffects, "heroID" : parseInt(heroID), "equipped" : true}, function(err, result) {
 		console.log("Successfully inserted " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
 	});
 }
 
 function unequipItem(itemCollection, itemToUnequip, heroID) {
-		itemCollection.update({"Hero": parseInt(heroID) , "itemID" : itemToUnequip.itemID },  {$set : {"Equipped" : false}}, function(err, result) {
+		itemCollection.update({"heroID": parseInt(heroID) , "itemID" : itemToUnequip.itemID },  {$set : {"Equipped" : false}}, function(err, result) {
 		console.log("Successfully unequipped " + itemToUnequip.Name + " " + itemToUnequip.itemID.substring(0,5));
 	});
 }

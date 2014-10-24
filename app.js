@@ -31,19 +31,19 @@ function getImportantStats(heroID) {
 			var rangeDamRed = 0;
 			var eliteDamRed = 0;
 			console.log("getImportantStats " + heroID);
-			itemCollection.find({"Hero" : heroID, "Equipped" : true}).toArray(function(error, heroItems) {
+			itemCollection.find({"heroID" : heroID, "equipped" : true}).toArray(function(error, heroItems) {
 
 				heroItems.forEach(function(currentItem) {
 					//get CDR from hat
 					if (currentItem.Type == "Head") {
 						//if it has a diamond
-						if ((currentItem.Gems[0].item.name).indexOf("Diamond") != -1) {
-							diamondText = currentItem.Gems[0].attributes.primary[0].text;
+						if ((currentItem.gems[0].item.name).indexOf("Diamond") != -1) {
+							diamondText = currentItem.gems[0].attributes.primary[0].text;
 							diamondCooldown = parseFloat(diamondText.substring(diamondText.indexOf("by ") + 3, diamondText.length-2));
 						}
 
 						if (currentItem.Name == "Leoric's Crown") {
-							currentItem.Affixes.secondary.forEach(function (secondary) {
+							currentItem.affixes.secondary.forEach(function (secondary) {
 								if (secondary.color == "orange") {
 									diamondCooldown = diamondCooldown * (1 + parseFloat(secondary.text.substring(secondary.text.indexOf("by ") + 3, secondary.text.length-2)/100));
 								}
@@ -52,23 +52,23 @@ function getImportantStats(heroID) {
 					}
 					//get eliteDam from Furnace
 					if (currentItem.Name == "The Furnace") {
-						furnaceElite = currentItem.Affixes.passive[0].text;
+						furnaceElite = currentItem.affixes.passive[0].text;
 						furnaceElite = parseFloat(furnaceElite.substring(furnaceElite.indexOf("by ")+3, furnaceElite.length-2));
 						console.log(furnaceElite);
 						eliteDam += furnaceElite;
 					}
 					//get CDR and elementalDam
-					for (j=0; j<currentItem.Affixes.primary.length; j++) {
+					for (j=0; j<currentItem.affixes.primary.length; j++) {
 						//get cooldown reduction from every item
-						if (currentItem.Affixes.primary[j].text.indexOf("cooldown") != -1) {
-							cooldownString = currentItem.Affixes.primary[j].text;
+						if (currentItem.affixes.primary[j].text.indexOf("cooldown") != -1) {
+							cooldownString = currentItem.affixes.primary[j].text;
 							// console.log(currentItem.Name + " " + cooldownString.substring(cooldownString.lastIndexOf(" ")+1,cooldownString.length-2 )+"%");
 							cooldown += parseFloat(cooldownString.substring(cooldownString.lastIndexOf(" ")+1,cooldownString.length-2 ));
 						}
 						//get element damage from every item
-						if (currentItem.Affixes.primary[j].text.indexOf("skills deal") != -1) {
+						if (currentItem.affixes.primary[j].text.indexOf("skills deal") != -1) {
 
-							skillsString = currentItem.Affixes.primary[j].text;
+							skillsString = currentItem.affixes.primary[j].text;
 							number = parseInt(skillsString.substring(skillsString.indexOf("deal ")+5, skillsString.indexOf("%")));
 							element = skillsString.substring(0, skillsString.indexOf(" skills"));
 
@@ -94,8 +94,8 @@ function getImportantStats(heroID) {
 							}
 						}
 						//get elite damage
-						if (currentItem.Affixes.primary[j].text.indexOf("Increases damage against elites by") != -1) {
-							eliteString = currentItem.Affixes.primary[j].text;
+						if (currentItem.affixes.primary[j].text.indexOf("Increases damage against elites by") != -1) {
+							eliteString = currentItem.affixes.primary[j].text;
 							eliteString = parseFloat(eliteString.substring(eliteString.indexOf("Increases damage against elites by")+35, eliteString.length-1));
 							eliteDam += eliteString;
 						}

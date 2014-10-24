@@ -255,16 +255,23 @@ d3.select("#hundred").on("click",function() {
 
 <!-- List of all the BattleTags for the corresponding Leaderboard -->
 <table>
-<% ejs_battletags.forEach(function (tag) { %>
-	
 	<tr>
-	<td><%= tag.Standing %></td>
-	<td><a href = "/player/<%= tag.Battletag.replace("#","-") %>" >  <%= tag.Battletag %></a></td>
-	<td><%= tag["Greater Rift"] %></td>
-	<td><%= tag["Time Spent"] %></td>
-	<td><%= tag["Date Completed"] %></td>
+		<th>Standing</th>
+		<th>Battletag</th>
+		<th>Greater Rift</th>
+		<th>Time Spent</th>
+		<th>Date Completed</th>
 	</tr>
+	<% ejs_battletags.forEach(function (tag) { %>
+		
+		<tr>
+			<td><%= tag.Standing %></td>
+			<td><a href = "/player/<%= tag.Battletag.replace("#","-") %>" >  <%= tag.Battletag %></a></td>
+			<td><%= tag["Greater Rift"] %></td>
+			<td><%= tag["Time Spent"] %></td>
+			<td><%= tag["Date Completed"] %></td>
+		</tr>
 
-<% }) %>
+	<% }) %>
 </table>
 </body>
