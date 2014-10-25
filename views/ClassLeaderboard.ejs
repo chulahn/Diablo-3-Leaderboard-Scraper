@@ -22,6 +22,8 @@
 <script>
 var allData = <%-JSON.stringify(all)%>;
 var currentArray = allData.slice(0,100);
+var currentDataset = "DPS";
+var currentTop = 100;
 
 var height = 300, width = 800;
 var barPadding = 1;
@@ -33,18 +35,48 @@ var svg= d3.select("#visual")
 	.attr("width" , width);
 
 var tip = d3.tip().attr('class', 'd3-tip').html(function(d,i) {
-	return (i+1)+"."+"<span class=\"btag\">"+d.battletag+"</span><br /><span class=\"damage\">"+d.stats.damage+"</span>";
+	return (i+1)+"."+"<span class=\"btag\">"+d.battletag+"</span><br />DPS:<span class=\"damage\">"+d.stats.damage+"</span>";
 });
 svg.call(tip);
 
+var legend = svg.selectAll(".legend")
+				.data([10,20,50,100])
+				.enter()
+				.append("g")
+				.attr("class", "legend")
+     			.attr("transform", function(d, i) { 
+     				return "translate("+(i*40)+",0)"; 
+     			});
 
-function createGraph() {
+legend.append("text")
+		.attr("x", 10)
+		.attr("y", 13)
+		.style("attr","black")
+		.text(function(d) {
+			return "Top " +d;
+		})
+		.on("click" , function(d) {
+			createGraph(d);
+		});
+
+function createGraph(number) {
+	//if number == null, set to currentTop
+	currentTop = 100;
+	currentArray = allData.slice(0,number);
+	d3.selectAll('.enter').attr("class", "exit").remove();
 
 	var xScale = d3.scale.linear()
 					.domain([0, currentArray.length])
 					.range([xPadding, width-xPadding]);
 	var yScale = d3.scale.linear()
-					.domain([0, d3.max(currentArray, function(d) { return d.stats.damage})])
+					.domain([0, d3.max(currentArray, function(d) { 
+						if (currentDataset == "DPS") {
+							return d.stats.damage;
+						}
+						if (currentDataset == "toughness") {
+							return d.stats.toughness;
+						}
+					})])
 					.range([height-yPadding, yPadding]);
 
 	var xAxis = d3.svg.axis()
@@ -56,65 +88,60 @@ function createGraph() {
 					.orient("left")
 					.ticks(5);
 
+	//add bars and links
 	svg.selectAll("rect").data(currentArray).enter()
-	.append("a").attr('xlink:href', function(d,i) {
-		return "<%- title %>#"+(i+1);
-	}).append("rect")
-		.attr("x" , function(d,i) {
-			return xScale(i); })
-		.attr("y" , function(d) { 
-			if (d == null || d == 0) {
-				return 0;
-			}
-			else {
-				return yScale(d.stats.damage);
-			}
-		})
-		//width of one bar is (widthOfGraph / # of datapoints) - spaceInBetweenBars
-		.attr("width", (width-(2*xPadding)) / currentArray.length - barPadding)
-		.attr("height", function(d) {
-			if (d == null || d == 0) {
-				return 0;
-			}
-			else {
-				return height-yScale(d.stats.damage)-yPadding;
-			}	
-		})
-		.attr("class" , "enter")
-		.on('mouseover', tip.show)
-		.on('mouseout', tip.hide);
+		.append("a").attr('xlink:href', function(d,i) {
+			return "<%- title %>#"+(i+1);
+		}).append("rect")
+			.attr("x" , function(d,i) {
+				return xScale(i); })
+			.attr("y" , function(d) { 
+				if (d == null || d == 0) {
+					return 0;
+				}
+				else {
+					if (currentDataset == "DPS") {
+						return yScale(d.stats.damage);
+					}
+					if (currentDataset == "toughness") {
+						return yScale(d.stats.toughness);
+					}
+				}
+			})
+			//width of one bar is (widthOfGraph / # of datapoints) - spaceInBetweenBars
+			.attr("width", (width-(2*xPadding)) / currentArray.length - barPadding)
+			.attr("height", function(d) {
+				if (d == null || d == 0) {
+					return 0;
+				}
+				else {
+					if (currentDataset == "DPS") {
+						return height-yScale(d.stats.damage)-yPadding;
+					}
+					if (currentDataset == "toughness") {
+						return height - yScale(d.stats.toughness)-yPadding;
+					}
+				}	
+			})
+			.attr("class" , "enter")
+			.on('mouseover', tip.show)
+			.on('mouseout', tip.hide);
+	//add xAxis
 	svg.append("g")
 		.attr("class", "enter axis")
 		.attr("transform", "translate(0," + (height-yPadding) + ")")
 		.call(xAxis);
+	//add yAxis
 	svg.append("g")
 		.attr("class", "enter axis")
 		.attr("transform", "translate("+xPadding+", 0)")
 		.call(yAxis);
 }
 
-createGraph();
-
-
-d3.select("#ten").on("click",function() {
-	currentArray = allData.slice(0,10);
-	d3.selectAll('.enter').attr("class", "exit").remove();
-	createGraph();
-});
-
-d3.select("#twenty").on("click",function() {
-	currentArray = allData.slice(0,20);
-	d3.selectAll('.enter').attr("class", "exit").remove();
-	createGraph();
-});
-
-d3.select("#fifty").on("click",function() {
-	currentArray = allData.slice(0,50);
-	d3.selectAll('.enter').attr("class", "exit").remove();
-	createGraph();
-});
+createGraph(100);
 
 d3.select("#hundred").on("click",function() {
+	currentDataset = "toughness";
 	currentArray = allData.slice(0,100);
 	d3.selectAll('.enter').attr("class", "exit").style('opacity' , 0);
 

@@ -14,56 +14,17 @@ var gRiftCategory= "era/1/rift-";
 var collectionCategory = "normal";
 
 var delayCounter = 0;
-
+//used when finding heroes in heroCollection
 var searchParamHC;
 var searchParamSeason;
-
 
 function timeToDelay() {
 	delayCounter++;
 	return (1500* (Math.floor(delayCounter/10)));
 }
 
-function setSearchParams(leaderboardType) {
-	switch (leaderboardType) {
-		case "normal" :
-			searchParamHC = false;
-			searchParamSeason = false;
-			return;
-		case "hc" :
-			searchParamHC = true;
-			searchParamSeason = false;
-			return;
-		case "season" :
-			searchParamHC = false;
-			searchParamSeason = true;
-			return;
-		case "seasonhc" :
-			searchParamHC = true;
-			searchParamSeason = true;
-			return;
-	}	
-}
-
-
-//used to set the griftcategory to know which leaderboard to request from.  used in update, which is called in getCurrentLeaderboard, which is called when updating.
-exports.getGRiftCategory = function(category) {
-	switch (category) {
-		case "normal" :
-			gRiftCategory = "era/1/rift-";
-			return;
-		case "hc" :
-			gRiftCategory =  "era/1/rift-hardcore-";
-			return;
-		case "season" :
-			gRiftCategory =  "season/1/rift-";
-			return;
-		case "seasonhc" :
-			gRiftCategory =  "season/1/rift-hardcore-"
-			return;
-	}
-}
 //called on localhost:/:category/:diabloClass
+//leaderboardType is req.params.category (normal, hc, season, seasonhc)
 //If leaderboardCollection has no data or not 1000 call getCurrentLeaderboard
 //For each player in that leaderboard, find the heroes (if it is hardcore/season and matches class) in heroCollection 
 //and get the one that has the highest dps, add to allData which is used for d3 visualization
@@ -198,7 +159,6 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 	});
 */
 }
-
 
 //Gets the leaderboard table from Battle.net website, parses each row, creates an API request URL
 //and passes it to updateLeaderboardCollectForPlayer to add/update player to collection e.g(hcbarb, seasondh, etc..)
@@ -430,10 +390,9 @@ exports.getCurrentLeaderboard = function(diabloClass) {
 }
 
 
-
-//used when searching a collection for a class.  used in getCurrentLeaderboard.  the diabloclass passed in is req.params.diabloclass
+//diabloClass is req.params.diabloClass
+//used in getCurrentLeaderboard to set the requestURL for getting the leaderboard table.
 function getClassNameForLeaderboard(diabloClass) {
-
 	if (diabloClass == "wiz" ){
 		return "wizard";
 	}
@@ -445,13 +404,12 @@ function getClassNameForLeaderboard(diabloClass) {
 	}
 	else {
 		return diabloClass;
-	
 	}
 }
 
-//used when searching a collection for a class.  used in getCurrentLeaderboard.  the diabloclass passed in is req.params.diabloclass
+//diabloClass is req.params.diabloClass
+//used in getLeaderboard to know which class(barb, dh, etc.) to search in DB
 function getClassNameForDatabase(diabloClass) {
-
 	if (diabloClass == "wiz" ){
 		return "wizard";
 	}
@@ -469,10 +427,8 @@ function getClassNameForDatabase(diabloClass) {
 	}
 	else {
 		return diabloClass;
-	
 	}
 }
-
 
 
 //sets the Region for requests.  used when adding to DB
@@ -493,8 +449,29 @@ function getRegion(region) {
 	}
 }
 
+//localhost/normal, /hc, /season, etc.
+//category is req.param
+//Used to set gRiftCategory, which is used in getCurrentLeaderboard(gets table from Battle.net) to request correct table.
+exports.getGRiftCategory = function(category) {
+	switch (category) {
+		case "normal" :
+			gRiftCategory = "era/1/rift-";
+			return;
+		case "hc" :
+			gRiftCategory =  "era/1/rift-hardcore-";
+			return;
+		case "season" :
+			gRiftCategory =  "season/1/rift-";
+			return;
+		case "seasonhc" :
+			gRiftCategory =  "season/1/rift-hardcore-"
+			return;
+	}
+}
+
+//gets a collectionName whether updating or getting.  SPLIT THIS FUNCTION LATER
 function getCollectionName(diabloClass, gRiftCategory) {
-	//when requesting from battle.net, set collection name based on what was set in getGRiftCategory
+	//inside update, after request from bnet, collectionName is what was set in getGRiftCategory
 	if (gRiftCategory == "era/1/rift-") {
 		collectionCategory="normal";		
 	}
@@ -507,11 +484,32 @@ function getCollectionName(diabloClass, gRiftCategory) {
 	else if (gRiftCategory ==  "season/1/rift-hardcore-") {
 		collectionCategory="seasonhc";
 	}
-	//when accesing db from getLeaderboard
+
+	//not updating, but accesing db from getLeaderboard
 	else {
 		collectionCategory = gRiftCategory;
 	}
-	
 	return collectionCategory + diabloClass;
+}
 
+//used in getLeaderboard.  set's searchParams to find heroes in heroCollection.
+function setSearchParams(leaderboardType) {
+	switch (leaderboardType) {
+		case "normal" :
+			searchParamHC = false;
+			searchParamSeason = false;
+			return;
+		case "hc" :
+			searchParamHC = true;
+			searchParamSeason = false;
+			return;
+		case "season" :
+			searchParamHC = false;
+			searchParamSeason = true;
+			return;
+		case "seasonhc" :
+			searchParamHC = true;
+			searchParamSeason = true;
+			return;
+	}	
 }

@@ -42,5 +42,8 @@ td, th {
 .axis text {
     font-family: sans-serif;
     font-size: 11px;
-    color : red;
+}
+.legend text {
+	font-family: sans-serif;
+    font-size: 12px;
 }

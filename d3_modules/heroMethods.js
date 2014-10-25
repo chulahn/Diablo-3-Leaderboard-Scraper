@@ -10,26 +10,7 @@ var apiKey = "y34m8hav4zpvrezvrs6xhgjh6uphqa5r";
 var region = "us";
 var apiURL = ".api.battle.net/d3/"
 var locale = "en_US";
-// var gRiftCategory= "era/1/rift-";
-// var collectionCategory = "normal";
 
-//sets the Region for requests.  used when adding to DB
-function getRegion(region) {
-	switch (region) {
-		case "us":
-			locale = "en_US";
-			region = "us";
-		case "eu":
-			locale = "en_GB";
-			region = "eu";
-		case "tw":
-			locale = "zh_TW";
-			region = "tw";
-		case "kr":
-			locale = "ko_KR";
-			region = "kr";
-	}
-}
 
 //localhost:3000/player/:battletag/hero/:heroID
 //for a given heroID, it searches heroCollection, and renders hero's page.  if not in data base, make an API request
@@ -374,4 +355,22 @@ function unequipItem(itemCollection, itemToUnequip, heroID) {
 		itemCollection.update({"heroID": parseInt(heroID) , "itemID" : itemToUnequip.itemID },  {$set : {"Equipped" : false}}, function(err, result) {
 		console.log("Successfully unequipped " + itemToUnequip.Name + " " + itemToUnequip.itemID.substring(0,5));
 	});
+}
+
+//sets the Region for requests.  used when adding to DB
+function getRegion(region) {
+	switch (region) {
+		case "us":
+			locale = "en_US";
+			region = "us";
+		case "eu":
+			locale = "en_GB";
+			region = "eu";
+		case "tw":
+			locale = "zh_TW";
+			region = "tw";
+		case "kr":
+			locale = "ko_KR";
+			region = "kr";
+	}
 }

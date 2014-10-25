@@ -13,24 +13,6 @@ var locale = "en_US";
 // var gRiftCategory= "era/1/rift-";
 // var collectionCategory = "normal";
 
-//sets the Region for requests.  used when adding to DB
-function getRegion(region) {
-	switch (region) {
-		case "us":
-			locale = "en_US";
-			region = "us";
-		case "eu":
-			locale = "en_GB";
-			region = "eu";
-		case "tw":
-			locale = "zh_TW";
-			region = "tw";
-		case "kr":
-			locale = "ko_KR";
-			region = "kr";
-	}
-}
-
 var delayCounter = 0;
 function timeToDelay() {
 	delayCounter++;
@@ -136,4 +118,22 @@ exports.getHeroes = function(battletag, req, res) {
 			}
 		});//end api request for heroID
 	},delay);//end setTimeout
+}
+
+//sets the Region for requests.  used when adding to DB
+function getRegion(region) {
+	switch (region) {
+		case "us":
+			locale = "en_US";
+			region = "us";
+		case "eu":
+			locale = "en_GB";
+			region = "eu";
+		case "tw":
+			locale = "zh_TW";
+			region = "tw";
+		case "kr":
+			locale = "ko_KR";
+			region = "kr";
+	}
 }

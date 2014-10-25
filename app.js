@@ -1,17 +1,15 @@
-var express = require("express");
 var leaderboardMethods = require('./d3_modules/leaderboardMethods');
 var playerMethods = require('./d3_modules/playerMethods');
 var heroMethods = require('./d3_modules/heroMethods');
 
+var express = require("express");
 var app = express();
-// var db = require('./db');
 
 var mongo = require('mongodb');
-// var Server = mongo.Server;
 var Db = mongo.Db;
 var MongoClient = mongo.MongoClient;
 
-//for a hero, check each item and sum the important stats (elemental damage, cooldown reducion, reduced damage)
+//for a hero, search itemDatabase, and sum the important stats (elemental damage, cooldown reducion, reduced damage)
 function getImportantStats(heroID) {
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 		if (err) {
@@ -108,9 +106,6 @@ function getImportantStats(heroID) {
 					return b[1]-a[1];
 				});
 
-				// console.log(JSON.stringify(elementalDam));
-
-				// console.log(elementalDam);
 				totalCooldown = cooldown + diamondCooldown;
 				console.log("total cooldown " + cooldown + " cooldown from hat " + diamondCooldown + " = " + totalCooldown);
 				console.log("elite Damage " + eliteDam);
@@ -214,50 +209,3 @@ app.get('/*' , function(req,res) {
 
 
 app.listen(3000);
-
-
-/*--work on later
-//given jsondata for player, method finds all heroes that match the leaderboard's class
-function findHero(player, diabloClass) {
-	var heroes = player.heroes;
-	var matchingClass = []
-	heroes.forEach(function(hero) {
-		if (hero.class == diabloClass) {
-			// console.log(hero.name + " " + hero.class + diabloClass);
-			matchingClass.push(hero);
-		}
-	});
-	if (matchingClass.length == 1) {
-		return matchingClass[0];
-	}
-	else {
-		findLeaderboardHero(player, matchingClass);
-	}
-}
-
-function findLeaderboardHero(player, matches){
-
-	var highestHero;
-	var mainstat=0;
-	matches.forEach(function(hero) {
-		//change this to databse later
-		var battletag = player.battleTag.replace("#", "-");
-		var requestURL = "https://us.api.battle.net/d3/profile/" + battletag + "/hero/" + hero.id + "?locale=en_US&apikey=y34m8hav4zpvrezvrs6xhgjh6uphqa5r";
-		// console.log(requestURL);
-		setTimeout( function () {request(requestURL, function(error, response, data) {
-			var heroData = JSON.parse(data);
-			// console.log(heroData.stats);
-			
-			console.log(battletag + " " + heroData.name + " " +	heroData.stats.strength);
-			// if (heroData.stats.strength > mainstat) {
-			// 	console.log(heroData.stats.strength);
-			// 	heroData.stats.strength = mainstat;
-			// 	highestHero = hero;
-			// }
-
-		});
-	},1000);
-		//if main stat is highest assume
-	});
-}
-*/
