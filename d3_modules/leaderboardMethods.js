@@ -23,6 +23,11 @@ function timeToDelay() {
 	return (1500* (Math.floor(delayCounter/10)));
 }
 
+
+
+// https://eu.api.battle.net/d3/profile/a/?locale=en_GB&apikey=y34m8hav4zpvrezvrs6xhgjh6uphqa5r
+
+
 //called on localhost:/:category/:diabloClass
 //leaderboardType is req.params.category (normal, hc, season, seasonhc)
 //If leaderboardCollection has no data or not 1000 call getCurrentLeaderboard
@@ -30,7 +35,7 @@ function timeToDelay() {
 //and get the one that has the highest dps, add to allData which is used for d3 visualization
 	//If not found in heroCollection, attempt to add by getting the heroID from searching the leaderboardCollection
 //Once allData reaches 1000 and data is not undefined, renderpage
-exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {    
+exports.getLeaderboard = function(region, diabloClass, leaderboardType, req, res) {    
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 	//Takes about 1/10th second
 		date = new Date();
@@ -40,15 +45,17 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 		}	
 		//successfully connected
 		else  {
-			console.log("Inside getLeaderboard for " + diabloClass + " " + leaderboardType);
-			var collectionName = getCollectionName(diabloClass, leaderboardType);
+			console.log("Inside getLeaderboard for " + region + " " + diabloClass + " " + leaderboardType);
+			setRegion(region);
+			var collectionName = region + getCollectionName(diabloClass, leaderboardType);
 			var leaderboardCollection = db.collection(collectionName);
+			console.log(region);
 			//get all from collection, sort by rank
 			leaderboardCollection.find({},{"_id" : 0 }).sort({"Standing" : 1}).toArray(function (err, leaderboardResults) {
 	    		
 	    		if (leaderboardResults.length == 0 || leaderboardResults.length != 1000) {
 	    			exports.getGRiftCategory(leaderboardType);
-	    			exports.getCurrentLeaderboard(diabloClass);
+	    			exports.getCurrentLeaderboard(region, diabloClass);
 	    			res.redirect('/');
 	    		}
 	    		//leaderboard has 1000
@@ -162,13 +169,14 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 
 //Gets the leaderboard table from Battle.net website, parses each row, creates an API request URL
 //and passes it to updateLeaderboardCollectForPlayer to add/update player to collection e.g(hcbarb, seasondh, etc..)
-exports.getCurrentLeaderboard = function(diabloClass) {
+exports.getCurrentLeaderboard = function(region, diabloClass) {
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 		//successfully connected
 		if(!err) {
 			console.log("We are connected");
+			setRegion(region);
 			date = new Date();
-			console.log(diabloClass + " " + gRiftCategory + " Leaders before request "+ date.getMinutes() +":"+ date.getSeconds());
+			console.log(region + " " + diabloClass + " " + gRiftCategory + " Leaders before request "+ date.getMinutes() +":"+ date.getSeconds());
 			var requestURL = "https://" + region + ".battle.net/d3/en/rankings/" + gRiftCategory + getClassNameForLeaderboard(diabloClass);
 			request(requestURL, function (error, response, body) {
 				console.log("getLeaderboard inside request")
@@ -242,9 +250,9 @@ exports.getCurrentLeaderboard = function(diabloClass) {
 					leaders.forEach(function (playerData, i) {
 						i = currentCallNum;
 //edit battletagRequestURL handle multiple regions.
-						// var battletagRequestURL = "https://"+region+".api.battle.net/d3/profile/" + playerData[1] + "/?locale=" + locale + "&apikey=" + apiKey;
+						var battletagRequestURL = "https://"+region+".api.battle.net/d3/profile/" + playerData[1] + "/?locale=" + locale + "&apikey=" + apiKey;
 
-						var battletagRequestURL = "https://us.api.battle.net/d3/profile/" + playerData[1] + "/?locale=" + locale + "&apikey=" + apiKey;
+						// var battletagRequestURL = "https://us.api.battle.net/d3/profile/" + playerData[1] + "/?locale=" + locale + "&apikey=" + apiKey;
 						date = new Date();					
 						var currentTime = new Date();
 						currentTime = currentTime.getSeconds()*1000 + currentTime.getMilliseconds();
@@ -260,7 +268,7 @@ exports.getCurrentLeaderboard = function(diabloClass) {
 									last10CallsTime = last10CallsTime.getSeconds()*1000 + last10CallsTime.getMilliseconds();
 								}
 								console.log("requested " + i + " " + last10CallsTime);
-								updateLeaderboardCollectForPlayer(battletagRequestURL,playerData,0,db,diabloClass,0);					
+								updateLeaderboardCollectForPlayer(region, battletagRequestURL,playerData,0,db,diabloClass,0);					
 							}
 							//Not 10th call or first 10, get the current time and check how long its been since the previous 10 calls, (previousTime - currentTime)
 							//If enough time has passsed (timeDifference was <= 0), update with no delay.  Else add delay
@@ -276,11 +284,11 @@ exports.getCurrentLeaderboard = function(diabloClass) {
 								var timeDifference = last10CallsTime - currentTime;
 								console.log("requested " + playerData + " " + last10CallsTime + " " + currentTime);
 								if (timeDifference <= 0) {
-									updateLeaderboardCollectForPlayer(battletagRequestURL,playerData,0,db,diabloClass,0);	
+									updateLeaderboardCollectForPlayer(region, battletagRequestURL,playerData,0,db,diabloClass,0);	
 								}
 								else {
 									console.log(i + " timeDiff was " + timeDifference);
-									updateLeaderboardCollectForPlayer(battletagRequestURL,playerData,timeDifference+800,db,diabloClass,0);
+									updateLeaderboardCollectForPlayer(region, battletagRequestURL,playerData,timeDifference+800,db,diabloClass,0);
 								}
 							}//end not first 10 else
 						}//end not a 10th call loop
@@ -290,13 +298,13 @@ exports.getCurrentLeaderboard = function(diabloClass) {
 							last10CallsTime += 1000;
 							if (i == 9){
 								console.log("requested " + i + " " + last10CallsTime + "Current request" + currentTime);
-								updateLeaderboardCollectForPlayer(battletagRequestURL,playerData,0,db,diabloClass,0);
+								updateLeaderboardCollectForPlayer(region, battletagRequestURL,playerData,0,db,diabloClass,0);
 							}
 							//after 10th call
 							else{
 								var timeDifference = last10CallsTime - currentTime;
 								console.log("requested " + i + " " + last10CallsTime + " " + currentTime);
-								updateLeaderboardCollectForPlayer(battletagRequestURL,playerData,timeDifference+800,db,diabloClass,0);
+								updateLeaderboardCollectForPlayer(region, battletagRequestURL,playerData,timeDifference+800,db,diabloClass,0);
 							}	
 						}
 						}//REMOVE LATER
@@ -311,18 +319,19 @@ exports.getCurrentLeaderboard = function(diabloClass) {
 //make a request to API with passed in requestURL.  Add players until collectionSize is correct.
 //If collectionSize is correct, check if the player in collection matches request, else update.
 //If data was undefined, call again.
- function updateLeaderboardCollectForPlayer(requestURL, playerData, delay, db, diabloClass, calledAgain) {
+ function updateLeaderboardCollectForPlayer(region, requestURL, playerData, delay, db, diabloClass, calledAgain) {
+ 	setRegion(region);
 	setTimeout( function() {
 		request(requestURL, function (error, response, data) {
 			if (data == undefined) {
-				updateLeaderboardCollectForPlayer(requestURL, playerData, delay, db, diabloClass, calledAgain+1);
+				updateLeaderboardCollectForPlayer(region, requestURL, playerData, delay, db, diabloClass, calledAgain+1);
 			} 
 
 			else {
 				var requestedPlayerData = JSON.parse(data);
 				if (requestedPlayerData.battleTag == undefined){
 					console.log("updateLeaderboardCollectForPlayer-----" + playerData[0] + " was undefined, called " + calledAgain + "times")
-					updateLeaderboardCollectForPlayer(requestURL,playerData,1000,db,diabloClass,calledAgain+1);
+					updateLeaderboardCollectForPlayer(region, requestURL,playerData,1000,db,diabloClass,calledAgain+1);
 				}
 				//requestedPlayerData should have no errors, continue
 				else {
@@ -333,8 +342,8 @@ exports.getCurrentLeaderboard = function(diabloClass) {
 					}
 
 //wrap in else
-
-					var collectionName = getCollectionName(diabloClass,gRiftCategory);
+					console.log("update leaderboard " + region);
+					var collectionName = region+getCollectionName(diabloClass,gRiftCategory);
 					var leaderboardCollection = db.collection(collectionName);
 
 					//Check leaderboardCollection's length.  If it is less than what it should be, insert to Collection.
@@ -432,7 +441,7 @@ function getClassNameForDatabase(diabloClass) {
 
 
 //sets the Region for requests.  used when adding to DB
-function getRegion(region) {
+function setRegion(region) {
 	switch (region) {
 		case "us":
 			locale = "en_US";

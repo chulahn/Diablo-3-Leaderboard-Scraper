@@ -181,8 +181,8 @@ app.get('/update/:diabloClass', function(req,res) {
 	res.redirect('/');
 });
 
-app.get('/:category/:diabloClass', function(req,res) {
-	leaderboardMethods.getLeaderboard(req.params.diabloClass, req.params.category, req, res);
+app.get('/:region/:category/:diabloClass', function(req,res) {
+	leaderboardMethods.getLeaderboard(req.params.region, req.params.diabloClass, req.params.category, req, res);
 });
 
 //setting which leaderboard to get data from.
