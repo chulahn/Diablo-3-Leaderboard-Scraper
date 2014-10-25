@@ -117,7 +117,7 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 		    					allData[currentPlayer.Standing-1] = heroToPush;
 		    				}
 
-		    				//hero was not in the heroCollection.  get heroes from currentPlayer (in leaderboardCollection), and find the ones that match searchParams.
+		    				//hero was not in the heroCollection.  get heroes from currentPlayer (in leaderboardCollection), and find the ones that match searchParams and add to collection.
 		    				//if no heroes, or hero is dead, set to 0
 		    				else {
 		    					var currentPlayerHeroes = currentPlayer.Heroes;
@@ -153,6 +153,7 @@ exports.getLeaderboard = function(diabloClass, leaderboardType, req, res) {
 									}
 								}
 								console.log("alldata length " + allData.length + " count " + count);
+
 								if (count ==  leaderboardResults.length) {
 						    		date = new Date();
 									console.log(diabloClass + " Page rendered "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
@@ -388,7 +389,7 @@ exports.getCurrentLeaderboard = function(diabloClass) {
 						}
 //!!!!!!!
 						//check what hasnt been added
-						else if (collectionLength <1000) { //change collectionLength to 1000 later
+						else if (collectionLength <1000) {
 							leaderboardCollection.find({"Standing" : playerData[0]}).toArray(function(err, searchResult) {
 								//if it the current standing hasn't been added, add it
 								if (searchResult.length == 0) {
@@ -403,7 +404,7 @@ exports.getCurrentLeaderboard = function(diabloClass) {
 						}
 
 						//collection is correct size, check if there were any changes.
-						else if (collectionLength == 1000) { //change collectionLength to 1000 later
+						else if (collectionLength == 1000) {
 
 							//playerData[0] occasionally doesn't show up
 

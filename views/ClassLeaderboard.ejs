@@ -2,223 +2,116 @@
 <html lang="en">
 <head>
 	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
 	<meta charset="UTF-8">
 	<title><%- leaderboardType %> <%- title %> Leaderboard page</title>
+	<link rel="stylesheet" type="text/css" href="../../../styles/leaderboard.css">
 </head>
 
 
 <body>
 <h1>This is the <%- leaderboardType %> <%- title %> Leaderboard page</h1>
-<p id='ten'> 10 values </p>
-<p id='twenty'> 20 values </p>
-<p id='fifty'> 50 values </p>
-<p id='hundred'> 100 values </p>
-
+<nav>
+	<span id='ten'> 10 values </span>
+	<span id='twenty'> 20 values </span>
+	<span id='fifty'> 50 values </span>
+	<span id='hundred'> 100 values </span>
+</nav>
+<br />
+<div id='visual'></div>
 <script>
+var allData = <%-JSON.stringify(all)%>;
+var currentArray = allData.slice(0,100);
+
 var height = 300, width = 800;
 var barPadding = 1;
-var svg= d3.select("body")
+var xPadding = 60;
+var yPadding = 25;
+var svg= d3.select("#visual")
 	.append("svg")
 	.attr("height", height)
 	.attr("width" , width);
-var allData = <%-JSON.stringify(all)%>;
 
-var currentArray = allData.slice(0,100);
-
-svg.selectAll("rect").data(currentArray).enter().append("rect")
-	.attr("x" , function(d,i) {
-		return i * (width/currentArray.length); })
-	.attr("y" , function(d) { 
-		if (d == null || d == 0) {
-			return 0;
-		}
-		else {
-			return height-d.stats.damage/10000;
-		}
-	})
-	.attr("width", width / currentArray.length - barPadding)
-	.attr("height", function(d) {
-		if (d == null || d == 0) {
-			return 0;
-		}
-		else {
-			return d.stats.damage/10000;
-		}	
-	})
-	.attr("class" , "enter");
-
-svg.selectAll("rect")
-   .on("mouseover", function(d) {
-   		svg.selectAll("text").data(currentArray).enter().append("text")
-	.attr("x" , function(d, i) {
-		return i * (width / currentArray.length) + (width / currentArray.length - barPadding) /2;
-	})
-	.attr("y" , function(d) {
-		if (d == null || d == 0) {
-			return 0;
-		}
-		else {
-			return (height)-(d.stats.damage/10000);
-		}
-	})
-	.text(function (d) {
-		if (d == null || d == 0) {
-			return 0;
-		}
-		else {
-			return (d.stats.damage/1000000).toFixed(2)+"m";
-		}
-	})
-	.attr("font-family", "sans-serif")
-   .attr("font-size", "11px")
-   .attr("fill", "red")
-   .attr("text-anchor", "middle")
-   console.log(d3.select(this).datum());
-
-   });
-
-
-svg.selectAll("rect")
-   .on("mouseover", function(d) {
-   		svg.selectAll("text").data(currentArray).enter().append("text")
-	.attr("x" , function(d, i) {
-		return i * (width / currentArray.length) + (width / currentArray.length - barPadding) /2;
-	})
-	.attr("y" , function(d) {
-		if (d == null || d == 0) {
-			return (0+10);
-		}
-		else {
-			return (height)-(d.stats.damage/10000 + 10);
-		}
-	})
-	.text(function (d) {
-		if (d == null || d == 0) {
-			return('NO BATTLETAG');
-		}
-		else {
-			return d.battletag;
-		}
-	})
-	.attr("font-family", "sans-serif")
-   .attr("font-size", "11px")
-   .attr("fill", "blue")
-   .attr("text-anchor", "middle");
+var tip = d3.tip().attr('class', 'd3-tip').html(function(d,i) {
+	return (i+1)+"."+"<span class=\"btag\">"+d.battletag+"</span><br /><span class=\"damage\">"+d.stats.damage+"</span>";
 });
-
-svg.selectAll("rect")
-   .on("mouseout", function(d) {
-   		svg.selectAll("text").remove("text");
+svg.call(tip);
 
 
-   });
+function createGraph() {
 
+	var xScale = d3.scale.linear()
+					.domain([0, currentArray.length])
+					.range([xPadding, width-xPadding]);
+	var yScale = d3.scale.linear()
+					.domain([0, d3.max(currentArray, function(d) { return d.stats.damage})])
+					.range([height-yPadding, yPadding]);
+
+	var xAxis = d3.svg.axis()
+					.scale(xScale)
+					.orient("bottom")
+					.ticks(5);
+	var yAxis = d3.svg.axis()
+					.scale(yScale)
+					.orient("left")
+					.ticks(5);
+
+	svg.selectAll("rect").data(currentArray).enter()
+	.append("a").attr('xlink:href', function(d,i) {
+		return "<%- title %>#"+(i+1);
+	}).append("rect")
+		.attr("x" , function(d,i) {
+			return xScale(i); })
+		.attr("y" , function(d) { 
+			if (d == null || d == 0) {
+				return 0;
+			}
+			else {
+				return yScale(d.stats.damage);
+			}
+		})
+		//width of one bar is (widthOfGraph / # of datapoints) - spaceInBetweenBars
+		.attr("width", (width-(2*xPadding)) / currentArray.length - barPadding)
+		.attr("height", function(d) {
+			if (d == null || d == 0) {
+				return 0;
+			}
+			else {
+				return height-yScale(d.stats.damage)-yPadding;
+			}	
+		})
+		.attr("class" , "enter")
+		.on('mouseover', tip.show)
+		.on('mouseout', tip.hide);
+	svg.append("g")
+		.attr("class", "enter axis")
+		.attr("transform", "translate(0," + (height-yPadding) + ")")
+		.call(xAxis);
+	svg.append("g")
+		.attr("class", "enter axis")
+		.attr("transform", "translate("+xPadding+", 0)")
+		.call(yAxis);
+}
+
+createGraph();
 
 
 d3.select("#ten").on("click",function() {
 	currentArray = allData.slice(0,10);
-	d3.selectAll('.enter').attr("class", "exit").style('opacity' , 0);
-	svg.selectAll("rect").data(currentArray).transition()
-	.attr("x" , function(d,i) {
-		return i * (width/currentArray.length); })
-	.attr("y" , function(d) { 
-		if (d == null || d == 0) {
-			return 0;
-		}
-		else {
-			return height-d.stats.damage/10000;
-		}
-	})
-	.attr("width", width / currentArray.length - barPadding)
-	.attr("height", function(d) {
-		if (d == null || d == 0) {
-			return 0;
-		}
-		else {
-			return d.stats.damage/10000;
-		}	
-	})
-	.attr("class" , "enter")
-	.style("opacity" , 1);
-	;
-
-
-	// svg.selectAll("text").data(dpsArray.slice(0,10)).enter().append("text")
-	// .attr("x" , function(d, i) {
-	// 	return i * (width / dpsArray.slice(0,10).length) + (width / dpsArray.slice(0,10).length - barPadding) /2;
-	// })
-	// .attr("y" , function(d) {
-	// 	return (height)-(d/10000);
-	// })
-	// .text(function (d) {
-	// 	return (d/1000000).toFixed(2)+"m";
-	// })
-	// .attr("font-family", "sans-serif")
- //   .attr("font-size", "11px")
- //   .attr("fill", "red")
- //   .attr("text-anchor", "middle");
-
-
+	d3.selectAll('.enter').attr("class", "exit").remove();
+	createGraph();
 });
 
 d3.select("#twenty").on("click",function() {
-
 	currentArray = allData.slice(0,20);
-	d3.selectAll('.enter').attr("class", "exit").style('opacity' , 0);
-
-	svg.selectAll("rect").data(currentArray).transition()
-	.attr("x" , function(d,i) {
-		return i * (width/currentArray.length); })
-	.attr("y" , function(d) { 
-		if (d == null || d == 0) {
-			return 0;
-		}
-		else {
-			return height-d.stats.damage/10000;
-		}
-	})
-	.attr("width", width / currentArray.length - barPadding)
-	.attr("height", function(d) {
-		if (d == null || d == 0) {
-			return 0;
-		}
-		else {
-			return d.stats.damage/10000;
-		}	
-	})
-	.attr("class" , "enter")
-	.style("opacity" , 1);
-	;
+	d3.selectAll('.enter').attr("class", "exit").remove();
+	createGraph();
 });
 
 d3.select("#fifty").on("click",function() {
-
 	currentArray = allData.slice(0,50);
-	d3.selectAll('.enter').attr("class", "exit").style('opacity' , 0);
-
-	svg.selectAll("rect").data(currentArray).transition()
-	.attr("x" , function(d,i) {
-		return i * (width/currentArray.length); })
-	.attr("y" , function(d) { 
-		if (d == null || d == 0) {
-			return 0;
-		}
-		else {
-			return height-d.stats.damage/10000;
-		}
-	})
-	.attr("width", width / currentArray.length - barPadding)
-	.attr("height", function(d) {
-		if (d == null || d == 0) {
-			return 0;
-		}
-		else {
-			return d.stats.damage/10000;
-		}	
-	})
-	.attr("class" , "enter")
-	.style("opacity" , 1);
-	;
+	d3.selectAll('.enter').attr("class", "exit").remove();
+	createGraph();
 });
 
 d3.select("#hundred").on("click",function() {
@@ -249,8 +142,6 @@ d3.select("#hundred").on("click",function() {
 	.style("opacity" , 1);
 	;
 });
-
-
 </script>
 
 <!-- List of all the BattleTags for the corresponding Leaderboard -->
@@ -262,11 +153,11 @@ d3.select("#hundred").on("click",function() {
 		<th>Time Spent</th>
 		<th>Date Completed</th>
 	</tr>
-	<% ejs_battletags.forEach(function (tag) { %>
+	<% ejs_battletags.slice(0,100).forEach(function (tag) { %>
 		
-		<tr>
+		<tr id="<%= tag.Standing %>">
 			<td><%= tag.Standing %></td>
-			<td><a href = "/player/<%= tag.Battletag.replace("#","-") %>" >  <%= tag.Battletag %></a></td>
+			<td><a href = "/player/<%= tag.Battletag.replace("#","-") %>" ><%= tag.Battletag %></a></td>
 			<td><%= tag["Greater Rift"] %></td>
 			<td><%= tag["Time Spent"] %></td>
 			<td><%= tag["Date Completed"] %></td>

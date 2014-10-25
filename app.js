@@ -155,6 +155,9 @@ app.get('/styles/battletag.css', function(req,res) {
 app.get('/styles/hero.css', function(req,res) {
 	res.sendfile('styles/hero.css');
 });
+app.get('/styles/leaderboard.css', function(req,res) {
+	res.sendfile('styles/leaderboard.css');
+});
 
 app.get('/player/:battletag', function(req,res) {
 	playerMethods.getHeroes(req.params.battletag, req, res);

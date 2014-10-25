@@ -1,19 +1,35 @@
+h1, h2, p, li {
+	color: white;
+}
+a {
+	text-decoration : none;
+}
 #profile, #items, #skills {
 	display : inline-block;
 	position : relative;
 	border-style : solid;
 	border-width : 1px;
 	padding : 5px;
+	border-color : white;
 }
-#skills {
-	left : 10%;
-}
+
 #items {
-	left : 20%;
+	position : static;
+	right : 0%;
 }
+
+#skills {
+
+}
+
+
 .orange {
 	color : orange;
 }
 .green {
 	color : green;
+}
+
+body {
+	background-color : black;
 }

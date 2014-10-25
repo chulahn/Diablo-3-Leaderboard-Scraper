@@ -161,192 +161,197 @@ function findItemInCollection(itemID, heroID, delay){
 			var itemRequestURL = "https://us.api.battle.net/d3/data/item/" + itemID + "?locale=" + locale + "&apikey=" + apiKey;
 			setTimeout( function() {
 				request(itemRequestURL, function (error, response, data) {
-					requestedItem = JSON.parse(data);
-					if (requestedItem.code == 403) {
-						findItemInCollection(itemID,heroID,delay+1000);
+					if (data == undefined) {
+						findItemInCollection(itemID,heroID,delay+1000);	
 					}
-					else{
-						var requestedItemType = itemMethods.getItemType(requestedItem.type.id);
-						// console.log(delay + " findItem in request " +requestedItem.name + " " + requestedItemType);
+					else {
+						requestedItem = JSON.parse(data);
+						if (requestedItem.code == 403) {
+							findItemInCollection(itemID,heroID,delay+1000);
+						}
+						else{
+							var requestedItemType = itemMethods.getItemType(requestedItem.type.id);
+							// console.log(delay + " findItem in request " +requestedItem.name + " " + requestedItemType);
 
-						(function(requestedItem) {
-							//find if hero has an item in that spot.  if there is check for differences.
-							itemCollection.find({"heroID": parseInt(heroID) , "type" :requestedItemType}).toArray(function(err, matchedItems) {
-								if (matchedItems.length != 0) {
+							(function(requestedItem) {
+								//find if hero has an item in that spot.  if there is check for differences.
+								itemCollection.find({"heroID": parseInt(heroID) , "type" :requestedItemType}).toArray(function(err, matchedItems) {
+									if (matchedItems.length != 0) {
 
-									//check to see if player has only one ring, and if its not the same as the ring in DB, add it
-									if (itemMethods.isRing(requestedItemType)) {
-										if (matchedItems.length == 1 && matchedItems[0].itemID != itemID) {
-											console.log("Inserted 2nd ring");
-											insertInItemCollection(itemCollection, requestedItem, heroID);
+										//check to see if player has only one ring, and if its not the same as the ring in DB, add it
+										if (itemMethods.isRing(requestedItemType)) {
+											if (matchedItems.length == 1 && matchedItems[0].itemID != itemID) {
+												console.log("Inserted 2nd ring");
+												insertInItemCollection(itemCollection, requestedItem, heroID);
+											}
 										}
-									}
 
-									matchedItems.forEach(function (equippedItem) {
-										//this check was put here because some items did not have itemID after being updated.
-										if (equippedItem.itemID == undefined) {
-											console.log(equippedItem[0]);
-										}
-										
-										//if equippedItem and requestItem have same ID, check for differences.
-										//If no new enchants, check if it is socketable to check gems.
-										if (equippedItem.itemID == itemID) {
-											if (!itemMethods.hasNewEnchant(requestedItem, equippedItem)) {											
-												//If replacement has more gems update it
+										matchedItems.forEach(function (equippedItem) {
+											//this check was put here because some items did not have itemID after being updated.
+											if (equippedItem.itemID == undefined) {
+												console.log(equippedItem[0]);
+											}
+											
+											//if equippedItem and requestItem have same ID, check for differences.
+											//If no new enchants, check if it is socketable to check gems.
+											if (equippedItem.itemID == itemID) {
+												if (!itemMethods.hasNewEnchant(requestedItem, equippedItem)) {											
+													//If replacement has more gems update it
+													if (itemMethods.isSocketable(requestedItemType)) {
+														if(itemMethods.doesRequestedHaveMoreGems(requestedItem, equippedItem)) {
+															updateInItemCollection(itemCollection, requestedItem, heroID);
+														}
+
+														//did not have more Gems, so it could have less or same.  Check if same count and not 0.
+														else { 
+															if (!itemMethods.isGemCountZero(requestedItem) && itemMethods.sameGemCount(requestedItem, equippedItem)) {
+																var requestedGems = requestedItem.gems;
+																var equippedGems = equippedItem.gems;
+																//Had gems so compare them based on item type.
+																if (!gemMethods.sameGems(requestedGems, equippedGems)) {
+
+																	//if item is hat, if equipped gem is not a diamond or amethyst and requested is, update
+																	if (itemMethods.isHat(requestedItemType)) {
+																		if (!gemMethods.isHatGemUtility(equippedGems) && gemMethods.isHatGemUtility(requestedGems)) {
+																			updateInItemCollection(itemCollection, requestedItem, heroID);
+																		}
+																	}//end if item was hat
+
+																	//if Ring or Amulet, first check if both jewels are legendary.
+																	//then check if currently using Boon of Hoarder.
+																	if (itemMethods.isJewlery(requestedItemType)) {
+																		if (gemMethods.isGemLegendary(equippedGems[0]) && gemMethods.isGemLegendary(requestedGems[0])) {
+																			//If gem was boon, update if requested has a higher rank or not boon
+																			if (gemMethods.isGemBoon(equippedGems[0])) {
+																				if (gemMethods.requestedRankHigher(requestedGems[0], equippedGems[0]) || !gemMethods.isGemBoon(requestedGems[0])) {
+																					updateInItemCollection(itemCollection, requestedItem, heroID);
+																				}
+																			}
+																			//If Gem was not boon, update if request has higher rank
+																			else {
+																				//if rank was higher, update
+																				if (gemMethods.requestedRankHigher(requestedGems[0], equippedGems[0])) {
+																					updateInItemCollection(itemCollection, requestedItem, heroID);
+																				}
+																			}
+																		}
+																		//If equipped gem is not legendary but requested is, update
+																		else if (!gemMethods.isGemLegendary(equippedGems[0]) && gemMethods.isGemLegendary(requestedGems[0])) {
+																			updateInItemCollection(itemCollection, requestedItem, heroID);
+																		}
+																	}//end if item was ring or neck
+																	//if item is a weapon,
+																}//end if had gems and gems were same
+															}//end if item had gems and had same gemcount
+														}//end if item did not have more gems
+													}//end if item is socketable
+												}//end if item did not have new enchant
+
+												//Updating because item had a new enchant
+												else {
+													updateInItemCollection(itemCollection, requestedItem, heroID);
+												}
+											}//end if items are the same
+
+
+											//Item is not the same, update+unequip socketable items if there are more gems in request.
+											else {
 												if (itemMethods.isSocketable(requestedItemType)) {
 													if(itemMethods.doesRequestedHaveMoreGems(requestedItem, equippedItem)) {
 														updateInItemCollection(itemCollection, requestedItem, heroID);
+														unequipItem(itemCollection, equippedItem, heroID);
 													}
 
-													//did not have more Gems, so it could have less or same.  Check if same count and not 0.
+													//Update+unequip itemif gem in request has better stats
 													else { 
+														//if item actually has gems, and have same gemCount  
 														if (!itemMethods.isGemCountZero(requestedItem) && itemMethods.sameGemCount(requestedItem, equippedItem)) {
 															var requestedGems = requestedItem.gems;
 															var equippedGems = equippedItem.gems;
-															//Had gems so compare them based on item type.
 															if (!gemMethods.sameGems(requestedGems, equippedGems)) {
-
-																//if item is hat, if equipped gem is not a diamond or amethyst and requested is, update
+																
 																if (itemMethods.isHat(requestedItemType)) {
 																	if (!gemMethods.isHatGemUtility(equippedGems) && gemMethods.isHatGemUtility(requestedGems)) {
 																		updateInItemCollection(itemCollection, requestedItem, heroID);
+																		unequipItem(itemCollection, equippedItem, heroID);
 																	}
 																}//end if item was hat
 
-																//if Ring or Amulet, first check if both jewels are legendary.
-																//then check if currently using Boon of Hoarder.
+																//If Jewelry, compare gems
 																if (itemMethods.isJewlery(requestedItemType)) {
 																	if (gemMethods.isGemLegendary(equippedGems[0]) && gemMethods.isGemLegendary(requestedGems[0])) {
-																		//If gem was boon, update if requested has a higher rank or not boon
 																		if (gemMethods.isGemBoon(equippedGems[0])) {
+																			//if replacement is not boon or has a higher rank, replace  
 																			if (gemMethods.requestedRankHigher(requestedGems[0], equippedGems[0]) || !gemMethods.isGemBoon(requestedGems[0])) {
-																				updateInItemCollection(itemCollection, requestedItem, heroID);
-																			}
-																		}
-																		//If Gem was not boon, update if request has higher rank
-																		else {
-																			//if rank was higher, update
-																			if (gemMethods.requestedRankHigher(requestedGems[0], equippedGems[0])) {
-																				updateInItemCollection(itemCollection, requestedItem, heroID);
-																			}
-																		}
-																	}
-																	//If equipped gem is not legendary but requested is, update
-																	else if (!gemMethods.isGemLegendary(equippedGems[0]) && gemMethods.isGemLegendary(requestedGems[0])) {
-																		updateInItemCollection(itemCollection, requestedItem, heroID);
-																	}
-																}//end if item was ring or neck
-																//if item is a weapon,
-															}//end if had gems and gems were same
-														}//end if item had gems and had same gemcount
-													}//end if item did not have more gems
-												}//end if item is socketable
-											}//end if item did not have new enchant
-
-											//Updating because item had a new enchant
-											else {
-												updateInItemCollection(itemCollection, requestedItem, heroID);
-											}
-										}//end if items are the same
-
-
-										//Item is not the same, update+unequip socketable items if there are more gems in request.
-										else {
-											if (itemMethods.isSocketable(requestedItemType)) {
-												if(itemMethods.doesRequestedHaveMoreGems(requestedItem, equippedItem)) {
-													updateInItemCollection(itemCollection, requestedItem, heroID);
-													unequipItem(itemCollection, equippedItem, heroID);
-												}
-
-												//Update+unequip itemif gem in request has better stats
-												else { 
-													//if item actually has gems, and have same gemCount  
-													if (!itemMethods.isGemCountZero(requestedItem) && itemMethods.sameGemCount(requestedItem, equippedItem)) {
-														var requestedGems = requestedItem.gems;
-														var equippedGems = equippedItem.Gems;
-														if (!gemMethods.sameGems(requestedGems, equippedGems)) {
-															
-															if (itemMethods.isHat(requestedItemType)) {
-																if (!gemMethods.isHatGemUtility(equippedGems) && gemMethods.isHatGemUtility(requestedGems)) {
-																	updateInItemCollection(itemCollection, requestedItem, heroID);
-																	unequipItem(itemCollection, equippedItem, heroID);
-																}
-															}//end if item was hat
-
-															//If Jewelry, compare gems
-															if (itemMethods.isJewlery(requestedItemType)) {
-																if (gemMethods.isGemLegendary(equippedGems[0]) && gemMethods.isGemLegendary(requestedGems[0])) {
-																	if (gemMethods.isGemBoon(equippedGems[0])) {
-																		//if replacement is not boon or has a higher rank, replace  
-																		if (gemMethods.requestedRankHigher(requestedGems[0], equippedGems[0]) || !gemMethods.isGemBoon(requestedGems[0])) {
-																			updateInItemCollection(itemCollection, requestedItem, heroID);
-																			unequipItem(itemCollection, equippedItem, heroID);
-																		}
-																	}
-																	//If equipped was not Boon, compare.
-																	else {
-																		//gets called before finishes updating
-																		if (itemMethods.isRing(requestedItemType)) {
-																			delay += 1000;
-																			setTimeout( function() {
-																				//COMPARE STATS, for now update+unequip
-																				itemCollection.find( {"itemID" :equippedItem.itemID} ).toArray(function(err, matchedRings) {
-																					if (matchedRings.length == 2) {
-																						console.log("two matching rings "+ equippedItem.Name + "  equipping " + requestedItem.name);
-																						updateInItemCollection(itemCollection, requestedItem, heroID);
-																						unequipItem(itemCollection, equippedItem, heroID);
-																					}
-																				});
-																			},delay);
-
-
-																		}
-																		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!not a ring
-																		else { //CHANGE THIS LATER.  RING WILL NOT UPDATE IF THERE WAS HIGHER RANK
-																			//Update if rank was higher.  !!!!ADD if same rank, compare stats
-																			if (gemMethods.requestedRankHigher(requestedGems[0], equippedGems[0])) {
-																				console.log("---here " + delay);
 																				updateInItemCollection(itemCollection, requestedItem, heroID);
 																				unequipItem(itemCollection, equippedItem, heroID);
 																			}
 																		}
+																		//If equipped was not Boon, compare.
+																		else {
+																			//gets called before finishes updating
+																			if (itemMethods.isRing(requestedItemType)) {
+																				delay += 1000;
+																				setTimeout( function() {
+																					//COMPARE STATS, for now update+unequip
+																					itemCollection.find( {"itemID" :equippedItem.itemID} ).toArray(function(err, matchedRings) {
+																						if (matchedRings.length == 2) {
+																							console.log("two matching rings "+ equippedItem.Name + "  equipping " + requestedItem.name);
+																							updateInItemCollection(itemCollection, requestedItem, heroID);
+																							unequipItem(itemCollection, equippedItem, heroID);
+																						}
+																					});
+																				},delay);
+
+
+																			}
+																			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!not a ring
+																			else { //CHANGE THIS LATER.  RING WILL NOT UPDATE IF THERE WAS HIGHER RANK
+																				//Update if rank was higher.  !!!!ADD if same rank, compare stats
+																				if (gemMethods.requestedRankHigher(requestedGems[0], equippedGems[0])) {
+																					console.log("---here " + delay);
+																					updateInItemCollection(itemCollection, requestedItem, heroID);
+																					unequipItem(itemCollection, equippedItem, heroID);
+																				}
+																			}
+																		}
 																	}
-																}
-																//Update+unequip if equipped is nonLeg and requested is
-																else if (!gemMethods.isGemLegendary(equippedGems[0]) && gemMethods.isGemLegendary(requestedGems[0])) {
-																	updateInItemCollection(itemCollection, requestedItem, heroID);
-																	unequipItem(itemCollection, equippedItem, heroID);
-																}
-															}//end if item was ring or neck
-															//ADD if item is a weapon,
-														}//end if gems were not same
+																	//Update+unequip if equipped is nonLeg and requested is
+																	else if (!gemMethods.isGemLegendary(equippedGems[0]) && gemMethods.isGemLegendary(requestedGems[0])) {
+																		updateInItemCollection(itemCollection, requestedItem, heroID);
+																		unequipItem(itemCollection, equippedItem, heroID);
+																	}
+																}//end if item was ring or neck
+																//ADD if item is a weapon,
+															}//end if gems were not same
 
-														//!!!!!!TO DOgems were same compare itemstats
-														else {
-															updateInItemCollection(itemCollection, requestedItem, heroID);
-															unequipItem(itemCollection, equippedItem, heroID);
-														}
-													}//end if item had gems, and had same gemcount
-												}//end if item did not have more gems
-											}//end if item is socketable
+															//!!!!!!TO DOgems were same compare itemstats
+															else {
+																updateInItemCollection(itemCollection, requestedItem, heroID);
+																unequipItem(itemCollection, equippedItem, heroID);
+															}
+														}//end if item had gems, and had same gemcount
+													}//end if item did not have more gems
+												}//end if item is socketable
 
-											//!!!not a socketable item
-											//!!!TO DOcompare stats
-											else {
-												updateInItemCollection(itemCollection, requestedItem, heroID);
-												unequipItem(itemCollection, equippedItem, heroID);
-											}
-										}//end if item was not the same
-									});//end forEach item
-								}//end if found a item in that spot
+												//!!!not a socketable item
+												//!!!TO DOcompare stats
+												else {
+													updateInItemCollection(itemCollection, requestedItem, heroID);
+													unequipItem(itemCollection, equippedItem, heroID);
+												}
+											}//end if item was not the same
+										});//end forEach item
+									}//end if found a item in that spot
 
-								//there no item in that spot, update
-								else {
-									insertInItemCollection(itemCollection, requestedItem, heroID);
-								}//end insertion		
-							});//end itemcollection find
-						})(requestedItem);//end self-invoking function
-					}//end else json had data				
+									//there no item in that spot, update
+									else {
+										insertInItemCollection(itemCollection, requestedItem, heroID);
+									}//end insertion		
+								});//end itemcollection find
+							})(requestedItem);//end self-invoking function
+						}//end else json had data	
+					}//end else data was not undefined			
 				});//end request
 			},delay);//end settimeout
 		}//end if successfully in db
