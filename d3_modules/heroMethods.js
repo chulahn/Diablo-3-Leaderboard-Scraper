@@ -27,13 +27,13 @@ exports.getHeroDetails = function(heroID, req, res) {
 			return console.log("getHeroDetails error connecting to db")
 		}
 		else {
-			console.log("connected")
 			heroCollection = db.collection('hero');
 			heroCollection.find({"heroID" : parseInt(heroID)}).toArray(function(err, matchedHero) {
 				if (matchedHero.length > 0) {
 					var heroData = matchedHero[0];
 					var heroItems = heroData.items;
-					if (heroData.level == 70) {
+					//add items to DB if extraItemDatta is undefined
+					if (heroData.level == 70 && heroData.extraItemData == undefined) {
 						exports.getItemIDsFromHero(heroItems,heroID,10);
 					}
 					res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
@@ -140,6 +140,8 @@ function findItemInCollection(itemID, heroID, delay){
 		else {
 			var itemCollection = db.collection("item");
 			var itemRequestURL = "https://us.api.battle.net/d3/data/item/" + itemID + "?locale=" + locale + "&apikey=" + apiKey;
+			// var itemRequestURL = "https://"+region+".api.battle.net/d3/data/item/" + itemID + "?locale=" + locale + "&apikey=" + apiKey;
+
 			setTimeout( function() {
 				request(itemRequestURL, function (error, response, data) {
 					if (data == undefined) {
@@ -277,7 +279,7 @@ function findItemInCollection(itemID, heroID, delay){
 																					//COMPARE STATS, for now update+unequip
 																					itemCollection.find( {"itemID" :equippedItem.itemID} ).toArray(function(err, matchedRings) {
 																						if (matchedRings.length == 2) {
-																							console.log("two matching rings "+ equippedItem.Name + "  equipping " + requestedItem.name);
+																							console.log("two matching rings "+ equippedItem.name + "  equipping " + requestedItem.name);
 																							updateInItemCollection(itemCollection, requestedItem, heroID);
 																							unequipItem(itemCollection, equippedItem, heroID);
 																						}
@@ -341,7 +343,7 @@ function findItemInCollection(itemID, heroID, delay){
 
 function updateInItemCollection(itemCollection, currentItem, heroID) {
 	itemCollection.update({"heroID": parseInt(heroID) , "type" :itemMethods.getItemType(currentItem.type.id)}, {"itemID" : currentItem.tooltipParams.replace("item/",""), "name" : currentItem.name, "displayColor" : currentItem.displayColor, "type" : itemMethods.getItemType(currentItem.type.id), "affixes" : currentItem.attributes, "randomAffixes" : currentItem.randomAffixes, "gems" : currentItem.gems, "socketEffects" : currentItem.socketEffects, "heroID" : parseInt(heroID), "equipped" : true}, function(err, result) {
-		console.log("Successfully updated " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
+		console.log("Successfully updated/equipped " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
 	});
 }
 
@@ -353,7 +355,7 @@ function insertInItemCollection(itemCollection, currentItem, heroID) {
 
 function unequipItem(itemCollection, itemToUnequip, heroID) {
 		itemCollection.update({"heroID": parseInt(heroID) , "itemID" : itemToUnequip.itemID },  {$set : {"Equipped" : false}}, function(err, result) {
-		console.log("Successfully unequipped " + itemToUnequip.Name + " " + itemToUnequip.itemID.substring(0,5));
+		console.log("Successfully unequipped " + itemToUnequip.name + " " + itemToUnequip.itemID.substring(0,5));
 	});
 }
 

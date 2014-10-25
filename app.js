@@ -170,7 +170,7 @@ app.get('/update/player/:battletag/hero/:heroID', function(req, res) {
 		}
 		else {
 			console.log(req.params.battletag)
-			playerMethods.addHeroData(req.params.battletag, parseInt(req.params.heroID), 50, db);
+			playerMethods.addHeroData("us",req.params.battletag, parseInt(req.params.heroID), 50, db);
 			res.redirect('/player/'+req.params.battletag+'/hero/'+req.params.heroID);
 		}	
 	});
@@ -179,7 +179,7 @@ app.get('/update/player/:battletag/hero/:heroID', function(req, res) {
 app.get('/update/:diabloClass', function(req,res) {
 	leaderboardMethods.getCurrentLeaderboard(req.params.diabloClass);
 	res.redirect('/');
-});
+}); 
 
 app.get('/:region/:category/:diabloClass', function(req,res) {
 	leaderboardMethods.getLeaderboard(req.params.region, req.params.diabloClass, req.params.category, req, res);

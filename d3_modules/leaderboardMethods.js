@@ -72,7 +72,6 @@ exports.getLeaderboard = function(region, diabloClass, leaderboardType, req, res
 
 		    			//get the hero that matches searchParams
 		    			heroCollection.find({"battletag" : currentPlayer.Battletag.replace("#", "-"), "class" : getClassNameForDatabase(diabloClass), "seasonal" : searchParamSeason, "hardcore" : searchParamHC }).toArray(function (error, heroResults) {
-
 		    				//if we found the Hero based on BattleTag and class, find the hero with the highest dps. 
 		    				if (heroResults.length > 0) {
 		    					// console.log('result was found ',heroResults[0].hardcore,leaderboardResults.length ,allData.length);
@@ -89,16 +88,19 @@ exports.getLeaderboard = function(region, diabloClass, leaderboardType, req, res
 		    				//if no heroes, or hero is dead, set to 0
 		    				else {
 		    					var currentPlayerHeroes = currentPlayer.Heroes;
-		    					//player deleted heroes
+		    					//player deleted all heroes or no matches
 		    					if (currentPlayerHeroes.length == 0) {
 	    							allData[currentPlayer.Standing-1] = 0;
 		    					}
+		    					var validHero70Count = 0;
 		    					currentPlayerHeroes.forEach(function(currentHero) {
-		    						if (currentHero.level == 70) {
-			    						if (getClassNameForDatabase(diabloClass) == currentHero.class && currentHero.dead == false && currentHero.hardcore == searchParamHC && currentHero.seasonal == searchParamSeason) {
+		    						//find the hero that matches searchParams (class, HC, seasonal, 70)
+		    						if (currentHero.level == 70 && currentHero.hardcore == searchParamHC && currentHero.seasonal == searchParamSeason && getClassNameForDatabase(diabloClass) == currentHero.class) {
+		    							validHero70Count += 1;
+			    						if (currentHero.dead == false) {
 			    							// console.log(currentHero);
 			    							console.log("before " + delayCounter);
-			    							playerMethods.addHeroData(currentPlayer.Battletag.replace("#", "-"), currentHero.id, timeToDelay(),db);
+			    							playerMethods.addHeroData(region, currentPlayer.Battletag.replace("#", "-"), currentHero.id, timeToDelay(),db);
 			    							console.log("after " + delayCounter);
 			    						}
 			    						//error handling for hc players.  heroID is in currentPlayer.Heroes, but was dead
@@ -107,6 +109,14 @@ exports.getLeaderboard = function(region, diabloClass, leaderboardType, req, res
 			    							allData[currentPlayer.Standing-1] = 0;
 			    						}
 			    					}
+
+			    					//reached lastHero, if there were no valid 70s, add 0.  player, has heroes, but deleted grift hero hero
+		    						if (currentPlayerHeroes.indexOf(currentHero) == currentPlayerHeroes.length-1) {
+		    							if (validHero70Count == 0) {
+		    								console.log("validHero70Count was 0 for " + currentPlayer.standing + " " + currentPlayer.Battletag);
+		    								allData[currentPlayer.Standing-1] = 0;
+		    							}
+		    						}
 		    					});
 		    				}
 							//Make sure allData has data at each point in array before rendering page
@@ -117,7 +127,7 @@ exports.getLeaderboard = function(region, diabloClass, leaderboardType, req, res
 										count++;
 									}
 									else {
-										// console.log(allData[i] + " " + i);
+										console.log(allData[i] + " " + i);
 									}
 								}
 								console.log("alldata length " + allData.length + " count " + count);
@@ -257,7 +267,7 @@ exports.getCurrentLeaderboard = function(region, diabloClass) {
 						var currentTime = new Date();
 						currentTime = currentTime.getSeconds()*1000 + currentTime.getMilliseconds();
 						//only update if greater than 100  REMOVE THIS LATER
-						if (i >= 100) {
+						if (i <= 100) {
 						//Not the 10th call
 						if (i % 10 != 9) {
 							//but is first 10
@@ -330,7 +340,7 @@ exports.getCurrentLeaderboard = function(region, diabloClass) {
 			else {
 				var requestedPlayerData = JSON.parse(data);
 				if (requestedPlayerData.battleTag == undefined){
-					console.log("updateLeaderboardCollectForPlayer-----" + playerData[0] + " was undefined, called " + calledAgain + "times")
+					console.log("updateLeaderboardCollectForPlayer-----" + playerData[0] + " was undefined, called " + calledAgain + "times",requestURL)
 					updateLeaderboardCollectForPlayer(region, requestURL,playerData,1000,db,diabloClass,calledAgain+1);
 				}
 				//requestedPlayerData should have no errors, continue
@@ -446,15 +456,19 @@ function setRegion(region) {
 		case "us":
 			locale = "en_US";
 			region = "us";
+			break;
 		case "eu":
 			locale = "en_GB";
 			region = "eu";
+			break;
 		case "tw":
 			locale = "zh_TW";
 			region = "tw";
+			break;
 		case "kr":
 			locale = "ko_KR";
 			region = "kr";
+			break;
 	}
 }
 

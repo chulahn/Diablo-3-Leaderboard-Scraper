@@ -55,8 +55,8 @@ exports.getHeroes = function(battletag, req, res) {
 }
 
 //add hero's data to hero collection if the hero is level 70 and has certain damage.  damageFiler currently set to 0 for instance hero probably unequipped weapon
- exports.addHeroData = function(battletag, heroID, delay,db) {
-
+ exports.addHeroData = function(region, battletag, heroID, delay,db) {
+ 	setRegion(region);
 	console.log("inside addHeroData for " + battletag + " " + heroID + "delay is " + delay);
 	var requestURL = "https://" + region + apiURL + "profile/" + battletag.replace("#", "-") + "/hero/" + heroID + "?locale=" + locale + "&apikey=" + apiKey;
 	setTimeout( function() {
@@ -98,13 +98,14 @@ exports.getHeroes = function(battletag, req, res) {
 								if (results.length == 1) {
 //!!!!!!!							//check if there is damage increase, check if all items are equipped and call get Important INFO
 									// if (requestedHeroData.stats.damage > 300000){
-										heroCollection.update({"heroID" : requestedHeroData.id}, {"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats}, function(err, results) {
+										console.log("here")
+										heroCollection.update({"heroID" : requestedHeroData.id}, {"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats, "region" : region}, function(err, results) {
 										console.log("addHeroData found, updating "+ battletag + " " + requestedHeroData.id);
 										});//end update.
 									// }
 								}
 								else {
-									heroCollection.insert({"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats}, function(err, results) {
+									heroCollection.insert({"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats, "region" : region}, function(err, results) {
 										console.log("addHeroData not found, inserting "+ battletag + " " + requestedHeroData.id);
 										// console.log("adding items")
 										// heroMethods.getItemIDsFromHero(requestedHeroData.items, requestedHeroData.id, timeToDelay());
@@ -121,19 +122,23 @@ exports.getHeroes = function(battletag, req, res) {
 }
 
 //sets the Region for requests.  used when adding to DB
-function getRegion(region) {
+function setRegion(region) {
 	switch (region) {
 		case "us":
 			locale = "en_US";
 			region = "us";
+			break;
 		case "eu":
 			locale = "en_GB";
 			region = "eu";
+			break;
 		case "tw":
 			locale = "zh_TW";
 			region = "tw";
+			break;
 		case "kr":
 			locale = "ko_KR";
 			region = "kr";
+			break;
 	}
 }
