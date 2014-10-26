@@ -45,13 +45,12 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 			setRegion(region);
 			var collectionName = region + getCollectionName(diabloClass, leaderboardType);
 			var leaderboardCollection = db.collection(collectionName);
-			console.log(region);
 			//get all from collection, sort by rank
 			leaderboardCollection.find({},{"_id" : 0 }).sort({"Standing" : 1}).toArray(function (err, leaderboardResults) {
 	    		
 	    		if (leaderboardResults.length == 0 || leaderboardResults.length != 1000) {
-	    			exports.getGRiftCategory(leaderboardType);
-	    			exports.getCurrentLeaderboard(region, diabloClass);
+	    			exports.setGRiftCategory(leaderboardType);
+	    			exports.getCurrentLeaderboard(region, diabloClass, leaderboardType);
 	    			res.redirect('/');
 	    		}
 	    		//leaderboard has 1000
@@ -185,7 +184,7 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 		//successfully connected
 		if(!err) {
 			setRegion(region);
-			exports.getGRiftCategory(leaderboardType);
+			exports.setGRiftCategory(leaderboardType);
 			date = new Date();
 			console.log(region + " " + diabloClass + " " + gRiftCategory + " Leaders before request "+ date.getMinutes() +":"+ date.getSeconds());
 			var requestURL = "https://" + region + ".battle.net/d3/en/rankings/" + gRiftCategory + getClassNameForLeaderboard(diabloClass);
@@ -260,7 +259,6 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 					var last10CallsTime;
 					leaders.forEach(function (playerData, i) {
 						i = currentCallNum;
-//edit battletagRequestURL handle multiple regions.
 						var battletagRequestURL = "https://"+region+".api.battle.net/d3/profile/" + playerData[1] + "/?locale=" + locale + "&apikey=" + apiKey;
 
 						date = new Date();					
@@ -368,7 +366,7 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 						}
 //!!!!!!!
 						//check what hasnt been added, if the current standing hasn't been added, add it
-						else if (collectionLength <1000) {
+						else if (collectionLength < 1000) {
 							leaderboardCollection.find({"Standing" : playerData[0]}).toArray(function(err, standingSearchResult) {
 								if (standingSearchResult.length == 0) {
 									console.log("adding " + requestedPlayerData.battleTag + " to " + playerData[0]);
@@ -387,6 +385,11 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 							leaderboardCollection.find({"Standing" : playerData[0]}).toArray(function(err, standingSearchResult) {
 								if (standingSearchResult.length == 0) {
 									console.log("updateLeaderboardCollectForPlayer standing not found for " + playerData);
+									leaderboardCollection.update({"Battletag" : playerData[1].replace("-","#")}, {$set : {"Standing" : playerData[0]}}, function (err, results) {
+										if (err) {
+											return console.log("error when setting standing xxxxxxxxxxxxxxxx")
+										}			
+									});
 									//find entries without Standing and remove them, and add.  for now manually remove.
 									// asd
 								}
@@ -404,13 +407,14 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 
 											//match, check for differences in Heroes	
 											if (JSON.stringify(dataBaseplayer.Heroes) != JSON.stringify(requestedPlayerData.heroes)) {
-												leaderboardCollection.update({"Standing" : playerData[0]} , {"Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : requestedPlayerData.heroes}, function(err, results) {
+												leaderboardCollection.update({"Standing" : playerData[0]} , {$set : {"Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : requestedPlayerData.heroes}}, function(err, results) {
 													console.log("updateLeaderboardCollectForPlayer, updating only heroes for, "+ requestedPlayerData.battleTag +  " --------updated with " + playerData);
 												});														
 											}
 									}
+									//different player in standing spot.
 									else {	
-										leaderboardCollection.update({"Standing" : playerData[0]} , {"Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : requestedPlayerData.heroes}, function(err, results) {
+										leaderboardCollection.update({"Standing" : playerData[0]} , {$set :{"Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : requestedPlayerData.heroes}}, function(err, results) {
 											console.log("updateLeaderboardCollectForPlayer, found,"+ requestedPlayerData.battleTag +  " --------updated with " + playerData);
 										});			
 									}
@@ -491,7 +495,7 @@ function setRegion(region) {
 //localhost/normal, /hc, /season, etc.
 //category is req.param
 //Used to set gRiftCategory, which is used in getCurrentLeaderboard(gets table from Battle.net) to request correct table.
-exports.getGRiftCategory = function(category) {
+exports.setGRiftCategory = function(category) {
 	switch (category) {
 		case "normal" :
 			gRiftCategory = "era/1/rift-";
@@ -510,7 +514,7 @@ exports.getGRiftCategory = function(category) {
 
 //gets a collectionName whether updating or getting.  SPLIT THIS FUNCTION LATER
 function getCollectionName(diabloClass, gRiftCategory) {
-	//inside update, after request from bnet, collectionName is what was set in getGRiftCategory
+	//inside update, after request from bnet, collectionName is what was set in setGRiftCategory
 	if (gRiftCategory == "era/1/rift-") {
 		collectionCategory="normal";		
 	}

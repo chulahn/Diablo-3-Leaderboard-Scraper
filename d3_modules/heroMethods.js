@@ -11,7 +11,6 @@ var region = "us";
 var apiURL = ".api.battle.net/d3/"
 var locale = "en_US";
 
-
 //localhost:3000/player/:battletag/hero/:heroID
 //for a given heroID, it searches heroCollection, and renders hero's page.  if not in data base, make an API request
 exports.getHeroDetails = function(heroID, req, res) {
@@ -43,8 +42,8 @@ exports.getHeroDetails = function(heroID, req, res) {
 				//not in database.  must request data from Blizzard site.
 				else {
 					request(heroRequestURL, function (error, response, data) {
-						console.log(data);
-						console.log(heroRequestURL);
+						// console.log(data);
+						// console.log(heroRequestURL);
 						var heroData = JSON.parse(data);
 						var heroItems = heroData.items;
 						if (heroData.level == 70) {
@@ -74,7 +73,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 */
 }
 
-//get all items from heroItems, and call findItemInCollection for each.
+//get all items from json heroItems, and call findItemInCollection for each.
 exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
 	var allItems = [];
 	if (heroItems.rightFinger != null) {

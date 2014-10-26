@@ -32,6 +32,10 @@ $(document).ready(function() {
 		for (j=0; j<diabloClasses.length; j++) {
 			innerHTML += "<a href=\"/us/" + groups[i] +"/"+ diabloClasses[j]+ "\">"+diabloClasses[j]+"</a> ";
 		}
+		innerHTML += "</p><p>"
+		for (k=0; k<diabloClasses.length; k++) {
+			innerHTML += "<a href=\"/update/us/" + groups[i] +"/"+ diabloClasses[k]+ "\">update"+diabloClasses[k]+"</a> ";
+		}
 		innerHTML += "</p>";
 		innerHTML += "</p>";
 	}
@@ -46,31 +50,11 @@ $(document).ready(function() {
 </nav>
 <p>&nbsp;</p>
 
-<nav class ="currentBoard">
 <p><a href="/eu/normal/barb">Euro barb </a>
-<p><a id="normalboard" href="/normal" >Normal</a>
-  <a id="hc" href="/hc">Hardcore</a>
-  
-  <a id="season" href="/season">Seasonal</a>
-  <a id="seasonhc" href="/seasonhc">Seasonal Hardcore</a>  
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
 </p>
-</nav>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-
-<input type="submit" onclick="location.href='/update/barb'" name="button" id="button" value="update barbs" />
-
-<input type="submit" onclick="location.href='/update/sader'" name="button" id="button" value="update sader" />
-
-<input type="submit" onclick="location.href='/update/dh'" name="button" id="button" value="update dh" />
-
-<input type="submit" onclick="location.href='/update/monk'" name="button" id="button" value="update monk" />
-
-<input type="submit" onclick="location.href='/update/wiz'" name="button" id="button" value="update wiz" />
-
-<input type="submit" onclick="location.href='/update/wd'" name="button" id="button" value="update wd" />
-</p>
-<p>&nbsp;</p>
 </body>
 
 </html>

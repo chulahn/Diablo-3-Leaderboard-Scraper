@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+	<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
 	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 	<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
 	<meta charset="UTF-8">
@@ -59,6 +60,10 @@ legend.append("text")
 		.on("click" , function(d) {
 			createGraph(d);
 		});
+
+function hideTable() {
+	$('table').hide()
+}
 
 function createGraph(number) {
 	//if number == null, set to currentTop
@@ -147,6 +152,7 @@ function createGraph(number) {
 createGraph(100);
 
 d3.select("#hundred").on("click",function() {
+	hideTable();
 	currentDataset = "toughness";
 	currentArray = allData.slice(0,100);
 	d3.selectAll('.enter').attr("class", "exit").style('opacity' , 0);
