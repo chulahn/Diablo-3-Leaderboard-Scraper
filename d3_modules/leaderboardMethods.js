@@ -24,10 +24,6 @@ function timeToDelay() {
 }
 
 
-
-// https://eu.api.battle.net/d3/profile/a/?locale=en_GB&apikey=y34m8hav4zpvrezvrs6xhgjh6uphqa5r
-
-
 //called on localhost:/:category/:diabloClass
 //leaderboardType is req.params.category (normal, hc, season, seasonhc)
 //If leaderboardCollection has no data or not 1000 call getCurrentLeaderboard
@@ -35,7 +31,7 @@ function timeToDelay() {
 //and get the one that has the highest dps, add to allData which is used for d3 visualization
 	//If not found in heroCollection, attempt to add by getting the heroID from searching the leaderboardCollection
 //Once allData reaches 1000 and data is not undefined, renderpage
-exports.getLeaderboard = function(region, diabloClass, leaderboardType, req, res) {    
+exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, req, res) {    
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 	//Takes about 1/10th second
 		date = new Date();
@@ -45,7 +41,7 @@ exports.getLeaderboard = function(region, diabloClass, leaderboardType, req, res
 		}	
 		//successfully connected
 		else  {
-			console.log("Inside getLeaderboard for " + region + " " + diabloClass + " " + leaderboardType);
+			console.log("Inside getLeaderboardFromDB for " + region + " " + diabloClass + " " + leaderboardType);
 			setRegion(region);
 			var collectionName = region + getCollectionName(diabloClass, leaderboardType);
 			var leaderboardCollection = db.collection(collectionName);
@@ -70,7 +66,7 @@ exports.getLeaderboard = function(region, diabloClass, leaderboardType, req, res
 		    			delayCounter =0;
 		    			var heroCollection = db.collection("hero");
 
-		    			//get the hero that matches searchParams
+		    			//get the heroes that matches searchParams
 		    			heroCollection.find({"battletag" : currentPlayer.Battletag.replace("#", "-"), "class" : getClassNameForDatabase(diabloClass), "seasonal" : searchParamSeason, "hardcore" : searchParamHC }).toArray(function (error, heroResults) {
 		    				//if we found the Hero based on BattleTag and class, find the hero with the highest dps. 
 		    				if (heroResults.length > 0) {
@@ -96,8 +92,8 @@ exports.getLeaderboard = function(region, diabloClass, leaderboardType, req, res
 		    					currentPlayerHeroes.forEach(function(currentHero) {
 		    						//find the hero that matches searchParams (class, HC, seasonal, 70)
 		    						if (currentHero.level == 70 && currentHero.hardcore == searchParamHC && currentHero.seasonal == searchParamSeason && getClassNameForDatabase(diabloClass) == currentHero.class) {
-		    							validHero70Count += 1;
 			    						if (currentHero.dead == false) {
+			    							validHero70Count += 1;
 			    							// console.log(currentHero);
 			    							console.log("before " + delayCounter);
 			    							playerMethods.addHeroData(region, currentPlayer.Battletag.replace("#", "-"), currentHero.id, timeToDelay(),db);
@@ -112,6 +108,11 @@ exports.getLeaderboard = function(region, diabloClass, leaderboardType, req, res
 
 			    					//reached lastHero, if there were no valid 70s, add 0.  player, has heroes, but deleted grift hero hero
 		    						if (currentPlayerHeroes.indexOf(currentHero) == currentPlayerHeroes.length-1) {
+		    							if (currentPlayer.Battletag == "Buhbuhlooske#1480" ||currentPlayer.Battletag == "AchillesRbrn#1782" ) {
+		    								// console.log( currentPlayerHeroes);
+		    								console.log(validHero70Count);
+		    								allData[currentPlayer.Standing-1] = 0;
+		    							}
 		    							if (validHero70Count == 0) {
 		    								console.log("validHero70Count was 0 for " + currentPlayer.standing + " " + currentPlayer.Battletag);
 		    								allData[currentPlayer.Standing-1] = 0;
@@ -127,7 +128,7 @@ exports.getLeaderboard = function(region, diabloClass, leaderboardType, req, res
 										count++;
 									}
 									else {
-										console.log(allData[i] + " " + i);
+										console.log(allData[i] + " " + (i+1));
 									}
 								}
 								console.log("alldata length " + allData.length + " count " + count);
@@ -136,7 +137,7 @@ exports.getLeaderboard = function(region, diabloClass, leaderboardType, req, res
 						    		date = new Date();
 									console.log(diabloClass + " Page rendered "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 									//Takes about half a minute to render.
-			    					res.render('ClassLeaderboard.ejs', {title : diabloClass , leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , all:allData });
+			    					res.render('ClassLeaderboard.ejs', {title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , all:allData });
 								}//end rendering page
 							}
 		    			})//end toArray callback from finding hero.
@@ -179,17 +180,17 @@ exports.getLeaderboard = function(region, diabloClass, leaderboardType, req, res
 
 //Gets the leaderboard table from Battle.net website, parses each row, creates an API request URL
 //and passes it to updateLeaderboardCollectForPlayer to add/update player to collection e.g(hcbarb, seasondh, etc..)
-exports.getCurrentLeaderboard = function(region, diabloClass) {
+exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
 		//successfully connected
 		if(!err) {
-			console.log("We are connected");
 			setRegion(region);
+			exports.getGRiftCategory(leaderboardType);
 			date = new Date();
 			console.log(region + " " + diabloClass + " " + gRiftCategory + " Leaders before request "+ date.getMinutes() +":"+ date.getSeconds());
 			var requestURL = "https://" + region + ".battle.net/d3/en/rankings/" + gRiftCategory + getClassNameForLeaderboard(diabloClass);
 			request(requestURL, function (error, response, body) {
-				console.log("getLeaderboard inside request")
+				console.log("getLeaderboardFromDB inside request")
 				var startTable = body.indexOf("<table>");
 				var endTable = body.indexOf("</table>");
 				//get leaderboard table from Battle.net website
@@ -262,12 +263,11 @@ exports.getCurrentLeaderboard = function(region, diabloClass) {
 //edit battletagRequestURL handle multiple regions.
 						var battletagRequestURL = "https://"+region+".api.battle.net/d3/profile/" + playerData[1] + "/?locale=" + locale + "&apikey=" + apiKey;
 
-						// var battletagRequestURL = "https://us.api.battle.net/d3/profile/" + playerData[1] + "/?locale=" + locale + "&apikey=" + apiKey;
 						date = new Date();					
 						var currentTime = new Date();
 						currentTime = currentTime.getSeconds()*1000 + currentTime.getMilliseconds();
 						//only update if greater than 100  REMOVE THIS LATER
-						if (i <= 100) {
+						if (i >= 0) {
 						//Not the 10th call
 						if (i % 10 != 9) {
 							//but is first 10
@@ -345,33 +345,32 @@ exports.getCurrentLeaderboard = function(region, diabloClass) {
 				}
 				//requestedPlayerData should have no errors, continue
 				else {
-					console.log("updateLeaderboardCollectForPlayer, requestedPlayerData not null " + calledAgain + "  " +  playerData + " " + requestedPlayerData.battleTag);
+					//playerData [rank, btag, grift, time , date completed]
+					console.log("updateLeaderboardCollectForPlayer, requestedPlayerData not null " +   region + " calledAgain" + calledAgain + "  " +  playerData[1] + " " + requestedPlayerData.battleTag);
 					//if passed in playerData did not have all information.
 					if (playerData.length != 5) {
 						console.log("updateLeaderboardCollectForPlayer did not have length of 5 for " + requestedPlayerData.battleTag);
 					}
 
 //wrap in else
-					console.log("update leaderboard " + region);
 					var collectionName = region+getCollectionName(diabloClass,gRiftCategory);
 					var leaderboardCollection = db.collection(collectionName);
 
 					//Check leaderboardCollection's length.  If it is less than what it should be, insert to Collection.
 					//else check to see if the player that is passed in matches the player in collection for that standing.
-					leaderboardCollection.find().toArray(function(err, results) {
+					leaderboardCollection.find().toArray(function(err, leaderboardArray) {
 						//playerData = [standing, battletag, tier, timespend, date accomplished]
-						var collectionLength = results.length;
+						var collectionLength = leaderboardArray.length;
 						//nothing in collection add player
 						if (collectionLength == 0) {
 							leaderboardCollection.insert({"Standing" : playerData[0] , "Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : requestedPlayerData.heroes}, function(err, results) {
 							});
 						}
 //!!!!!!!
-						//check what hasnt been added
+						//check what hasnt been added, if the current standing hasn't been added, add it
 						else if (collectionLength <1000) {
-							leaderboardCollection.find({"Standing" : playerData[0]}).toArray(function(err, searchResult) {
-								//if it the current standing hasn't been added, add it
-								if (searchResult.length == 0) {
+							leaderboardCollection.find({"Standing" : playerData[0]}).toArray(function(err, standingSearchResult) {
+								if (standingSearchResult.length == 0) {
 									console.log("adding " + requestedPlayerData.battleTag + " to " + playerData[0]);
 									leaderboardCollection.insert({"Standing" : playerData[0] , "Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : requestedPlayerData.heroes}, function(err, results) {
 										console.log("successfully added "+ requestedPlayerData.battleTag + " to " + playerData[0])
@@ -384,20 +383,37 @@ exports.getCurrentLeaderboard = function(region, diabloClass) {
 
 						//collection is correct size, check if there were any changes.
 						else if (collectionLength == 1000) {
-
-							//playerData[0] occasionally doesn't show up
-
-							leaderboardCollection.find({"Standing" : playerData[0]}).toArray(function(err, searchResult) {
-								if (searchResult.length == 0) {
-									console.log("updateLeaderboardCollectForPlayer ranking not found for " + playerData[0]);
+							//playerData[0] occasionally doesn't show up, log to see what it was
+							leaderboardCollection.find({"Standing" : playerData[0]}).toArray(function(err, standingSearchResult) {
+								if (standingSearchResult.length == 0) {
+									console.log("updateLeaderboardCollectForPlayer standing not found for " + playerData);
+									//find entries without Standing and remove them, and add.  for now manually remove.
+									// asd
 								}
-								if(playerData[1].replace("-","#") == requestedPlayerData.battleTag && result[0]["Greater Rift"] == playerData[2] && result[0]["Time Spent"] == playerData[3] && result[0]["Date Completed"] == playerData[4]) {
-										console.log("updateLeaderboardCollectForPlayer found " + requestedPlayerData.battleTag + " nothing changed");
-								}
+								//check if player in DB in current spot, matches player from request
+								//if they do match, check if heroes are still the same.  else update
 								else {	
-									leaderboardCollection.update({"Standing" : playerData[0]} , {"Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : requestedPlayerData.heroes}, function(err, results) {
-										console.log("updateLeaderboardCollectForPlayer, found,"+ requestedPlayerData.battleTag +  " --------updated with " + playerData);
-									});			
+									//console.log(standingSearchResult, standingSearchResult.length);
+									if (playerData[0] == null || playerData[0] == undefined) {
+										asdfa
+									}
+									if(playerData[1].replace("-","#") == requestedPlayerData.battleTag && standingSearchResult[0]["Greater Rift"] == playerData[2] && standingSearchResult[0]["Time Spent"] == playerData[3] && standingSearchResult[0]["Date Completed"] == playerData[4]) {
+											console.log("updateLeaderboardCollectForPlayer found " + requestedPlayerData.battleTag + " in same spot.  Checking for hero updates");
+											
+											dataBaseplayer = standingSearchResult[0];
+
+											//match, check for differences in Heroes	
+											if (JSON.stringify(dataBaseplayer.Heroes) != JSON.stringify(requestedPlayerData.heroes)) {
+												leaderboardCollection.update({"Standing" : playerData[0]} , {"Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : requestedPlayerData.heroes}, function(err, results) {
+													console.log("updateLeaderboardCollectForPlayer, updating only heroes for, "+ requestedPlayerData.battleTag +  " --------updated with " + playerData);
+												});														
+											}
+									}
+									else {	
+										leaderboardCollection.update({"Standing" : playerData[0]} , {"Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : requestedPlayerData.heroes}, function(err, results) {
+											console.log("updateLeaderboardCollectForPlayer, found,"+ requestedPlayerData.battleTag +  " --------updated with " + playerData);
+										});			
+									}
 								}
 							});					 
 						}
@@ -427,7 +443,7 @@ function getClassNameForLeaderboard(diabloClass) {
 }
 
 //diabloClass is req.params.diabloClass
-//used in getLeaderboard to know which class(barb, dh, etc.) to search in DB
+//used in getLeaderboardFromDB to know which class(barb, dh, etc.) to search in DB
 function getClassNameForDatabase(diabloClass) {
 	if (diabloClass == "wiz" ){
 		return "wizard";
@@ -508,14 +524,14 @@ function getCollectionName(diabloClass, gRiftCategory) {
 		collectionCategory="seasonhc";
 	}
 
-	//not updating, but accesing db from getLeaderboard
+	//not updating, but accesing db from getLeaderboardFromDB
 	else {
 		collectionCategory = gRiftCategory;
 	}
 	return collectionCategory + diabloClass;
 }
 
-//used in getLeaderboard.  set's searchParams to find heroes in heroCollection.
+//used in getLeaderboardFromDB.  set's searchParams to find heroes in heroCollection.
 function setSearchParams(leaderboardType) {
 	switch (leaderboardType) {
 		case "normal" :

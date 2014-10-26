@@ -67,6 +67,7 @@ exports.getHeroes = function(battletag, req, res) {
 				exports.addHeroData(battletag, heroID, 2000);
 			}
 			else {
+				// console.log(requestURL,data);
 				var requestedHeroData = JSON.parse(data);
 				var items = requestedHeroData.items;
 				//start error Handling
@@ -106,6 +107,9 @@ exports.getHeroes = function(battletag, req, res) {
 								}
 								else {
 									heroCollection.insert({"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats, "region" : region}, function(err, results) {
+											if (err) {
+												return console.log(err);
+											}
 										console.log("addHeroData not found, inserting "+ battletag + " " + requestedHeroData.id);
 										// console.log("adding items")
 										// heroMethods.getItemIDsFromHero(requestedHeroData.items, requestedHeroData.id, timeToDelay());

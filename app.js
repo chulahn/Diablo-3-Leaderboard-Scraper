@@ -137,6 +137,40 @@ app.get('/', function(req, res) {
 	res.sendfile('default.html');
 });
 
+//shows leaderboard page
+app.get('/:region/:category/:diabloClass', function(req,res) {
+	leaderboardMethods.getLeaderboardFromDB(req.params.region, req.params.diabloClass, req.params.category, req, res);
+});
+//shows a player page, with heroes.
+app.get('/player/:battletag', function(req,res) {
+	playerMethods.getHeroes(req.params.battletag, req, res);
+});
+//shows a hero page
+app.get('/player/:battletag/hero/:heroID', function(req, res) {
+	heroMethods.getHeroDetails(parseInt(req.params.heroID), req, res);
+	getImportantStats(parseInt(req.params.heroID));
+});
+
+
+//update methods
+//update leaderboard
+app.get('/update/:region/:category/:diabloClass', function(req,res) {
+	leaderboardMethods.getCurrentLeaderboard(req.params.region, req.params.diabloClass, req.params.category, req, res);
+});
+//update hero
+app.get('/update/player/:battletag/hero/:heroID', function(req, res) {
+	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
+		if (err) {
+			return console.log(err);
+		}
+		else {
+			console.log(req.params.battletag)
+			playerMethods.addHeroData("us",req.params.battletag, parseInt(req.params.heroID), 50, db);
+			res.redirect('/player/'+req.params.battletag+'/hero/'+req.params.heroID);
+		}	
+	});
+});
+
 //files
 app.get('/get.js', function(req,res) {
 	res.sendfile('get.js');
@@ -152,55 +186,6 @@ app.get('/styles/hero.css', function(req,res) {
 });
 app.get('/styles/leaderboard.css', function(req,res) {
 	res.sendfile('styles/leaderboard.css');
-});
-
-app.get('/player/:battletag', function(req,res) {
-	playerMethods.getHeroes(req.params.battletag, req, res);
-});
-
-app.get('/player/:battletag/hero/:heroID', function(req, res) {
-	heroMethods.getHeroDetails(parseInt(req.params.heroID), req, res);
-	getImportantStats(parseInt(req.params.heroID));
-});
-
-app.get('/update/player/:battletag/hero/:heroID', function(req, res) {
-	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
-		if (err) {
-			return console.log(err);
-		}
-		else {
-			console.log(req.params.battletag)
-			playerMethods.addHeroData("us",req.params.battletag, parseInt(req.params.heroID), 50, db);
-			res.redirect('/player/'+req.params.battletag+'/hero/'+req.params.heroID);
-		}	
-	});
-});
-
-app.get('/update/:diabloClass', function(req,res) {
-	leaderboardMethods.getCurrentLeaderboard(req.params.diabloClass);
-	res.redirect('/');
-}); 
-
-app.get('/:region/:category/:diabloClass', function(req,res) {
-	leaderboardMethods.getLeaderboard(req.params.region, req.params.diabloClass, req.params.category, req, res);
-});
-
-//setting which leaderboard to get data from.
-app.get('/normal', function(req,res) {
-	leaderboardMethods.getGRiftCategory('normal');
-	res.redirect('/');
-});
-app.get('/hc', function(req,res) {
-	leaderboardMethods.getGRiftCategory('hc');
-	res.redirect('/');
-});
-app.get('/season', function(req,res) {
-	leaderboardMethods.getGRiftCategory('season');
-	res.redirect('/');
-});
-app.get('/seasonhc', function(req,res) {
-	leaderboardMethods.getGRiftCategory('seasonhc');
-	res.redirect('/');
 });
 
 app.get('/*' , function(req,res) {
