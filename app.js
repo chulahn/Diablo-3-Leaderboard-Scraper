@@ -188,6 +188,15 @@ app.get('/styles/leaderboard.css', function(req,res) {
 	res.sendfile('styles/leaderboard.css');
 });
 
+app.get('/images/hardcore.png', function(req,res) {
+	res.sendfile('images/hardcore.png');
+});
+app.get('/images/seasonal.png', function(req,res) {
+	res.sendfile('images/seasonal.png');
+});
+
+
+
 app.get('/*' , function(req,res) {
 	res.send("404");
 });

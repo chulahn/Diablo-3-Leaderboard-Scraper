@@ -98,12 +98,11 @@ exports.getHeroes = function(battletag, req, res) {
 								if (results.length == 1) {
 //!!!!!!!							//check if there is damage increase, check if all items are equipped and call get Important INFO
 									// if (requestedHeroData.stats.damage > 300000){
-										console.log("here")
-									updateInHeroCollection(heroCollection, requestedHeroData, region);
+									updateInHeroCollection(heroCollection, battletag, requestedHeroData, region);
 									// }
 								}
 								else {
-									insertInHeroCollection(heroCollection, requestedHeroData, region);
+									insertInHeroCollection(heroCollection, battletag, requestedHeroData, region);
 								}
 							});//end update/insert 
 						}//end else DB not null
@@ -136,7 +135,7 @@ function setRegion(region) {
 	}
 }
 
-function insertInHeroCollection(heroCollection, requestedHeroData, region) {
+function insertInHeroCollection(heroCollection, battletag, requestedHeroData, region) {
 	heroCollection.insert({"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats, "region" : region}, function(err, results) {
 			if (err) {
 				return console.log("insertInHeroCollection error, " + err);
@@ -149,13 +148,13 @@ function insertInHeroCollection(heroCollection, requestedHeroData, region) {
 	});//end insertion.
 }
 
-function updateInHeroCollection(heroCollection, requestedHeroData, region) {
+function updateInHeroCollection(heroCollection, battletag, requestedHeroData, region) {
 	heroCollection.update({"heroID" : requestedHeroData.id}, {$set: {"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats, "region" : region}}, function(err, results) {
 		if (err) {
 			return console.log("updateInHeroCollection error, " + err)
 		}
 		else {
-			console.log("addHeroData found, updating "+ battletag + " " + requestedHeroData.id);
+			console.log("updateInHeroCollection found, updating "+ battletag + " " + requestedHeroData.id);
 		}
 	});//end update.	
 }

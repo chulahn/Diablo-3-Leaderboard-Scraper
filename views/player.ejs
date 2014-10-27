@@ -13,8 +13,8 @@
 <ul>
 <% ejs_heroes.forEach(function (hero) { %>
 	<li><a class = <%= hero.class %> href = "/player/<%= ejs_btag %>/hero/<%= hero.id %>"> <%= hero.name %> <%= hero.level %> </a> -----  <a href = "http://us.battle.net/d3/en/profile/<%= ejs_btag %>/hero/<%= hero.id %>" > Battle.net Profile</a>
-	<% if (hero.seasonal == true) { %> Seasonal <% } %> 
-	<% if(hero.hardcore == true)  { %> Seasonal <% } %> 
+	<% if (hero.seasonal == true) { %> <img src = "../images/seasonal.png" title="Seasonal"> <% } %> 
+	<% if(hero.hardcore == true)  { %> <img src = "../images/hardcore.png" title="Hardcore"> <% } %> 
 	</li>
 <% }); %>
 </ul>

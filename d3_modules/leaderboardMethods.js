@@ -57,7 +57,7 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 			//get all from collection, sort by rank
 			leaderboardCollection.find({},{"_id" : 0 }).sort({"Standing" : 1}).toArray(function (err, leaderboardResults) {
 	    		
-	    		if (leaderboardResults.length == 0 || leaderboardResults.length != 1000) {
+	    		if (leaderboardResults.length == 0 || leaderboardResults.length != 100) {
 	    			exports.getCurrentLeaderboard(region, diabloClass, leaderboardType);
 	    			res.redirect('/');
 	    		}
@@ -90,17 +90,6 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 		    						// console.log("getting extraItemData from " + heroToPush.battletag);
 		    						// heroMethods.getItemIDsFromHero(heroToPush.items, heroToPush.heroID, itemDelay(),db);
 		    					}
-		    					// asdfasdf
-		    					// if (heroToPush)
-		    		
-		    					// leaderboardCollection.update({"Battletag" : currentPlayer.Battletag},{$set : {"GRift Hero" : heroToPush}}, function( err, results) {
-		    					// 	if (err) {
-		    					// 		return console.log(err)
-		    					// 	}
-		    					// 	else {
-		    					// 		console.log(results);
-		    					// 	}
-		    					// });
 		    				}
 
 		    				//hero was not in the heroCollection.  get heroes from currentPlayer (in leaderboardCollection), and find the ones that match searchParams and add to collection.
@@ -223,6 +212,7 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 				var leaders = [];
 				//env uses HTML or URL, [script, it will be JQuery], and callback function(error, window)
 				//passes in table from battle.net and allows Jquery to be used
+
 				jsdom.env(table, ["http://code.jquery.com/jquery.js"], function (error, window) {
 					//allows normal JQuery usage
 					var $ = window.jQuery;
@@ -233,7 +223,7 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 					//push that row to leaders array.
 					$('tbody tr').each( function getDataFromRow(){
 						//get the top players from 1 to count, CHANGE TO 1000 later
-						if (count < 1000) {
+						if (count < 100) {
 							//index for a row's column.  gets reset after each row.
 							var cellIndex = 0; 
 							//information from the current player will be added to this array.  When all information for player is added, it will be pushed to leaders array
@@ -375,8 +365,6 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 					if (playerDataFromTable.length != 5) {
 						console.log("updateLeaderboardCollectForPlayer did not have length of 5 for " + requestedPlayerData.battleTag);
 					}
-
-//wrap in else
 					else {
 						var collectionName = region+getCollectionName(diabloClass,gRiftCategory);
 						var leaderboardCollection = db.collection(collectionName);
@@ -396,7 +384,7 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 								}
 		//!!!!!!!
 								//check what hasnt been added, if the current standing hasn't been added, add it
-								else if (collectionLength < 1000) {
+								else if (collectionLength < 100) {
 									leaderboardCollection.find({"Standing" : playerDataFromTable[0]}).toArray(function(err, standingSearchResult) {
 										if (standingSearchResult.length == 0) {
 											console.log("adding " + requestedPlayerData.battleTag + " to " + playerDataFromTable[0]);
@@ -408,7 +396,7 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 								}
 
 								//collection is correct size, check if there were any changes.
-								else if (collectionLength == 1000) {
+								else if (collectionLength == 100) {
 									//playerDataFromTable[0] occasionally doesn't show up, log to see what it was
 									leaderboardCollection.find({"Standing" : playerDataFromTable[0]}).toArray(function(err, standingSearchResult) {
 										if (standingSearchResult.length == 0) {
@@ -581,7 +569,6 @@ function getCollectionName(diabloClass, gRiftCategory) {
 	else if (gRiftCategory ==  "season/1/rift-hardcore-") {
 		collectionCategory="seasonhc";
 	}
-
 	//not updating, but accesing db from getLeaderboardFromDB
 	else {
 		collectionCategory = gRiftCategory;

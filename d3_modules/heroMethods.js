@@ -151,7 +151,7 @@ exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
 	//if onehanded weapon
 	//if class is DH, if no quiver, add second bow.
 	//if class is barb or monk, check offhand
-function findItemInCollection(itemID, heroID, delay,db){
+function findItemInCollection(itemID, heroID, delay, db){
 	// setTimeout( function() {
 
 	// MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
