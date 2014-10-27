@@ -19,7 +19,6 @@ function timeToDelay() {
 	return (1100* (Math.floor(delayCounter/10)+1) + 2000);
 }
 
-
 //localhost:3000/player/BATTLETAG
 //for a given Battletag, it makes a request to get all heroes for that tag.  After getting heroes, call addHeroData and create the page for that Battletag
 //addHeroData is currently uncommented until it has been updated.
@@ -100,21 +99,11 @@ exports.getHeroes = function(battletag, req, res) {
 //!!!!!!!							//check if there is damage increase, check if all items are equipped and call get Important INFO
 									// if (requestedHeroData.stats.damage > 300000){
 										console.log("here")
-										heroCollection.update({"heroID" : requestedHeroData.id}, {"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats, "region" : region}, function(err, results) {
-										console.log("addHeroData found, updating "+ battletag + " " + requestedHeroData.id);
-										});//end update.
+									updateInHeroCollection(heroCollection, requestedHeroData, region);
 									// }
 								}
 								else {
-									heroCollection.insert({"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats, "region" : region}, function(err, results) {
-											if (err) {
-												return console.log(err);
-											}
-										console.log("addHeroData not found, inserting "+ battletag + " " + requestedHeroData.id);
-										// console.log("adding items")
-										// heroMethods.getItemIDsFromHero(requestedHeroData.items, requestedHeroData.id, timeToDelay());
-
-									});//end insertion.
+									insertInHeroCollection(heroCollection, requestedHeroData, region);
 								}
 							});//end update/insert 
 						}//end else DB not null
@@ -145,4 +134,28 @@ function setRegion(region) {
 			region = "kr";
 			break;
 	}
+}
+
+function insertInHeroCollection(heroCollection, requestedHeroData, region) {
+	heroCollection.insert({"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats, "region" : region}, function(err, results) {
+			if (err) {
+				return console.log("insertInHeroCollection error, " + err);
+			}
+			else {
+				console.log("addHeroData not found, inserting "+ battletag + " " + requestedHeroData.id);
+			}
+		// console.log("adding items")
+		// heroMethods.getItemIDsFromHero(requestedHeroData.items, requestedHeroData.id, timeToDelay());
+	});//end insertion.
+}
+
+function updateInHeroCollection(heroCollection, requestedHeroData, region) {
+	heroCollection.update({"heroID" : requestedHeroData.id}, {$set: {"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats, "region" : region}}, function(err, results) {
+		if (err) {
+			return console.log("updateInHeroCollection error, " + err)
+		}
+		else {
+			console.log("addHeroData found, updating "+ battletag + " " + requestedHeroData.id);
+		}
+	});//end update.	
 }

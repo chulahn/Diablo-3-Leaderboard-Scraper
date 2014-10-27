@@ -105,7 +105,7 @@ function getImportantStats(heroID) {
 				elementalDam.sort(function(a,b) {
 					return b[1]-a[1];
 				});
-
+				console.log(elementalDam);
 				totalCooldown = cooldown + diamondCooldown;
 				console.log("total cooldown " + cooldown + " cooldown from hat " + diamondCooldown + " = " + totalCooldown);
 				console.log("elite Damage " + eliteDam);

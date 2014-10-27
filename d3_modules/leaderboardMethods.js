@@ -3,6 +3,7 @@ var request = require("request");
 var jsdom = require("jsdom");
 var mongo = require("mongodb");
 var playerMethods = require("../d3_modules/playerMethods");
+var heroMethods = require("../d3_modules/heroMethods");
 
 var MongoClient = mongo.MongoClient;
 
@@ -21,6 +22,13 @@ var searchParamSeason;
 function timeToDelay() {
 	delayCounter++;
 	return (1500* (Math.floor(delayCounter/10)));
+}
+
+
+var itemDelayCounter = 0;
+function itemDelay() {
+	itemDelayCounter++;
+	return (1000 * itemDelayCounter);
 }
 
 
@@ -45,11 +53,11 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 			setRegion(region);
 			var collectionName = region + getCollectionName(diabloClass, leaderboardType);
 			var leaderboardCollection = db.collection(collectionName);
+			console.log(collectionName);
 			//get all from collection, sort by rank
 			leaderboardCollection.find({},{"_id" : 0 }).sort({"Standing" : 1}).toArray(function (err, leaderboardResults) {
 	    		
 	    		if (leaderboardResults.length == 0 || leaderboardResults.length != 1000) {
-	    			exports.setGRiftCategory(leaderboardType);
 	    			exports.getCurrentLeaderboard(region, diabloClass, leaderboardType);
 	    			res.redirect('/');
 	    		}
@@ -77,6 +85,22 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 		    						}
 		    					});
 		    					allData[currentPlayer.Standing-1] = heroToPush;
+		    					// console.log(heroToPush)
+		    					if (heroToPush.extraItemData == undefined) {
+		    						// console.log("getting extraItemData from " + heroToPush.battletag);
+		    						// heroMethods.getItemIDsFromHero(heroToPush.items, heroToPush.heroID, itemDelay(),db);
+		    					}
+		    					// asdfasdf
+		    					// if (heroToPush)
+		    		
+		    					// leaderboardCollection.update({"Battletag" : currentPlayer.Battletag},{$set : {"GRift Hero" : heroToPush}}, function( err, results) {
+		    					// 	if (err) {
+		    					// 		return console.log(err)
+		    					// 	}
+		    					// 	else {
+		    					// 		console.log(results);
+		    					// 	}
+		    					// });
 		    				}
 
 		    				//hero was not in the heroCollection.  get heroes from currentPlayer (in leaderboardCollection), and find the ones that match searchParams and add to collection.
@@ -107,7 +131,8 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 
 			    					//reached lastHero, if there were no valid 70s, add 0.  player, has heroes, but deleted grift hero hero
 		    						if (currentPlayerHeroes.indexOf(currentHero) == currentPlayerHeroes.length-1) {
-		    							if (currentPlayer.Battletag == "Buhbuhlooske#1480" ||currentPlayer.Battletag == "AchillesRbrn#1782" ) {
+		    							//notfound in addHero
+		    							if (currentPlayer.Battletag == "Buhbuhlooske#1480" ||currentPlayer.Battletag == "AchillesRbrn#1782" || currentPlayer.Battletag == "Bwnage#1400") {
 		    								// console.log( currentPlayerHeroes);
 		    								console.log(validHero70Count);
 		    								allData[currentPlayer.Standing-1] = 0;
@@ -259,7 +284,6 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 					var last10CallsTime;
 					leaders.forEach(function (playerData, i) {
 						i = currentCallNum;
-						var battletagRequestURL = "https://"+region+".api.battle.net/d3/profile/" + playerData[1] + "/?locale=" + locale + "&apikey=" + apiKey;
 
 						date = new Date();					
 						var currentTime = new Date();
@@ -276,27 +300,27 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 									last10CallsTime = last10CallsTime.getSeconds()*1000 + last10CallsTime.getMilliseconds();
 								}
 								console.log("requested " + i + " " + last10CallsTime);
-								updateLeaderboardCollectForPlayer(region, battletagRequestURL,playerData,0,db,diabloClass,0);					
+								updateLeaderboardCollectForPlayer(region, playerData,0,db,diabloClass,0);					
 							}
 							//Not 10th call or first 10, get the current time and check how long its been since the previous 10 calls, (previousTime - currentTime)
 							//If enough time has passsed (timeDifference was <= 0), update with no delay.  Else add delay
 							else {
 								//temporary code
-																if (i == 100) {
-									last10CallsTime = new Date();
-									last10CallsTime = last10CallsTime.getSeconds()*1000 + last10CallsTime.getMilliseconds();
-								}
+								// 								if (i == 100) {
+								// 	last10CallsTime = new Date();
+								// 	last10CallsTime = last10CallsTime.getSeconds()*1000 + last10CallsTime.getMilliseconds();
+								// }
 								//temporary code end
 								var currentTime = new Date();
 								currentTime = currentTime.getSeconds()*1000 + currentTime.getMilliseconds();
 								var timeDifference = last10CallsTime - currentTime;
 								console.log("requested " + playerData + " " + last10CallsTime + " " + currentTime);
 								if (timeDifference <= 0) {
-									updateLeaderboardCollectForPlayer(region, battletagRequestURL,playerData,0,db,diabloClass,0);	
+									updateLeaderboardCollectForPlayer(region, playerData,0,db,diabloClass,0);	
 								}
 								else {
 									console.log(i + " timeDiff was " + timeDifference);
-									updateLeaderboardCollectForPlayer(region, battletagRequestURL,playerData,timeDifference+800,db,diabloClass,0);
+									updateLeaderboardCollectForPlayer(region, playerData,timeDifference+800,db,diabloClass,0);
 								}
 							}//end not first 10 else
 						}//end not a 10th call loop
@@ -306,13 +330,13 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 							last10CallsTime += 1000;
 							if (i == 9){
 								console.log("requested " + i + " " + last10CallsTime + "Current request" + currentTime);
-								updateLeaderboardCollectForPlayer(region, battletagRequestURL,playerData,0,db,diabloClass,0);
+								updateLeaderboardCollectForPlayer(region, playerData,0,db,diabloClass,0);
 							}
 							//after 10th call
 							else{
 								var timeDifference = last10CallsTime - currentTime;
 								console.log("requested " + i + " " + last10CallsTime + " " + currentTime);
-								updateLeaderboardCollectForPlayer(region, battletagRequestURL,playerData,timeDifference+800,db,diabloClass,0);
+								updateLeaderboardCollectForPlayer(region, playerData,timeDifference+800,db,diabloClass,0);
 							}	
 						}
 						}//REMOVE LATER
@@ -327,105 +351,135 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 //make a request to API with passed in requestURL.  Add players until collectionSize is correct.
 //If collectionSize is correct, check if the player in collection matches request, else update.
 //If data was undefined, call again.
- function updateLeaderboardCollectForPlayer(region, requestURL, playerData, delay, db, diabloClass, calledAgain) {
+ function updateLeaderboardCollectForPlayer(region, playerDataFromTable, delay, db, diabloClass, calledAgain) {
  	setRegion(region);
 	setTimeout( function() {
+		var requestURL = "https://"+region+".api.battle.net/d3/profile/" + playerDataFromTable[1] + "/?locale=" + locale + "&apikey=" + apiKey;
+
 		request(requestURL, function (error, response, data) {
 			if (data == undefined) {
-				updateLeaderboardCollectForPlayer(region, requestURL, playerData, delay, db, diabloClass, calledAgain+1);
+				updateLeaderboardCollectForPlayer(region, playerDataFromTable, delay, db, diabloClass, calledAgain+1);
 			} 
 
 			else {
 				var requestedPlayerData = JSON.parse(data);
 				if (requestedPlayerData.battleTag == undefined){
-					console.log("updateLeaderboardCollectForPlayer-----" + playerData[0] + " was undefined, called " + calledAgain + "times",requestURL)
-					updateLeaderboardCollectForPlayer(region, requestURL,playerData,1000,db,diabloClass,calledAgain+1);
+					console.log("updateLeaderboardCollectForPlayer-----" + playerDataFromTable[0] + " was undefined, called " + calledAgain + "times",requestURL);
+					updateLeaderboardCollectForPlayer(region, playerDataFromTable,1000,db,diabloClass,calledAgain+1);
 				}
 				//requestedPlayerData should have no errors, continue
 				else {
-					//playerData [rank, btag, grift, time , date completed]
-					console.log("updateLeaderboardCollectForPlayer, requestedPlayerData not null " +   region + " calledAgain" + calledAgain + "  " +  playerData[1] + " " + requestedPlayerData.battleTag);
-					//if passed in playerData did not have all information.
-					if (playerData.length != 5) {
+					//playerDataFromTable [rank, btag, grift, time , date completed]
+					console.log("updateLeaderboardCollectForPlayer, requestedPlayerData not null " + region + " calledAgain" + calledAgain + "  " + playerDataFromTable[1] + " " + requestedPlayerData.battleTag);
+					//if passed in playerDataFromTable did not have all information.
+					if (playerDataFromTable.length != 5) {
 						console.log("updateLeaderboardCollectForPlayer did not have length of 5 for " + requestedPlayerData.battleTag);
 					}
 
 //wrap in else
-					var collectionName = region+getCollectionName(diabloClass,gRiftCategory);
-					var leaderboardCollection = db.collection(collectionName);
+					else {
+						var collectionName = region+getCollectionName(diabloClass,gRiftCategory);
+						var leaderboardCollection = db.collection(collectionName);
 
-					//Check leaderboardCollection's length.  If it is less than what it should be, insert to Collection.
-					//else check to see if the player that is passed in matches the player in collection for that standing.
-					leaderboardCollection.find().toArray(function(err, leaderboardArray) {
-						//playerData = [standing, battletag, tier, timespend, date accomplished]
-						var collectionLength = leaderboardArray.length;
-						//nothing in collection add player
-						if (collectionLength == 0) {
-							leaderboardCollection.insert({"Standing" : playerData[0] , "Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : requestedPlayerData.heroes}, function(err, results) {
-							});
-						}
-//!!!!!!!
-						//check what hasnt been added, if the current standing hasn't been added, add it
-						else if (collectionLength < 1000) {
-							leaderboardCollection.find({"Standing" : playerData[0]}).toArray(function(err, standingSearchResult) {
-								if (standingSearchResult.length == 0) {
-									console.log("adding " + requestedPlayerData.battleTag + " to " + playerData[0]);
-									leaderboardCollection.insert({"Standing" : playerData[0] , "Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : requestedPlayerData.heroes}, function(err, results) {
-										console.log("successfully added "+ requestedPlayerData.battleTag + " to " + playerData[0])
+						//Check leaderboardCollection's length.  If it is less than what it should be, insert to Collection.
+						//else check to see if the player that is passed in matches the player in collection for that standing.
+						leaderboardCollection.find().toArray(function(err, leaderboardArray) {
+							//playerDataFromTable = [standing, battletag, tier, timespend, date accomplished]
+							if (leaderboardArray == null) {
+								updateLeaderboardCollectForPlayer(region, playerDataFromTable, 1000, db, diabloClass, calledAgain);
+							}
+							else {
+								var collectionLength = leaderboardArray.length;
+								//nothing in collection add player
+								if (collectionLength == 0) {
+									insertInLeaderboardCollect(leaderboardCollection, playerDataFromTable, requestedPlayerData);
+								}
+		//!!!!!!!
+								//check what hasnt been added, if the current standing hasn't been added, add it
+								else if (collectionLength < 1000) {
+									leaderboardCollection.find({"Standing" : playerDataFromTable[0]}).toArray(function(err, standingSearchResult) {
+										if (standingSearchResult.length == 0) {
+											console.log("adding " + requestedPlayerData.battleTag + " to " + playerDataFromTable[0]);
+											insertInLeaderboardCollect(leaderboardCollection, playerDataFromTable, requestedPlayerData);
+										}
+										else {
+										}
 									});
 								}
-								else {
-								}
-							});
-						}
 
-						//collection is correct size, check if there were any changes.
-						else if (collectionLength == 1000) {
-							//playerData[0] occasionally doesn't show up, log to see what it was
-							leaderboardCollection.find({"Standing" : playerData[0]}).toArray(function(err, standingSearchResult) {
-								if (standingSearchResult.length == 0) {
-									console.log("updateLeaderboardCollectForPlayer standing not found for " + playerData);
-									leaderboardCollection.update({"Battletag" : playerData[1].replace("-","#")}, {$set : {"Standing" : playerData[0]}}, function (err, results) {
-										if (err) {
-											return console.log("error when setting standing xxxxxxxxxxxxxxxx")
-										}			
-									});
-									//find entries without Standing and remove them, and add.  for now manually remove.
-									// asd
-								}
-								//check if player in DB in current spot, matches player from request
-								//if they do match, check if heroes are still the same.  else update
-								else {	
-									//console.log(standingSearchResult, standingSearchResult.length);
-									if (playerData[0] == null || playerData[0] == undefined) {
-										asdfa
-									}
-									if(playerData[1].replace("-","#") == requestedPlayerData.battleTag && standingSearchResult[0]["Greater Rift"] == playerData[2] && standingSearchResult[0]["Time Spent"] == playerData[3] && standingSearchResult[0]["Date Completed"] == playerData[4]) {
-											console.log("updateLeaderboardCollectForPlayer found " + requestedPlayerData.battleTag + " in same spot.  Checking for hero updates");
-											
-											dataBaseplayer = standingSearchResult[0];
-
-											//match, check for differences in Heroes	
-											if (JSON.stringify(dataBaseplayer.Heroes) != JSON.stringify(requestedPlayerData.heroes)) {
-												leaderboardCollection.update({"Standing" : playerData[0]} , {$set : {"Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : requestedPlayerData.heroes}}, function(err, results) {
-													console.log("updateLeaderboardCollectForPlayer, updating only heroes for, "+ requestedPlayerData.battleTag +  " --------updated with " + playerData);
-												});														
+								//collection is correct size, check if there were any changes.
+								else if (collectionLength == 1000) {
+									//playerDataFromTable[0] occasionally doesn't show up, log to see what it was
+									leaderboardCollection.find({"Standing" : playerDataFromTable[0]}).toArray(function(err, standingSearchResult) {
+										if (standingSearchResult.length == 0) {
+											console.log("updateLeaderboardCollectForPlayer standing not found for " + playerDataFromTable);
+											leaderboardCollection.update({"Battletag" : playerDataFromTable[1].replace("-","#")}, {$set : {"Standing" : playerDataFromTable[0]}}, function (err, results) {
+												if (err) {
+													return console.log("error when setting standing xxxxxxxxxxxxxxxx")
+												}			
+												console.log("adding standing to " + playerDataFromTable[1]);
+											});
+											//find entries without Standing and remove them, and add.  for now manually remove.
+											// asd
+										}
+										//check if player in DB in current spot, matches player from request
+										//if they do match, check if heroes are still the same.  else update
+										else {	
+											//console.log(standingSearchResult, standingSearchResult.length);
+											if (playerDataFromTable[0] == null || playerDataFromTable[0] == undefined) {
+												asdfa
 											}
-									}
-									//different player in standing spot.
-									else {	
-										leaderboardCollection.update({"Standing" : playerData[0]} , {$set :{"Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerData[2] , "Time Spent" : playerData[3] , "Date Completed" : playerData[4] , "Heroes" : requestedPlayerData.heroes}}, function(err, results) {
-											console.log("updateLeaderboardCollectForPlayer, found,"+ requestedPlayerData.battleTag +  " --------updated with " + playerData);
-										});			
-									}
+											dataBaseplayer = standingSearchResult[0];
+											if (!didPlayerDataChange(playerDataFromTable,databasePlayer)) {
+													console.log("updateLeaderboardCollectForPlayer " + requestedPlayerData.battleTag + " did not change. Checking for hero updates");
+													
+												//match, check for differences in Heroes	
+												if (JSON.stringify(databaseplayer.Heroes) != JSON.stringify(requestedPlayerData.heroes)) {
+													updateInLeaderboardCollect(leaderboardCollection, playerDataFromTable, requestedPlayerData);							
+													console.log("updateLeaderboardCollectForPlayer, updating only heroes for, "+ requestedPlayerData.battleTag);
+												}
+
+											}
+											//different player in standing spot, or time changed
+											else {	
+												updateInLeaderboardCollect(leaderboardCollection, playerDataFromTable, requestedPlayerData);
+											}
+										}
+									});					 
 								}
-							});					 
-						}
-					});//end collectionFind
+							}
+						});//end collectionFind
+					}//end else playerData had all info
 				}//end inside db and data was not null
 			}//end if successfully connected to db
 		});//end request
 	},delay);//end settimeout
+}
+
+function didPlayerDataChange(playerDataFromTable, databasePlayer) {
+	return (playerDataFromTable[1].replace("-","#") == databasePlayer.Battletag && playerDataFromTable[2] == databasePlayer["Greater Rift"] && playerDataFromTable[3] == databasePlayer["Time Spent"] && playerDataFromTable[4] == databasePlayer["Date Completed"]);
+}
+
+function insertInLeaderboardCollect(leaderboardCollection, playerDataFromTable, requestedPlayerData) {
+	leaderboardCollection.insert({"Standing" : playerDataFromTable[0] , "Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerDataFromTable[2] , "Time Spent" : playerDataFromTable[3] , "Date Completed" : playerDataFromTable[4] , "Heroes" : requestedPlayerData.heroes}, function(err, results) {
+		if (err) {
+			return console.log("error in insertInLeaderboardCollect ", err);
+		}
+		else {
+			console.log("successfully added "+ requestedPlayerData.battleTag + " to " + playerDataFromTable[0]);
+		}
+	});
+}
+
+function updateInLeaderboardCollect(leaderboardCollection, playerDataFromTable, requestedPlayerData) {
+	leaderboardCollection.update({"Standing" : playerDataFromTable[0]} , {$set : {"Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerDataFromTable[2] , "Time Spent" : playerDataFromTable[3] , "Date Completed" : playerDataFromTable[4] , "Heroes" : requestedPlayerData.heroes}}, function(err, results) {
+		if (err) {
+			return console.log("error in insertInLeaderboardCollect ", err);
+		}
+		else {		
+			console.log("updateLeaderboardCollectForPlayer, updating only heroes for, "+ requestedPlayerData.battleTag +  " --------updated with " + playerDataFromTable);
+		}
+	});	
 }
 
 

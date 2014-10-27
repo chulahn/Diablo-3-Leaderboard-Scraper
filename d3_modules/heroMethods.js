@@ -11,6 +11,14 @@ var region = "us";
 var apiURL = ".api.battle.net/d3/"
 var locale = "en_US";
 
+
+var itemDelayCounter = 0;
+function itemDelay() {
+	itemDelayCounter++;
+	return (1000 * itemDelayCounter);
+}
+
+
 //localhost:3000/player/:battletag/hero/:heroID
 //for a given heroID, it searches heroCollection, and renders hero's page.  if not in data base, make an API request
 exports.getHeroDetails = function(heroID, req, res) {
@@ -31,7 +39,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 				if (matchedHero.length > 0) {
 					var heroData = matchedHero[0];
 					var heroItems = heroData.items;
-					//add items to DB if extraItemDatta is undefined
+					//add items to DB if extraItemData is undefined
 					if (heroData.level == 70 && heroData.extraItemData == undefined) {
 						exports.getItemIDsFromHero(heroItems,heroID,10);
 					}
@@ -47,7 +55,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 						var heroData = JSON.parse(data);
 						var heroItems = heroData.items;
 						if (heroData.level == 70) {
-							exports.getItemIDsFromHero(heroItems,heroID,10);
+							// exports.getItemIDsFromHero(heroItems,heroID,10);
 						}
 						res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
 						date = new Date();
@@ -75,52 +83,64 @@ exports.getHeroDetails = function(heroID, req, res) {
 
 //get all items from json heroItems, and call findItemInCollection for each.
 exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
-	var allItems = [];
-	if (heroItems.rightFinger != null) {
-		allItems.push(heroItems.rightFinger);
-	}
-	if (heroItems.leftFinger != null) {
-		allItems.push(heroItems.leftFinger);
-	}
-	if (heroItems.head != null) {
-		allItems.push(heroItems.head);
-	}
-	if (heroItems.torso != null) {
-		allItems.push(heroItems.torso);
-	}
-	if (heroItems.feet != null) {
-		allItems.push(heroItems.feet);
-	}
-	if (heroItems.hands != null) {
-		allItems.push(heroItems.hands);
-	}
-	if (heroItems.shoulders != null) {
-		allItems.push(heroItems.shoulders);
-	}
-	if (heroItems.legs != null) {
-		allItems.push(heroItems.legs);
-	}
-	if (heroItems.bracers != null) {
-		allItems.push(heroItems.bracers);
-	}
-	if (heroItems.waist != null) {
-		allItems.push(heroItems.waist);
-	}
-	if (heroItems.neck != null) {
-		allItems.push(heroItems.neck);
-	}
-	if (heroItems.mainHand != null) {
-		allItems.push(heroItems.mainHand);
-	}
-	if (heroItems.offHand != null) {
-		allItems.push(heroItems.offHand);
-	}
-	allItems.forEach(function(item, i) {
-		// console.log(item.name + " " + i + " delay " + delay);
-		itemID = item.tooltipParams.replace("item/" , "");
-		findItemInCollection(itemID, heroID, delay);
-		delay = delay + 100;
-		i++;
+	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
+		if (err) {
+			return console.log("getHeroDetails error connecting to db")
+			getItemIDsFromHero(heroItems, heroID, delay);
+		}
+		else {
+			db.collection("item").find({}).toArray(function(err, results) {
+				// console.log(results);
+				// asdfas
+			})
+			var allItems = [];
+			if (heroItems.rightFinger != null) {
+				allItems.push(heroItems.rightFinger);
+			}
+			if (heroItems.leftFinger != null) {
+				allItems.push(heroItems.leftFinger);
+			}
+			if (heroItems.head != null) {
+				allItems.push(heroItems.head);
+			}
+			if (heroItems.torso != null) {
+				allItems.push(heroItems.torso);
+			}
+			if (heroItems.feet != null) {
+				allItems.push(heroItems.feet);
+			}
+			if (heroItems.hands != null) {
+				allItems.push(heroItems.hands);
+			}
+			if (heroItems.shoulders != null) {
+				allItems.push(heroItems.shoulders);
+			}
+			if (heroItems.legs != null) {
+				allItems.push(heroItems.legs);
+			}
+			if (heroItems.bracers != null) {
+				allItems.push(heroItems.bracers);
+			}
+			if (heroItems.waist != null) {
+				allItems.push(heroItems.waist);
+			}
+			if (heroItems.neck != null) {
+				allItems.push(heroItems.neck);
+			}
+			if (heroItems.mainHand != null) {
+				allItems.push(heroItems.mainHand);
+			}
+			if (heroItems.offHand != null) {
+				allItems.push(heroItems.offHand);
+			}
+			allItems.forEach(function(item, i) {
+				console.log(item.name + " " + i + " delay " + delay);
+				itemID = item.tooltipParams.replace("item/" , "");
+				findItemInCollection(itemID, heroID, delay ,db);
+				delay = delay + 100;
+				i++;
+			});
+		}
 	});
 }
 
@@ -131,12 +151,14 @@ exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
 	//if onehanded weapon
 	//if class is DH, if no quiver, add second bow.
 	//if class is barb or monk, check offhand
-function findItemInCollection(itemID, heroID, delay){
-	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
-		if (err) {
-			return console.log("findItem error connecting to db")
-		}
-		else {
+function findItemInCollection(itemID, heroID, delay,db){
+	// setTimeout( function() {
+
+	// MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
+	// 	if (err) {
+	// 		return console.log("findItem error connecting to db", err)
+	// 	}
+	// 	else {
 			var itemCollection = db.collection("item");
 			var itemRequestURL = "https://us.api.battle.net/d3/data/item/" + itemID + "?locale=" + locale + "&apikey=" + apiKey;
 			// var itemRequestURL = "https://"+region+".api.battle.net/d3/data/item/" + itemID + "?locale=" + locale + "&apikey=" + apiKey;
@@ -336,8 +358,9 @@ function findItemInCollection(itemID, heroID, delay){
 					}//end else data was not undefined			
 				});//end request
 			},delay);//end settimeout
-		}//end if successfully in db
-	});
+		// }//end if successfully in db
+	// });
+	// },delay);
 }
 
 function updateInItemCollection(itemCollection, currentItem, heroID) {
