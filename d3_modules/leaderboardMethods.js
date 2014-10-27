@@ -127,7 +127,7 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 		    								allData[currentPlayer.Standing-1] = 0;
 		    							}
 		    							if (validHero70Count == 0) {
-		    								console.log("validHero70Count was 0 for " + currentPlayer.standing + " " + currentPlayer.Battletag);
+		    								console.log("validHero70Count was 0 for " + currentPlayer.Standing + " " + currentPlayer.Battletag);
 		    								allData[currentPlayer.Standing-1] = 0;
 		    							}
 		    						}
@@ -463,6 +463,9 @@ function playerHasSameHeroes(playerDataFromTable, requestedPlayerData) {
 function insertInLeaderboardCollect(leaderboardCollection, playerDataFromTable, requestedPlayerData) {
 	leaderboardCollection.insert({"Standing" : playerDataFromTable[0] , "Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerDataFromTable[2] , "Time Spent" : playerDataFromTable[3] , "Date Completed" : playerDataFromTable[4] , "Heroes" : requestedPlayerData.heroes}, function(err, results) {
 		if (err) {
+			setTimeout(function () {
+				insertInLeaderboardCollect(leaderboardCollection, playerDataFromTable, requestedPlayerData);
+			}, 2000);
 			return console.log("error in insertInLeaderboardCollect ", err);
 		}
 		else {

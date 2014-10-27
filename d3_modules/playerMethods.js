@@ -61,9 +61,9 @@ exports.getHeroes = function(battletag, req, res) {
 	setTimeout( function() {
 		request(requestURL, function (error, response, data) {
 			if (data == undefined) {
-				console.log("addHeroData data was undefined");
+				console.log("addHeroData data was undefined, calling again");
 				//error handling, call again
-				exports.addHeroData(battletag, heroID, 2000);
+				exports.addHeroData(region, battletag, heroID, 2000);
 			}
 			else {
 				// console.log(requestURL,data);
@@ -76,15 +76,15 @@ exports.getHeroes = function(battletag, req, res) {
 				}
 				//check if data is not null
 				else if (items == null) {
-					console.log("addHeroData items was null for " + battletag + " " + heroID);
-					exports.addHeroData(battletag, heroID,timeToDelay());
+					console.log("addHeroData items was null for " + battletag + " " + heroID + " calling again");
+					exports.addHeroData(region, battletag, heroID, timeToDelay());
 					console.log(requestedHeroData);
 				}					
 				else {
 					//database was null
 					if (db == null) {
-						console.log("addHeroData database was null for " + battletag + " " + heroID);
-						exports.addHeroData(battletag, heroID, timeToDelay());							
+						console.log("addHeroData database was null for " + battletag + " " + heroID + " calling again");
+						exports.addHeroData(region, battletag, heroID, timeToDelay());							
 					}
 					//end error handling
 					//If the Hero is level 70 and has damage > than CURRENTLY 0, search heroCollection.  If hero is there, determine whether or not to update, else add hero.

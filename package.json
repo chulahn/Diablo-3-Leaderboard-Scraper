@@ -1,15 +1,15 @@
 {
   "name": "D3Leader",
   "version": "1.0.0",
-  "description": "",
-  "main": "request.js",
+  "description": "A node.js app that scrapes leaderboard table from Battle.net and top players and their stats.",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js"
   },
   "dependencies": {
-    "ejs": "x.x.x",
+    "ejs": "1.x.x",
     "express": "4.2.x",
-    "jsdom": "x.x.x",
+    "jsdom": "1.x.x"
   },
   "author": "Chul Ahn",
   "license": "ISC"

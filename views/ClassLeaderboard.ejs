@@ -24,8 +24,9 @@
 <script>
 var allData = <%-JSON.stringify(all)%>;
 var currentArray = allData.slice(0,100);
-var currentDataset = "DPS";
 var currentTop = 100;
+var currentDataset = "dps";
+var axes = true;
 
 var height = 300, width = 800;
 var barPadding = 1;
@@ -37,35 +38,106 @@ var svg= d3.select("#visual")
 	.attr("width" , width);
 
 var tip = d3.tip().attr('class', 'd3-tip').html(function(d,i) {
-	return (i+1)+"."+"<span class=\"btag\">"+d.battletag+"</span><br />DPS:<span class=\"damage\">"+d.stats.damage+"</span>";
+	return (i+1)+"."+"<span class=\"btag\">"+d.battletag+"</span><br />DPS:<span class=\"damage\">"+d.stats.damage+"</span><br />Toughness:<span class=\"damage\">"+d.stats.toughness;
 });
 svg.call(tip);
 
-var legend = svg.selectAll(".legend")
-				.data([10,20,50,100])
-				.enter()
-				.append("g")
-				.attr("class", "legend")
-     			.attr("transform", function(d, i) { 
-     				return "translate("+(i*40)+",0)"; 
-     			});
+function addLegend() {
+	var legend = svg.selectAll(".legend")
+					.data([10,20,50,100])
+					.enter()
+					.append("g")
+					.attr("class", "legend")
+	     			.attr("transform", function(d, i) { 
+	     				return "translate("+(i*40)+",0)"; 
+	     			});
 
-legend.append("text")
-		.attr("x", 10)
-		.attr("y", 13)
-		.style("attr","black")
-		.text(function(d) {
-			return "Top " +d;
-		})
-		.on("click" , function(d) {
-			createGraph(d);
-		});
+	legend.append("text")
+			.attr("x", 10)
+			.attr("y", 13)
+			.text(function(d) {
+				return "Top " +d;
+			})
+			.on("click" , function(d) {
+				currentTop=parseInt(d);
+				createGraph(d, currentDataset);
+				legend.selectAll(".selected").classed("selected",false);
+				d3.select(this).attr("class", "selected");
+			})
+			.on("mouseover" , function() {
+				d3.select(this).style("font-weight", "bold");
+			})
+			.on("mouseout" , function() {
+				d3.select(this).style("font-weight" , "");
+			});
 
-function hideTable() {
-	$('table').hide()
+	var category = svg.selectAll(".category")
+					.data(["dps" , "toughness"])
+					.enter()
+					.append("g")
+					.attr("class", "category")
+					.attr("transform", function(d, i) {
+	    				return "translate("+(i*40)+",0)"; 
+	     			});
+
+	category.append("text")
+			.attr("x", 200)
+			.attr("y", 13)
+			.text(function(d) {
+				return d;
+			})
+			.on("click" , function(d) {
+				currentDataset = d;
+				createGraph(currentTop, d);
+				category.selectAll(".selected").classed("selected",false);
+				d3.select(this).attr("class", "selected");
+			})
+			.on("mouseover" , function() {
+				d3.select(this).style("font-weight", "bold");
+			})
+			.on("mouseout" , function() {
+				d3.select(this).style("font-weight" , "");
+			});
+
+
+	// var extra = svg.selectAll(".extra")
+	// 				.data(["axis on", "axes off"])
+	// 				.enter()
+	// 				.append("g")
+	// 				.attr("class" , "extra")
+	// 				.attr("transform", function(d, i) {
+	//     				return "translate("+(i*60)+",0)"; 
+	// 				});
+	// extra.append("text")
+	// 		.attr("x", 500)
+	// 		.attr("y", 13)
+	// 		.text(function(d) {
+	// 			return d;
+	// 		})
+	// 		.on("click" , function() {
+	// 			currentDataset = d;
+	// 			d3.select(this).classed("selected");
+	// 		})
 }
 
-function createGraph(number) {
+
+function getY(d, currentDataset) {
+	if (d == null || d == 0) {
+		return 0;
+	}
+	else {
+		switch(currentDataset) {
+			case "dps":
+				return d.stats.damage;
+				break;
+			case "toughness":
+				return d.stats.toughness;
+				break;
+		}
+	}
+}
+
+function createGraph(number, currentDataset) {
 	//if number == null, set to currentTop
 	currentTop = 100;
 	currentArray = allData.slice(0,number);
@@ -75,18 +147,8 @@ function createGraph(number) {
 					.domain([0, currentArray.length])
 					.range([xPadding, width-xPadding]);
 	var yScale = d3.scale.linear()
-					.domain([0, d3.max(currentArray, function(d) { 
-						if (d == null || d == 0) {
-							return 0;
-						}
-						else {
-							if (currentDataset == "DPS") {
-								return d.stats.damage;
-							}
-							if (currentDataset == "toughness") {
-								return d.stats.toughness;
-							}
-						}
+					.domain([0, d3.max(currentArray, function(d) { 	
+						return getY(d, currentDataset);		
 					})])
 					.range([height-yPadding, yPadding]);
 
@@ -105,36 +167,22 @@ function createGraph(number) {
 			return "<%- title %>#"+(i+1);
 		}).append("rect")
 			.attr("x" , function(d,i) {
-				return xScale(i); })
+				return xScale(i); 
+			})
 			.attr("y" , function(d) { 
-				if (d == null || d == 0) {
-					return 0;
-				}
-				else {
-					if (currentDataset == "DPS") {
-						return yScale(d.stats.damage);
-					}
-					if (currentDataset == "toughness") {
-						return yScale(d.stats.toughness);
-					}
-				}
+				return yScale(getY(d, currentDataset));
 			})
 			//width of one bar is (widthOfGraph / # of datapoints) - spaceInBetweenBars
 			.attr("width", (width-(2*xPadding)) / currentArray.length - barPadding)
 			.attr("height", function(d) {
-				if (d == null || d == 0) {
-					return 0;
-				}
-				else {
-					if (currentDataset == "DPS") {
-						return height-yScale(d.stats.damage)-yPadding;
-					}
-					if (currentDataset == "toughness") {
-						return height - yScale(d.stats.toughness)-yPadding;
-					}
-				}	
+				// if (d == null || d == 0) {
+				// 	return 0;
+				// }
+				// else {
+					return height-yScale(getY(d, currentDataset))-yPadding;
+				// }	
 			})
-			.attr("class" , "enter")
+			.attr("class" , "enter bar")
 			.on('mouseover', tip.show)
 			.on('mouseout', tip.hide);
 	//add xAxis
@@ -149,10 +197,10 @@ function createGraph(number) {
 		.call(yAxis);
 }
 
-createGraph(100);
+addLegend();
+createGraph(currentTop, currentDataset);
 
 d3.select("#hundred").on("click",function() {
-	hideTable();
 	currentDataset = "toughness";
 	currentArray = allData.slice(0,100);
 	d3.selectAll('.enter').attr("class", "exit").style('opacity' , 0);
