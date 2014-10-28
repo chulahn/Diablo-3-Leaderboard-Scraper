@@ -11,7 +11,7 @@ var MongoClient = mongo.MongoClient;
 
 //for a hero, search itemDatabase, and sum the important stats (elemental damage, cooldown reducion, reduced damage)
 function getImportantStats(heroID) {
-	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
+	MongoClient.connect(process.env.DBURL, function(err, db) {
 		if (err) {
 			return console.log("getImportantStats error connecting to db")
 		}
@@ -159,7 +159,7 @@ app.get('/update/:region/:category/:diabloClass', function(req,res) {
 });
 //update hero
 app.get('/update/player/:battletag/hero/:heroID', function(req, res) {
-	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
+	MongoClient.connect(process.env.DBURL, function(err, db) {
 		if (err) {
 			return console.log(err);
 		}

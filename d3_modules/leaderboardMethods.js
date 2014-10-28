@@ -7,7 +7,7 @@ var heroMethods = require("../d3_modules/heroMethods");
 
 var MongoClient = mongo.MongoClient;
 
-var apiKey = "y34m8hav4zpvrezvrs6xhgjh6uphqa5r";
+var apiKey = process.env.APIKEY;
 var region = "us";
 var apiURL = ".api.battle.net/d3/"
 var locale = "en_US";
@@ -40,7 +40,7 @@ function itemDelay() {
 	//If not found in heroCollection, attempt to add by getting the heroID from searching the leaderboardCollection
 //Once allData reaches 1000 and data is not undefined, renderpage
 exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, req, res) {    
-	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
+	MongoClient.connect(process.env.DBURL, function(err, db) {
 	//Takes about 1/10th second
 		date = new Date();
 		console.log(diabloClass + " Page before request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
@@ -194,7 +194,7 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 //Gets the leaderboard table from Battle.net website, parses each row, creates an API request URL
 //and passes it to checkLeaderboardCollectForPlayer to add/update player to collection e.g(hcbarb, seasondh, etc..)
 exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
-	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
+	MongoClient.connect(process.env.DBURL, function(err, db) {
 		//successfully connected
 		if(!err) {
 			setRegion(region);

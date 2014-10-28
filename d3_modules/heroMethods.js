@@ -6,7 +6,7 @@ var itemMethods = require('../d3_modules/itemMethods.js');
 
 var MongoClient = mongo.MongoClient;
 
-var apiKey = "y34m8hav4zpvrezvrs6xhgjh6uphqa5r";
+var apiKey = process.env.APIKEY;
 var region = "us";
 var apiURL = ".api.battle.net/d3/"
 var locale = "en_US";
@@ -29,7 +29,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 	console.log(heroID + " Page before request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 
 //Takes 200ms.  Only has information from DB.  Not always up to Date
-	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
+	MongoClient.connect(process.env.DBURL, function(err, db) {
 		if (err) {
 			return console.log("getHeroDetails error connecting to db")
 		}
@@ -83,7 +83,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 
 //get all items from json heroItems, and call findItemInCollection for each.
 exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
-	MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
+	MongoClient.connect(process.env.DBURL, function(err, db) {
 		if (err) {
 			return console.log("getHeroDetails error connecting to db")
 			getItemIDsFromHero(heroItems, heroID, delay);
@@ -154,7 +154,7 @@ exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
 function findItemInCollection(itemID, heroID, delay, db){
 	// setTimeout( function() {
 
-	// MongoClient.connect("mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders", function(err, db) {
+	// MongoClient.connect(process.env.DBURL, function(err, db) {
 	// 	if (err) {
 	// 		return console.log("findItem error connecting to db", err)
 	// 	}
