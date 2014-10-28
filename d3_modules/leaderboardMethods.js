@@ -7,7 +7,9 @@ var heroMethods = require("../d3_modules/heroMethods");
 
 var MongoClient = mongo.MongoClient;
 
-var apiKey = process.env.APIKEY;
+var databaseURL = process.env.DBURL || "mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders";
+var apiKey = process.env.APIKEY || "y34m8hav4zpvrezvrs6xhgjh6uphqa5r";
+
 var region = "us";
 var apiURL = ".api.battle.net/d3/"
 var locale = "en_US";
@@ -24,7 +26,6 @@ function timeToDelay() {
 	return (1500* (Math.floor(delayCounter/10)));
 }
 
-
 var itemDelayCounter = 0;
 function itemDelay() {
 	itemDelayCounter++;
@@ -40,7 +41,7 @@ function itemDelay() {
 	//If not found in heroCollection, attempt to add by getting the heroID from searching the leaderboardCollection
 //Once allData reaches 1000 and data is not undefined, renderpage
 exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, req, res) {    
-	MongoClient.connect(process.env.DBURL, function(err, db) {
+	MongoClient.connect(databaseURL, function(err, db) {
 	//Takes about 1/10th second
 		date = new Date();
 		console.log(diabloClass + " Page before request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
@@ -147,6 +148,7 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 								console.log("alldata length " + allData.length + " count " + count);
 
 								if (count ==  leaderboardResults.length) {
+									// console.log(allData);
 						    		date = new Date();
 									console.log(diabloClass + " Page rendered "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 									//Takes about half a minute to render.
@@ -194,7 +196,7 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 //Gets the leaderboard table from Battle.net website, parses each row, creates an API request URL
 //and passes it to checkLeaderboardCollectForPlayer to add/update player to collection e.g(hcbarb, seasondh, etc..)
 exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
-	MongoClient.connect(process.env.DBURL, function(err, db) {
+	MongoClient.connect(databaseURL, function(err, db) {
 		//successfully connected
 		if(!err) {
 			setRegion(region);

@@ -8,10 +8,11 @@ var app = express();
 var mongo = require('mongodb');
 var Db = mongo.Db;
 var MongoClient = mongo.MongoClient;
+var databaseURL = databaseURL || "mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders";
 
 //for a hero, search itemDatabase, and sum the important stats (elemental damage, cooldown reducion, reduced damage)
 function getImportantStats(heroID) {
-	MongoClient.connect(process.env.DBURL, function(err, db) {
+	MongoClient.connect(databaseURL, function(err, db) {
 		if (err) {
 			return console.log("getImportantStats error connecting to db")
 		}
@@ -134,7 +135,7 @@ function getImportantStats(heroID) {
 }
 
 app.get('/', function(req, res) {
-	res.sendfile('default.html');
+	res.sendfile('index.html');
 });
 
 //shows leaderboard page
@@ -159,7 +160,7 @@ app.get('/update/:region/:category/:diabloClass', function(req,res) {
 });
 //update hero
 app.get('/update/player/:battletag/hero/:heroID', function(req, res) {
-	MongoClient.connect(process.env.DBURL, function(err, db) {
+	MongoClient.connect(databaseURL, function(err, db) {
 		if (err) {
 			return console.log(err);
 		}
@@ -172,14 +173,14 @@ app.get('/update/player/:battletag/hero/:heroID', function(req, res) {
 });
 
 //files
-app.get('/get.js', function(req,res) {
-	res.sendfile('get.js');
-});
-app.get('/request.js', function(req,res) {
-	res.sendfile('request.js');
+app.get('/d3functions.js', function(req,res) {
+	res.sendfile('d3functions.js');
 });
 app.get('/styles/battletag.css', function(req,res) {
 	res.sendfile('styles/battletag.css');
+});
+app.get('/styles/homepage.css', function(req,res) {
+	res.sendfile('styles/homepage.css');
 });
 app.get('/styles/hero.css', function(req,res) {
 	res.sendfile('styles/hero.css');
@@ -194,7 +195,6 @@ app.get('/images/hardcore.png', function(req,res) {
 app.get('/images/seasonal.png', function(req,res) {
 	res.sendfile('images/seasonal.png');
 });
-
 
 
 app.get('/*' , function(req,res) {

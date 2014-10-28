@@ -6,7 +6,8 @@ var itemMethods = require('../d3_modules/itemMethods.js');
 
 var MongoClient = mongo.MongoClient;
 
-var apiKey = process.env.APIKEY;
+var databaseURL = process.env.DBURL || "mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders";
+var apiKey = process.env.APIKEY || "y34m8hav4zpvrezvrs6xhgjh6uphqa5r";
 var region = "us";
 var apiURL = ".api.battle.net/d3/"
 var locale = "en_US";
@@ -29,7 +30,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 	console.log(heroID + " Page before request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 
 //Takes 200ms.  Only has information from DB.  Not always up to Date
-	MongoClient.connect(process.env.DBURL, function(err, db) {
+	MongoClient.connect(databaseURL, function(err, db) {
 		if (err) {
 			return console.log("getHeroDetails error connecting to db")
 		}
@@ -41,7 +42,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 					var heroItems = heroData.items;
 					//add items to DB if extraItemData is undefined
 					if (heroData.level == 70 && heroData.extraItemData == undefined) {
-						exports.getItemIDsFromHero(heroItems,heroID,10);
+						// exports.getItemIDsFromHero(heroItems,heroID,10);
 					}
 					res.render('hero.ejs', {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
 					date = new Date();
@@ -50,8 +51,6 @@ exports.getHeroDetails = function(heroID, req, res) {
 				//not in database.  must request data from Blizzard site.
 				else {
 					request(heroRequestURL, function (error, response, data) {
-						// console.log(data);
-						// console.log(heroRequestURL);
 						var heroData = JSON.parse(data);
 						var heroItems = heroData.items;
 						if (heroData.level == 70) {
@@ -83,7 +82,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 
 //get all items from json heroItems, and call findItemInCollection for each.
 exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
-	MongoClient.connect(process.env.DBURL, function(err, db) {
+	MongoClient.connect(databaseURL, function(err, db) {
 		if (err) {
 			return console.log("getHeroDetails error connecting to db")
 			getItemIDsFromHero(heroItems, heroID, delay);
@@ -154,7 +153,7 @@ exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
 function findItemInCollection(itemID, heroID, delay, db){
 	// setTimeout( function() {
 
-	// MongoClient.connect(process.env.DBURL, function(err, db) {
+	// MongoClient.connect(databaseURL, function(err, db) {
 	// 	if (err) {
 	// 		return console.log("findItem error connecting to db", err)
 	// 	}

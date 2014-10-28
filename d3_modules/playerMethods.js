@@ -6,7 +6,8 @@ var heroMethods = require("../d3_modules/heroMethods.js");
 var mongo = require('mongodb');
 var MongoClient = mongo.MongoClient;
 
-var apiKey = process.env.APIKEY;
+var databaseURL = process.env.DBURL || "mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders";
+var apiKey = process.env.APIKEY || "y34m8hav4zpvrezvrs6xhgjh6uphqa5r";
 var region = "us";
 var apiURL = ".api.battle.net/d3/"
 var locale = "en_US";
@@ -23,7 +24,7 @@ function timeToDelay() {
 //for a given Battletag, it makes a request to get all heroes for that tag.  After getting heroes, call addHeroData and create the page for that Battletag
 //addHeroData is currently uncommented until it has been updated.
 exports.getHeroes = function(battletag, req, res) {
-	MongoClient.connect(process.env.DBURL, function(err, db) {
+	MongoClient.connect(databaseURL, function(err, db) {
 		var heroCollection = db.collection("hero");
 	});
 
