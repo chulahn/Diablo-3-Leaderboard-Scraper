@@ -148,7 +148,11 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 								console.log("alldata length " + allData.length + " count " + count);
 
 								if (count ==  leaderboardResults.length) {
-									// console.log(allData);
+									allData.forEach(function(player) {
+										if (player.extraItemData == undefined) {
+											heroMethods.getItemIDsFromHero(player.items, player.heroID, itemDelay())
+										}
+									});
 						    		date = new Date();
 									console.log(diabloClass + " Page rendered "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 									//Takes about half a minute to render.

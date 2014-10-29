@@ -7,11 +7,12 @@
     "start": "node app.js"
   },
   "dependencies": {
+    "async": "0.9.0",
     "ejs": "1.x.x",
     "express": "4.2.x",
     "jsdom": "1.x.x",
-    "mongodb": "2.x.x",
-    "request": "2.x.x"
+    "mongodb": "2.0.4",
+    "request": "2.47.0"
   },
   "author": "Chul Ahn",
   "license": "ISC"

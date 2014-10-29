@@ -1,11 +1,13 @@
-var leaderboardMethods = require('./d3_modules/leaderboardMethods');
-var playerMethods = require('./d3_modules/playerMethods');
-var heroMethods = require('./d3_modules/heroMethods');
+var leaderboardMethods = require("./d3_modules/leaderboardMethods");
+var playerMethods = require("./d3_modules/playerMethods");
+var heroMethods = require("./d3_modules/heroMethods");
+var async = require("async");
+var asyncMethods = require('./asyncMethods.js')
 
 var express = require("express");
 var app = express();
 
-var mongo = require('mongodb');
+var mongo = require("mongodb");
 var Db = mongo.Db;
 var MongoClient = mongo.MongoClient;
 var databaseURL = databaseURL || "mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders";
@@ -134,20 +136,21 @@ function getImportantStats(heroID) {
 	});	//end connection
 }
 
-app.get('/', function(req, res) {
-	res.sendfile('index.html');
+app.get("/", function(req, res) {
+	res.sendfile("index.html");
+	// asyncMethods.getItemsAndExtraData(43712118);
 });
 
 //shows leaderboard page
-app.get('/:region/:category/:diabloClass', function(req,res) {
+app.get("/:region/:category/:diabloClass", function(req,res) {
 	leaderboardMethods.getLeaderboardFromDB(req.params.region, req.params.diabloClass, req.params.category, req, res);
 });
 //shows a player page, with heroes.
-app.get('/player/:battletag', function(req,res) {
+app.get("/player/:battletag", function(req,res) {
 	playerMethods.getHeroes(req.params.battletag, req, res);
 });
 //shows a hero page
-app.get('/player/:battletag/hero/:heroID', function(req, res) {
+app.get("/player/:battletag/hero/:heroID", function(req, res) {
 	heroMethods.getHeroDetails(parseInt(req.params.heroID), req, res);
 	getImportantStats(parseInt(req.params.heroID));
 });
@@ -155,11 +158,11 @@ app.get('/player/:battletag/hero/:heroID', function(req, res) {
 
 //update methods
 //update leaderboard
-app.get('/update/:region/:category/:diabloClass', function(req,res) {
+app.get("/update/:region/:category/:diabloClass", function(req,res) {
 	leaderboardMethods.getCurrentLeaderboard(req.params.region, req.params.diabloClass, req.params.category, req, res);
 });
 //update hero
-app.get('/update/player/:battletag/hero/:heroID', function(req, res) {
+app.get("/update/player/:battletag/hero/:heroID", function(req, res) {
 	MongoClient.connect(databaseURL, function(err, db) {
 		if (err) {
 			return console.log(err);
@@ -167,37 +170,37 @@ app.get('/update/player/:battletag/hero/:heroID', function(req, res) {
 		else {
 			console.log(req.params.battletag)
 			playerMethods.addHeroData("us",req.params.battletag, parseInt(req.params.heroID), 50, db);
-			res.redirect('/player/'+req.params.battletag+'/hero/'+req.params.heroID);
+			res.redirect("/player/"+req.params.battletag+"/hero/"+req.params.heroID);
 		}	
 	});
 });
 
 //files
-app.get('/d3functions.js', function(req,res) {
-	res.sendfile('d3functions.js');
+app.get("/d3functions.js", function(req,res) {
+	res.sendfile("d3functions.js");
 });
-app.get('/styles/battletag.css', function(req,res) {
-	res.sendfile('styles/battletag.css');
+app.get("/styles/battletag.css", function(req,res) {
+	res.sendfile("styles/battletag.css");
 });
-app.get('/styles/homepage.css', function(req,res) {
-	res.sendfile('styles/homepage.css');
+app.get("/styles/homepage.css", function(req,res) {
+	res.sendfile("styles/homepage.css");
 });
-app.get('/styles/hero.css', function(req,res) {
-	res.sendfile('styles/hero.css');
+app.get("/styles/hero.css", function(req,res) {
+	res.sendfile("styles/hero.css");
 });
-app.get('/styles/leaderboard.css', function(req,res) {
-	res.sendfile('styles/leaderboard.css');
-});
-
-app.get('/images/hardcore.png', function(req,res) {
-	res.sendfile('images/hardcore.png');
-});
-app.get('/images/seasonal.png', function(req,res) {
-	res.sendfile('images/seasonal.png');
+app.get("/styles/leaderboard.css", function(req,res) {
+	res.sendfile("styles/leaderboard.css");
 });
 
+app.get("/images/hardcore.png", function(req,res) {
+	res.sendfile("images/hardcore.png");
+});
+app.get("/images/seasonal.png", function(req,res) {
+	res.sendfile("images/seasonal.png");
+});
 
-app.get('/*' , function(req,res) {
+
+app.get("/*" , function(req,res) {
 	res.send("404");
 });
 
