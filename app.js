@@ -138,7 +138,7 @@ function getImportantStats(heroID) {
 
 app.get("/", function(req, res) {
 	res.sendfile("index.html");
-	// asyncMethods.getItemsAndExtraData(43712118);
+	asyncMethods.getItemsAndExtraData(43712118);
 });
 
 //shows leaderboard page
@@ -198,6 +198,50 @@ app.get("/images/hardcore.png", function(req,res) {
 app.get("/images/seasonal.png", function(req,res) {
 	res.sendfile("images/seasonal.png");
 });
+
+app.get("/images/barbarian-female.png", function(req,res) {
+	res.sendfile("images/barbarian-female.png");
+});
+app.get("/images/barbarian-male.png", function(req,res) {
+	res.sendfile("images/barbarian-male.png");
+});
+
+app.get("/images/crusader-female.png", function(req,res) {
+	res.sendfile("images/crusader-female.png");
+});
+app.get("/images/crusader-male.png", function(req,res) {
+	res.sendfile("images/crusader-male.png");
+});
+
+app.get("/images/demon-hunter-female.png", function(req,res) {
+	res.sendfile("images/demon-hunter-female.png");
+});
+app.get("/images/demon-hunter-male.png", function(req,res) {
+	res.sendfile("images/demon-hunter-male.png");
+});
+
+app.get("/images/monk-female.png", function(req,res) {
+	res.sendfile("images/monk-female.png");
+});
+app.get("/images/monk-male.png", function(req,res) {
+	res.sendfile("images/monk-male.png");
+});
+
+app.get("/images/witch-doctor-female.png", function(req,res) {
+	res.sendfile("images/witch-doctor-female.png");
+});
+app.get("/images/witch-doctor-male.png", function(req,res) {
+	res.sendfile("images/witch-doctor-male.png");
+});
+
+app.get("/images/wizard-female.png", function(req,res) {
+	res.sendfile("images/wizard-female.png");
+});
+app.get("/images/wizard-male.png", function(req,res) {
+	res.sendfile("images/wizard-male.png");
+});
+
+
 
 
 app.get("/*" , function(req,res) {

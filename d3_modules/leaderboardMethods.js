@@ -150,7 +150,7 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 								if (count ==  leaderboardResults.length) {
 									allData.forEach(function(player) {
 										if (player.extraItemData == undefined) {
-											heroMethods.getItemIDsFromHero(player.items, player.heroID, itemDelay())
+											// heroMethods.getItemIDsFromHero(player.items, player.heroID, itemDelay())
 										}
 									});
 						    		date = new Date();

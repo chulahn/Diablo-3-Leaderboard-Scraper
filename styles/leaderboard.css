@@ -64,3 +64,9 @@ td, th {
 .selected {
 	font-weight : bold;
 }
+
+.update {
+	position : fixed;
+	right : 0px;
+	top : 0px;
+}

@@ -140,8 +140,8 @@ exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
 					delay = delay + 100;
 					i++;
 				});
-// console.log("delay " + delay + " itemsLength: " + items.length)
-// findItemsInCollection(items, heroID, delay, db);
+		// console.log("delay " + delay + " itemsLength: " + items.length)
+		// findItemsInCollection(items, heroID, delay, db);
 
 			}
 			else {
@@ -162,7 +162,6 @@ exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
 	//if class is DH, if no quiver, add second bow.
 	//if class is barb or monk, check offhand
 function findItemInCollection(itemID, heroID, delay, db){
-	// setTimeout( function() {
 
 	if (db == undefined) {
 		MongoClient.connect(databaseURL, function(err, db) {
@@ -174,72 +173,64 @@ function findItemInCollection(itemID, heroID, delay, db){
 		
 		});
 	}
-
 	else {
+		var itemCollection = db.collection("item");
+		var itemRequestURL = "https://us.api.battle.net/d3/data/item/" + itemID + "?locale=" + locale + "&apikey=" + apiKey;
+		// var itemRequestURL = "https://"+region+".api.battle.net/d3/data/item/" + itemID + "?locale=" + locale + "&apikey=" + apiKey;
 
-			var itemCollection = db.collection("item");
-			var itemRequestURL = "https://us.api.battle.net/d3/data/item/" + itemID + "?locale=" + locale + "&apikey=" + apiKey;
-			// var itemRequestURL = "https://"+region+".api.battle.net/d3/data/item/" + itemID + "?locale=" + locale + "&apikey=" + apiKey;
-
-			setTimeout( function() {
-				request(itemRequestURL, function (error, response, data) {
-					if (data == undefined) {
-						findItemInCollection(itemID,heroID,delay+1000);	
+		setTimeout( function() {
+			request(itemRequestURL, function (error, response, data) {
+				if (data == undefined) {
+					findItemInCollection(itemID,heroID,delay+1000);	
+				}
+				else {
+					requestedItem = JSON.parse(data);
+					if (requestedItem.code == 403) {
+						findItemInCollection(itemID,heroID,delay+1000);
 					}
-					else {
-						requestedItem = JSON.parse(data);
-						if (requestedItem.code == 403) {
-							findItemInCollection(itemID,heroID,delay+1000);
-						}
-						else{
+					else{
 
-							(function(requestedItem) {
-								var requestedItemType = itemMethods.getItemType(requestedItem.type.id);
-								console.log(delay + " findItem in request " +requestedItem.name + " " + requestedItemType);
-								//find if hero has an item in that spot.  if there is check for differences.
-								itemCollection.find({"heroID": parseInt(heroID) , "type" :requestedItemType}).toArray(function(err, matchedItems) {
-									if (matchedItems.length != 0) {
+						(function(requestedItem) {
+							var requestedItemType = itemMethods.getItemType(requestedItem.type.id);
+							console.log(delay + " findItem in request " +requestedItem.name + " " + requestedItemType);
+							//find if hero has an item in that spot.  if there is check for differences.
+							itemCollection.find({"heroID": parseInt(heroID) , "type" :requestedItemType}).toArray(function(err, matchedItems) {
+								if (matchedItems.length != 0) {
 
-										//check to see if player has only one ring, and if its not the same as the ring in DB, add it
-										if (itemMethods.isRing(requestedItemType)) {
-											if (matchedItems.length == 1 && matchedItems[0].itemID != itemID) {
-												console.log("Inserted 2nd ring");
-												insertInItemCollection(itemCollection, requestedItem, heroID);
-											}
+									//check to see if player has only one ring, and if its not the same as the ring in DB, add it
+									if (itemMethods.isRing(requestedItemType)) {
+										if (matchedItems.length == 1 && matchedItems[0].itemID != itemID) {
+											console.log("Inserted 2nd ring");
+											insertInItemCollection(itemCollection, requestedItem, heroID);
 										}
+									}
 
-										matchedItems.forEach(function (equippedItem) {
-											//this check was put here because some items did not have itemID after being updated.
-											if (equippedItem.itemID == undefined) {
-												console.log(equippedItem[0]);
-											}
+									matchedItems.forEach(function (equippedItem) {
+										//this check was put here because some items did not have itemID after being updated.
+										if (equippedItem.itemID == undefined) {
+											console.log(equippedItem[0]);
+										}
+										compareItems(heroID, equippedItem, requestedItem);
+									});//end forEach item
+								}//end if found a item in that spot
+								//there no item in that spot, update
+								else {
+									insertInItemCollection(itemCollection, requestedItem, heroID);
+								}//end insertion		
+							});//end itemcollection find
+						})(requestedItem);//end self-invoking function
+					}//end else json had data	
+				}//end else data was not undefined			
+			});//end request
+		},delay);//end settimeout
 
-											compareItems(heroID, equippedItem, requestedItem);
-											
-											
-										});//end forEach item
-									}//end if found a item in that spot
-
-									//there no item in that spot, update
-									else {
-										insertInItemCollection(itemCollection, requestedItem, heroID);
-									}//end insertion		
-								});//end itemcollection find
-							})(requestedItem);//end self-invoking function
-						}//end else json had data	
-					}//end else data was not undefined			
-				});//end request
-			},delay);//end settimeout
-		// }//end if successfully in db
-	// });
-	// },delay);
 	}
 }
 
 function compareItems(heroID, equippedItem, requestedItem) {
 	var requestedItemType = itemMethods.getItemType(requestedItem.type.id);
 
-
+	console.log("comparing items");
 
 	//if equippedItem and requestItem have same ID, check for differences.
 	//If no new enchants, check if it is socketable to check gems.
@@ -264,6 +255,7 @@ function compareItems(heroID, equippedItem, requestedItem) {
 								if (!gemMethods.isHatGemUtility(equippedGems) && gemMethods.isHatGemUtility(requestedGems)) {
 									updateInItemCollection(itemCollection, requestedItem, heroID);
 								}
+								
 							}//end if item was hat
 
 							//if Ring or Amulet, first check if both jewels are legendary.
