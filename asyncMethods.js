@@ -5,43 +5,6 @@ var mongo = require("mongodb");
 var MongoClient = mongo.MongoClient;
 var databaseURL = databaseURL || "mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders";
 
-
-
-function getHighestHero(standing) {
-
-	async.waterfall([
-
-		function(callback) {
-
-			MongoClient.connect(databaseURL, function(err, db) {
-				if (err) {
-					return console.log("getImportantStats error connecting to db")
-				}
-				else {
-					db.collection("usnormalbarb").find({"Standing" : 1}).toArray(function (err, results) {
-						callback(null, results[0])	
-					})
-				}
-			})
-		},
-		function(result, callback) {
-			var heroes = result.Heroes;
-			griftHero = heroes[0]
-			heroes.forEach(function(hero) {
-				if (hero.id > griftHero.id) {
-					griftHero = hero;
-				}	
-			})
-			callback(null, griftHero)
-		}
-	],
-
-	function(err, results) {
-		console.log(results);
-	});
-
-}
-
 function getImportantStats(heroID) {
 	MongoClient.connect(databaseURL, function(err, db) {
 		if (err) {
@@ -165,31 +128,36 @@ function getImportantStats(heroID) {
 	});	//end connection
 }
 
-
 exports.getItemsAndExtraData = function(heroID) {
 
 	async.waterfall([
 
-		function(callback) {
+		function getHeroItemsFromDB(callback) {
 
 			MongoClient.connect(databaseURL, function(err, db) {
 				if (err) {
 					return console.log("getImportantStats error connecting to db")
+					exports.getItemAndExtraData(heroID);
 				}
 				else {
 					db.collection("hero").find({"heroID" : heroID}).toArray(function (err, results) {
 						callback(null, results[0])	
-					})
+					});
 				}
-			})
+			});
 
 		},
 
-		function(hero, callback) {
+		//getItemIDS for requests
+		function (hero, callback) {
 
 			heroMethods.getItemIDsFromHero(hero.items, hero.heroID, 1000, callback);
+			//getItemIDs then calls findItem in collection
+			//once all items have been found, callback
 			
 		},
+
+		//get important data
 		function(itemLength, callback) {
 			itemCount = 0;
 			if (itemCount == itemLength) {
