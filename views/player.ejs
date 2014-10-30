@@ -34,7 +34,7 @@
 	<% switch(gender) { case 1: gender = "female"; break; case 0: gender = "male"; break; } %>
 	<% var imgURL = hero.class+"-"+gender %>
 	
-	<div class="<% if (hero.level == 1) { %> mule <% } %>">
+	<div class="hero<% if (hero.level < 70) { %> mule <% } %>">
 		<img src = "../images/<%= imgURL %>.png" height="50" width="50">
 		<a class = "<%= hero.class %>" href = "/player/<%= ejs_btag %>/hero/<%= hero.id %>"> <%= hero.name %> <%= hero.level %></a> ----- <a href = "http://us.battle.net/d3/en/profile/<%= ejs_btag %>/hero/<%= hero.id %>" >Battle.net Profile</a>
 		<% if (hero.seasonal == true) { %> <img src = "../images/seasonal.png" title="Seasonal"> <% } %> 
