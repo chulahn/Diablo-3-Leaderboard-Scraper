@@ -4,6 +4,7 @@ var jsdom = require("jsdom");
 var mongo = require("mongodb");
 var playerMethods = require("../d3_modules/playerMethods");
 var heroMethods = require("../d3_modules/heroMethods");
+var async = require("async");
 
 var MongoClient = mongo.MongoClient;
 
@@ -156,7 +157,20 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 						    		date = new Date();
 									console.log(diabloClass + " Page rendered "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 									//Takes about half a minute to render.
-			    					res.render('ClassLeaderboard.ejs', {title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , all:allData });
+									async.waterfall([
+										function(callback) {
+											leaderboardCollection.find({}).sort({"lastupdated" : -1}).toArray(function(err, results) {
+												if (results[0]["lastupdated"] != undefined) {	
+													callback(null, results[0]["lastupdated"]);
+												}
+												else {
+													callback(null, 0);
+												}
+											});
+									}], function(err, date) {
+				    					res.render('ClassLeaderboard.ejs', {title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , all:allData , lastupdated : date});
+									});										
+
 								}//end rendering page
 							}
 		    			})//end toArray callback from finding hero.
@@ -454,6 +468,12 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 	},delay);//end settimeout
 }
 
+// function getLastUpdated(leaderboardCollection) {
+// 	leaderboardCollection.find({}).sort({"lastupdated" : -1}).toArray(function(err, results) {
+// 		console.log(results[0]["lastupdated"].getMinutes() + " " + results[0]["lastupdated"].getSeconds());
+// 	});
+// }
+
 function samePlayerInSpot(playerDataFromTable, databasePlayer) {
 	return (playerDataFromTable[1].replace("-","#") == databasePlayer.Battletag);
 }
@@ -467,7 +487,7 @@ function playerHasSameHeroes(playerDataFromTable, requestedPlayerData) {
 }
 
 function insertInLeaderboardCollect(leaderboardCollection, playerDataFromTable, requestedPlayerData) {
-	leaderboardCollection.insert({"Standing" : playerDataFromTable[0] , "Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerDataFromTable[2] , "Time Spent" : playerDataFromTable[3] , "Date Completed" : playerDataFromTable[4] , "Heroes" : requestedPlayerData.heroes}, function(err, results) {
+	leaderboardCollection.insert({"Standing" : playerDataFromTable[0] , "Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerDataFromTable[2] , "Time Spent" : playerDataFromTable[3] , "Date Completed" : playerDataFromTable[4] , "Heroes" : requestedPlayerData.heroes, "lastupdated" : new Date()}, function(err, results) {
 		if (err) {
 			setTimeout(function () {
 				insertInLeaderboardCollect(leaderboardCollection, playerDataFromTable, requestedPlayerData);
@@ -481,7 +501,7 @@ function insertInLeaderboardCollect(leaderboardCollection, playerDataFromTable, 
 }
 
 function updateInLeaderboardCollect(leaderboardCollection, playerDataFromTable, requestedPlayerData) {
-	leaderboardCollection.update({"Standing" : playerDataFromTable[0]} , {$set : {"Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerDataFromTable[2] , "Time Spent" : playerDataFromTable[3] , "Date Completed" : playerDataFromTable[4] , "Heroes" : requestedPlayerData.heroes}}, function(err, results) {
+	leaderboardCollection.update({"Standing" : playerDataFromTable[0]} , {$set : {"Battletag" : requestedPlayerData.battleTag , "Greater Rift" : playerDataFromTable[2] , "Time Spent" : playerDataFromTable[3] , "Date Completed" : playerDataFromTable[4] , "Heroes" : requestedPlayerData.heroes, "lastupdated" : new Date()}}, function(err, results) {
 		if (err) {
 			return console.log("error in insertInLeaderboardCollect ", err);
 		}

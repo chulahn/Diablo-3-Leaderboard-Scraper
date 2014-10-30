@@ -27,9 +27,15 @@
 <header>
 	<h1> <%- region.toUpperCase() %> <%- leaderboardType.toUpperCase() %> <%- title.toUpperCase() %></h1>
 </header>
-<nav>
+<aside>
+<% if (lastupdated != 0) { %>
+
+<% var lastUpdated = lastupdated.getMonth() + "/" + lastupdated.getDay() + "/" + (lastupdated.getYear()+1900) %>
+last updated: <%= lastUpdated %><br />
+
+<% } %>
 <a class="update" href="/update/<%- region %>/<%- leaderboardType %>/<%- title %>">update leaderboard</a>
-</nav>
+</aside>
 <br />
 
 <div id='visual'></div>
