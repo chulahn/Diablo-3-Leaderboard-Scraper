@@ -6,22 +6,11 @@ a {
 }
 #profile, #items, #skills {
 	display : inline-block;
-	position : relative;
 	border-style : solid;
 	border-width : 1px;
 	padding : 5px;
 	border-color : white;
 }
-
-#items {
-	position : static;
-	right : 0%;
-}
-
-#skills {
-
-}
-
 
 .orange {
 	color : orange;
@@ -29,7 +18,13 @@ a {
 .green {
 	color : green;
 }
+.yellow {
+	color : yellow;
+}
+.blue {
+	color : blue;
+}
 
 body {
-	background-color : black;
+	background-color : #2B2B2B;
 }

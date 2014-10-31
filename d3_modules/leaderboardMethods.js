@@ -123,7 +123,7 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 
 				    						// 	function(callback) {
 
-						    						heroMethods.getItemIDsFromHero(heroToPush.items, heroToPush.heroID, 1000);
+						    						// heroMethods.getItemIDsFromHero(heroToPush.items, heroToPush.heroID, 1000);
 
 				    						// 	},
 

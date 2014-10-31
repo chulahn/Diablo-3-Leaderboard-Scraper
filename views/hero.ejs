@@ -2,9 +2,14 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title><%= ejs_btag %> <%= ejs_heroData.name %>s Page</title>
-	<link rel="stylesheet" type="text/css" href="../../../styles/hero.css">
+	<title><%= ejs_heroData.name %>'s Details</title>
+	<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/bootstrap/3.3.0/js/bootstrap.min.js"></script>
 	<script src="https://us.battle.net/d3/static/js/tooltips.js"></script>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/bootstrap/3.3.0/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="../../../styles/hero.css">
+
+
 	<!-- credit to davem on battle.net forums -->
 	<script>
 		var b = Bnet.D3.Tooltips;
@@ -28,7 +33,7 @@
 </head>
 
 <body>
-<h1><%= ejs_btag %> <%= ejs_heroData.name %>  </h1>
+<h1><%= ejs_heroData.name %> <small><%= ejs_btag %></small>  </h1>
 
 <p><a href = "http://us.battle.net/d3/en/profile/<%= ejs_btag %>/hero/<%= ejs_heroID %>" > Battle.net Profile </a>
 <p><a href = "/update/player/<%= ejs_btag %>/hero/<%= ejs_heroID %>">Update </a>
@@ -38,74 +43,75 @@
 
 
 <!-- Shows information for a Hero -->
-<div id="profile">
-	<ul><h2><%= ejs_heroData.name %></h2>
-		<li>Hardcore : <%= ejs_heroData.hardcore %></li>
-		<li>Seasonal : <%= ejs_heroData.seasonal %></li>
-		<li>Class : <%= ejs_heroData.class %></li>
-		<li>Level : <%= ejs_heroData.level %></li>
-		<li>Paragon : <%= ejs_heroData.Paragon %></li>
-		<li>Damage : <%= ejs_heroData.stats.damage %></li>
-			<ul>
+<div class="container-fluid">
+	<div class="row">
+		<div id="profile" class="col-lg-3 col-md-3 col-sm-4 col-xs-7">
+			<ul><h2>Stats</h2>
+				<li>Hardcore : <%= ejs_heroData.hardcore %></li>
+				<li>Seasonal : <%= ejs_heroData.seasonal %></li>
+				<li>Class : <%= ejs_heroData.class %></li>
+				<li>Level : <%= ejs_heroData.level %></li>
+				<li>Paragon : <%= ejs_heroData.Paragon %></li>
+				<li>Damage : <%= ejs_heroData.stats.damage %></li>
+					<ul>
+						<% if ( ejs_heroData.class == "demon-hunter" || ejs_heroData.class == "monk" ) { %>
+							<li>Dexterity : <%= ejs_heroData.stats.dexterity %></li>
+						<% } %>
+						<% if ( ejs_heroData.class == "witch-doctor" || ejs_heroData.class == "wizard" ) { %>
+							<li>Intelligence : <%= ejs_heroData.stats.intelligence %></li>
+						<% } %>
+						<% if ( ejs_heroData.class == "barbarian" || ejs_heroData.class == "crusader" ) { %>
+							<li>Strength : <%= ejs_heroData.stats.strength %></li>
+						<% } %>
+						<li>Crit Chance : <%= (ejs_heroData.stats.critChance*100).toFixed(2)+"%" %></li>
+						<li>Crit Damage : <%= (ejs_heroData.stats.critDamage*100).toFixed(2)+"%" %></li>
+					</ul>
+				<% if (ejs_heroData.extraItemData != undefined) { %>
+					<% ejs_heroData.extraItemData.elementalDam.forEach(function (element) { %>
+						<% if (element[1] != 0) { %> 
+							<li>+<%= element[0] %> Skills Damage : <%= element[1] %>%</li>
+						<% } %>
+					<% }) %>
+					<% if (ejs_heroData.extraItemData.eliteDam != undefined && ejs_heroData.extraItemData.eliteDam != 0) { %>
+						<li>+Elite Damage : <%= ejs_heroData.extraItemData.eliteDam %>%</li>
+					<% } %>
+					<% if (ejs_heroData.extraItemData.elementalDam[0][1] != 0)  { %>
+						<li>Elemental DPS : <%= ejs_heroData.extraItemData.elementalDam[0][1] * ejs_heroData.stats.damage %></li>
+					<% } %>
+					<% if (ejs_heroData.extraItemData.eliteDam != undefined && ejs_heroData.extraItemData.eliteDam != 0) { %>
+						<li> Elite DPS : <%= ejs_heroData.extraItemData.eliteDam * ejs_heroData.stats.damage %></li>
+						<li> Elite Elemental DPS : <%= ejs_heroData.extraItemData.elementalDam[0][1] * ejs_heroData.extraItemData.eliteDam * ejs_heroData.stats.damage %></li>
+					<% } %>
+					<% if (ejs_heroData.extraItemData.cooldown != 0) { %>
+						<li>CDR from Items : <%= ejs_heroData.extraItemData.cooldown %>%</li>
+					<% } %>
+				<% }%>
+				<li>Toughness : <%= ejs_heroData.stats.toughness %></li>
+					<ul>
+						<li>Vitality : <%= ejs_heroData.stats.vitality %></li>
+						<li>Armor : <%= ejs_heroData.stats.armor %></li>
+						<li>Average Resist : <%= Math.round((ejs_heroData.stats.fireResist+ejs_heroData.stats.coldResist+ejs_heroData.stats.lightningResist+ejs_heroData.stats.poisonResist+ejs_heroData.stats.arcaneResist)/6) %></li>
+						<li>Life : <%= ejs_heroData.stats.life %></li>
+					</ul>
+				<li>Healing : <%= ejs_heroData.stats.healing %></li>
 				<% if ( ejs_heroData.class == "demon-hunter" || ejs_heroData.class == "monk" ) { %>
-					<li>Dexterity : <%= ejs_heroData.stats.dexterity %></li>
-				<% } %>
-				<% if ( ejs_heroData.class == "witch-doctor" || ejs_heroData.class == "wizard" ) { %>
+					<li>Strength : <%= ejs_heroData.stats.strength %></li>
 					<li>Intelligence : <%= ejs_heroData.stats.intelligence %></li>
 				<% } %>
-				<% if ( ejs_heroData.class == "barbarian" || ejs_heroData.class == "crusader" ) { %>
+				<% if ( ejs_heroData.class == "witch-doctor" || ejs_heroData.class == "wizard" ) { %>
 					<li>Strength : <%= ejs_heroData.stats.strength %></li>
+					<li>Dexterity : <%= ejs_heroData.stats.dexterity %></li>
 				<% } %>
-				<li>Crit Chance : <%= (ejs_heroData.stats.critChance*100).toFixed(2)+"%" %></li>
-				<li>Crit Damage : <%= (ejs_heroData.stats.critDamage*100).toFixed(2)+"%" %></li>
-			</ul>
-		<% if (ejs_heroData.extraItemData != undefined) { %>
-			<% ejs_heroData.extraItemData.elementalDam.forEach(function (element) { %>
-				<% if (element[1] != 0) { %> 
-					<li>+<%= element[0] %> Skills Damage : <%= element[1] %>%</li>
+				<% if ( ejs_heroData.class == "barbarian" || ejs_heroData.class == "crusader" ) { %>
+					<li>Dexterity : <%= ejs_heroData.stats.dexterity %></li>
+					<li>Intelligence : <%= ejs_heroData.stats.intelligence %></li>
 				<% } %>
-			<% }) %>
-			<% if (ejs_heroData.extraItemData.eliteDam != undefined && ejs_heroData.extraItemData.eliteDam != 0) { %>
-				<li>+Elite Damage : <%= ejs_heroData.extraItemData.eliteDam %>%</li>
-			<% } %>
-			<% if (ejs_heroData.extraItemData.elementalDam[0][1] != 0)  { %>
-				<li>Elemental DPS : <%= ejs_heroData.extraItemData.elementalDam[0][1] * ejs_heroData.stats.damage %></li>
-			<% } %>
-			<% if (ejs_heroData.extraItemData.eliteDam != undefined && ejs_heroData.extraItemData.eliteDam != 0) { %>
-				<li> Elite DPS : <%= ejs_heroData.extraItemData.eliteDam * ejs_heroData.stats.damage %></li>
-				<li> Elite Elemental DPS : <%= ejs_heroData.extraItemData.elementalDam[0][1] * ejs_heroData.extraItemData.eliteDam * ejs_heroData.stats.damage %></li>
-			<% } %>
-			<% if (ejs_heroData.extraItemData.cooldown != 0) { %>
-				<li>CDR from Items : <%= ejs_heroData.extraItemData.cooldown %>%</li>
-			<% } %>
-		<% }%>
-		<li>Toughness : <%= ejs_heroData.stats.toughness %></li>
-			<ul>
-				<li>Vitality : <%= ejs_heroData.stats.vitality %></li>
-				<li>Armor : <%= ejs_heroData.stats.armor %></li>
-				<li>Average Resist : <%= Math.round((ejs_heroData.stats.fireResist+ejs_heroData.stats.coldResist+ejs_heroData.stats.lightningResist+ejs_heroData.stats.poisonResist+ejs_heroData.stats.arcaneResist)/6) %></li>
-				<li>Life : <%= ejs_heroData.stats.life %></li>
-			</ul>
-		<li>Healing : <%= ejs_heroData.stats.healing %></li>
-		<% if ( ejs_heroData.class == "demon-hunter" || ejs_heroData.class == "monk" ) { %>
-			<li>Strength : <%= ejs_heroData.stats.strength %></li>
-			<li>Intelligence : <%= ejs_heroData.stats.intelligence %></li>
-		<% } %>
-		<% if ( ejs_heroData.class == "witch-doctor" || ejs_heroData.class == "wizard" ) { %>
-			<li>Strength : <%= ejs_heroData.stats.strength %></li>
-			<li>Dexterity : <%= ejs_heroData.stats.dexterity %></li>
-		<% } %>
-		<% if ( ejs_heroData.class == "barbarian" || ejs_heroData.class == "crusader" ) { %>
-			<li>Dexterity : <%= ejs_heroData.stats.dexterity %></li>
-			<li>Intelligence : <%= ejs_heroData.stats.intelligence %></li>
-		<% } %>
-		
-</div>
+				
+		</div>
 
-<div id="items">
-	<ul>
-		<li> Items : 
-			<ul>
+		<div id="items" class="col-lg-3 col-md-4 col-sm-5 col-xs-7 col-sm-offset-1 col-md-offset-3">
+			<ul><h2>Items</h2>
+
 				<% if (ejs_heroData.items == 1) { %> No Items <% } %>
 				<% if (ejs_heroData.items.head != undefined) { %>
 				<li>Head : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.head.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.head.displayColor %>"><%= ejs_heroData.items.head.name %></a></li>
@@ -151,28 +157,30 @@
 				<li title="Insert data from tooltip params">Off Hand : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.offHand.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.offHand.displayColor %>"><%= ejs_heroData.items.offHand.name %></a></li>
 				<% } %>		
 			</ul>
-		</li>
-	</ul>
-</div>
-<br />
-<div id="skills">
-	<ul>
-		<li>Active Skills :
-			<!-- loop through the active skills -->
-			<ul><% ejs_heroData.skills.active.forEach(function (activeSkills) { %>
-				<!-- if skill is not null, add it to list -->
-				<% if (activeSkills.skill != undefined) { %>
-					<li><%= activeSkills.skill.name %>
-					<!-- if there is a rune add it to skill -->
-					<% if (activeSkills.rune != undefined) { %> : <%= activeSkills.rune.name %><% } %>
-				</li><% } %> 
-			<% }) %></ul><!-- end of active skills loop -->
-		</li>
-		<li>Passives : 
-			<ul><% ejs_heroData.skills.passive.forEach(function (passives) { %>
-				<% if (passives.skill != undefined) { %> <li> <%= passives.skill.name %> </li> <% } %>
-			<% }) %></ul>
-		</li>
-	</ul>
+
+		</div>
+	</div>
+	<div class="row">
+		<div id="skills" class="col-lg-3 col-md-3 col-sm-4">
+			<ul><h2>Skills</h2>
+				<li>Active Skills :
+					<!-- loop through the active skills -->
+					<ul><% ejs_heroData.skills.active.forEach(function (activeSkills) { %>
+						<!-- if skill is not null, add it to list -->
+						<% if (activeSkills.skill != undefined) { %>
+							<li><%= activeSkills.skill.name %>
+							<!-- if there is a rune add it to skill -->
+							<% if (activeSkills.rune != undefined) { %> : <%= activeSkills.rune.name %><% } %>
+						</li><% } %> 
+					<% }) %></ul><!-- end of active skills loop -->
+				</li>
+				<li>Passives : 
+					<ul><% ejs_heroData.skills.passive.forEach(function (passives) { %>
+						<% if (passives.skill != undefined) { %> <li> <%= passives.skill.name %> </li> <% } %>
+					<% }) %></ul>
+				</li>
+			</ul>
+		</div>
+	</div>
 </div>
 </body>

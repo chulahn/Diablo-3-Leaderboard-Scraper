@@ -49,6 +49,7 @@
 .hero {
 	width : 50%;
 }
+
 div {
 	transition : background 1s;
 	-webkit-transition : background 1s;
@@ -56,11 +57,14 @@ div {
 	transition-timing-function: ease;
 }
 div:hover {
-	background : gray;
+	background : #404040;
 
 }
 
-@-webkit-keyframes divhover {
-	from {background: white;}
-	to {background: gray;}
+body {
+	background : #2B2B2B;
+}
+
+h1 , div {
+	color: white;
 }
