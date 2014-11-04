@@ -10,6 +10,52 @@
 	<link rel="stylesheet" type="text/css" href="../../../styles/leaderboard.css">
 
 	<script>
+		var allData = <%-JSON.stringify(all)%>;
+
+		$(document).ready(function () {
+			$('#top').hide();
+		})
+
+		$(window).scroll(function() {
+			if ($(window).scrollTop() > 400) {
+	        // > 100px from top - show div
+	        	$('#top').show();
+			}
+
+		    else {
+		        // <= 100px from top - hide div
+		        $('#top').hide();
+		    }
+		});
+		//itemName, itemCount
+		var allItems = [[],[]];
+		var itemName = allItems[0];
+		var itemCount = allItems[1];
+
+		function getItems() {	
+			for(i=0; i<allData.length; i++) {
+				if (allData[i].items.head != undefined) {
+					if (itemName.indexOf(allData[i].items.head.name) == -1) {
+						itemName.push(allData[i].items.head.name);
+						itemCount.push(1);
+					}
+					else {
+						itemCount[itemName.indexOf(allData[i].items.head.name)] += 1;
+					}
+				}
+			}
+		}
+
+		var playerItems = allData[0].items;
+
+		for (itemName in playerItems) {
+			if (playerItems.hasOwnProperty(itemName)) {
+				console.log(playerItems[itemName].name);
+			}
+		}
+	</script>
+
+	<script>
 	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
 	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
@@ -24,11 +70,15 @@
 
 
 <body>
-<script> var allData = <%-JSON.stringify(all)%>; </script>
 <header>
-	<h1> <%- region.toUpperCase() %> <%- leaderboardType.toUpperCase() %> <%- title.toUpperCase() %></h1>
+	<h1 id="#"> <%- region.toUpperCase() %> <%- leaderboardType.toUpperCase() %> <%- title.toUpperCase() %></h1>
 </header>
-<aside>
+
+<aside id="top">
+	<a href="#">top</a>
+</aside>
+
+<aside id="update">
 <% if (lastupdated != 0) { %>
 
 <% var lastUpdated = lastupdated.getMonth() + "/" + lastupdated.getDay() + "/" + (lastupdated.getYear()+1900) %>
@@ -38,6 +88,7 @@ last updated: <%= lastUpdated %><br />
 <a class="update" href="/update/<%- region %>/<%- leaderboardType %>/<%- title %>">update leaderboard</a>
 </aside>
 <br />
+<div id="graphChooser"></div>
 
 <div id='visual'></div>
 

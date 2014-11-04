@@ -10,11 +10,11 @@ var app = express();
 var mongo = require("mongodb");
 var Db = mongo.Db;
 var MongoClient = mongo.MongoClient;
-var databaseURL = databaseURL || "mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders";
+var databaseURL = process.env.DBURL || "mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders";
 
 app.get("/", function(req, res) {
 	res.sendfile("index.html");
-	// asyncMethods.getItemsAndExtraData(43712118);
+	heroMethods.getItemIDsFromHero(43712118);
 });
 
 //shows leaderboard page

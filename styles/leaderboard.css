@@ -75,9 +75,15 @@ td, th {
 	font-weight : bold;
 }
 
-aside {
-	position : fixed;
-	right : 0px;
-	top : 0px;
+#update {
 	text-align : right;
+	right : 0px;
+	position : fixed;
+	top : 0px;
+}
+
+#top {
+	position : fixed;
+	top : 0px;
+	left : 0px;
 }

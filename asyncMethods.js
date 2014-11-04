@@ -3,7 +3,7 @@ var exports = module.exports = {};
 var async = require('async')
 var mongo = require("mongodb");
 var MongoClient = mongo.MongoClient;
-var databaseURL = databaseURL || "mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders";
+var databaseURL = process.env.DBURL || "mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders";
 
 function getImportantStats(heroID) {
 	MongoClient.connect(databaseURL, function(err, db) {
