@@ -45,14 +45,17 @@
 				}
 			}
 		}
-
+		/*
 		var playerItems = allData[0].items;
 
-		for (itemName in playerItems) {
-			if (playerItems.hasOwnProperty(itemName)) {
-				console.log(playerItems[itemName].name);
+		function getItemsFromPlayer() {
+			for (itemName in playerItems) {
+				if (playerItems.hasOwnProperty(itemName)) {
+					console.log(playerItems[itemName].name);
+				}
 			}
 		}
+		*/
 	</script>
 
 	<script>
@@ -88,10 +91,16 @@ last updated: <%= lastUpdated %><br />
 <a class="update" href="/update/<%- region %>/<%- leaderboardType %>/<%- title %>">update leaderboard</a>
 </aside>
 <br />
-<div id="graphChooser"></div>
+<div id="graphChooser">
+	<span id="items">Items</span><br />
+	<div id ="itemPicker"></div>
+	<span id="stats">Stats</span><br />
+	Skills<br />
+</div>
 
-<div id='visual'></div>
-
+<br />
+<div id="mainStatsDiv"></div>
+<div id="itemGraphDiv"></div>
 
 <!-- List of all the BattleTags for the corresponding Leaderboard -->
 <table>
