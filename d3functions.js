@@ -30,11 +30,130 @@ var itemsPieChart = d3.select("#itemGraphDiv")
 	.attr("height", pieChartHeight)
 	.attr("width" , pieChartWidth);
 
+//Data for setting up skills pie chart
+var	allActiveSkills = [ [], [], [], [] ];
+var activeSkillsName = allActiveSkills[0];
+var activeSkillsCount = allActiveSkills[1];
+var skillTotal = 0;
+var	runeNames = allActiveSkills[2];
+var	runeCount = allActiveSkills[3]; 
+var passiveSkills = [[],[]];
+
+var skillsPieChartHeight = 200, skillsPieChartWidth = 400;
+var skillsPieChart = d3.select("#skillGraphDiv")
+	.append("svg")
+	.attr("height", skillsPieChartHeight)
+	.attr("width" , skillsPieChartWidth);
+
+
+fromTopHeroesGetSkills();
+createSkillsPie();
+
+function createSkillsPie() {
+	skillsPieChart.selectAll('.enter').attr("class", "exit").remove();
+
+	var pie = d3.layout.pie();
+	var outerRadius = skillsPieChartHeight / 2 ;
+	var innerRadius = 0;
+	var arc = d3.svg.arc()
+				.innerRadius(innerRadius)
+				.outerRadius(outerRadius);
+	var color = d3.scale.category20();
+
+	var arcs = skillsPieChart.selectAll("g.arc")
+					.data(pie(activeSkillsCount))
+					.enter()
+					.append("g")
+					.attr("class", "arc enter")
+					.attr("transform", "translate(" + 200 + ", " + outerRadius + ")")
+
+	arcs.append("path")
+		.attr("fill", function(d, i) {
+			return color(i)
+		})
+		.attr("d", arc)
+	    .attr("class", "enter");
+
+
+	arcs.append("text")
+	    .attr("transform", function(d) {
+	        return "translate(" + arc.centroid(d) + ")";
+	    })
+	    .attr("text-anchor", "middle")
+	    .attr("class", "enter")
+	    .html(function(d, i) {
+	    	// console.log(d);
+	    	return (activeSkillsCount[i]/skillTotal*100).toFixed(0);
+	        
+	    });
+
+	var activeSkillsTooltip = d3.tip().attr('class', 'd3-tip').html(function(d,i) {
+		return activeSkillsName[i]+" ("+activeSkillsCount[i]+")";
+	});
+	arcs.call(activeSkillsTooltip);
+	arcs.on("mouseover", activeSkillsTooltip.show)
+		.on("mouseout", activeSkillsTooltip.hide);
+}
 
 
 //used in itemPicker div
 var itemStrings = ["shoulders", "head", "neck", "hands", "torso", "bracers", "leftFinger", "waist", "rightFinger", "mainHand", "legs", "offHand", "feet"];	
 
+/*
+	Get active skills and runes for each player.
+*/
+function fromTopHeroesGetSkills() {
+	//reset values
+	allActiveSkills = [ [], [], [], [] ];
+	activeSkillsName = allActiveSkills[0];
+	activeSkillsCount = allActiveSkills[1];
+	runeNames = allActiveSkills[2];
+	runeCount = allActiveSkills[3]; 
+
+ 	skillTotal = 0;
+
+ 	allData.forEach(function (currentPlayer) {
+
+ 		if (currentPlayer.skills != undefined) {
+ 			//add active skills for graph
+	 		var currentPlayerActiveSkills = currentPlayer.skills.active;
+	 		currentPlayerActiveSkills.forEach(function (currentActive) {
+
+	 			var currentSkillName = currentActive.skill.name;
+	 			var currentRuneName = currentActive.rune.name;
+
+	 			var locationOfCurrentActive = activeSkillsName.indexOf(currentSkillName);
+
+	 			if (locationOfCurrentActive == -1) {
+	 				activeSkillsName.push(currentSkillName);
+	 				activeSkillsCount.push(1);
+	 				runeNames.push([currentRuneName]);
+	 				runeCount.push([1]);
+	 				skillTotal += 1;
+	 			}
+	 			else {
+	 				activeSkillsCount[locationOfCurrentActive] += 1;
+	 				skillTotal += 1;
+	 				//check if rune was already added.
+	 				var runesForCurrentSkill = runeNames[locationOfCurrentActive]
+	 				var runeCountForCurrentSkill = runeCount[locationOfCurrentActive];
+
+	 				var locationOfCurrentRune = runesForCurrentSkill.indexOf(currentRuneName);
+
+	 				if (locationOfCurrentRune == -1) {
+	 					runesForCurrentSkill.push(currentRuneName);
+	 					runeCountForCurrentSkill.push(1);
+	 				}
+	 				else {
+	 					runeCountForCurrentSkill[locationOfCurrentRune] += 1;
+	 				}
+
+	 			}
+
+	 		});
+ 		}
+ 	});
+}
 
 /*
 	Add legend for DPS/toughness graph.  Allows to switch top (10,20,50,100) and DPS/toughness
@@ -201,8 +320,8 @@ function createGraph(currentTop, currentDataset) {
 }
 
 /*
+	Helper method used in createPie
 	Get and count the item(head, torso, etc..) that players are using and sets allItems, itemTotal. 
-	Used in createPie
 */
 function fromTopHeroesGetItem(item) {
 	//reset values
@@ -211,21 +330,69 @@ function fromTopHeroesGetItem(item) {
 	itemCount = allItems[1];
  	itemTotal = 0;
 
-	for(i=0; i<allData.length; i++) {
-		if (allData[i].items[item] != undefined) {
-			if (itemName.indexOf(allData[i].items[item].name) == -1) {
-				itemName.push(allData[i].items[item].name);
+	allData.forEach(function (currentPlayer) {
+
+	// for(i=0; i<allData.length; i++) {
+		var currentItem = currentPlayer.items[item];
+		if (currentItem != undefined) {
+			var locationOfCurrentItem = itemName.indexOf(currentItem.name);
+			if (locationOfCurrentItem == -1) {
+				itemName.push(currentItem.name);
 				itemCount.push(1);
+				itemTotal += 1;
 			}
 			else {
-				itemCount[itemName.indexOf(allData[i].items[item].name)] += 1;
+				itemCount[locationOfCurrentItem] += 1;
+				itemTotal += 1;
 			}
 		}
+	// }
+	})
+}
+
+/* 
+	Helper method used in createPie
+	Returns a string that will fit the pieChart.
+
+*/
+function getShortenedItemName(currentItemName, itemPercentage) {
+	var percentageString = itemPercentage + "% ";
+
+	if (currentItemName == "Ring of Royal Grandeur") {
+		return percentageString + "RoRG";
 	}
-	for (j=0; j<itemCount.length; j++) {
-		itemTotal += itemCount[j]; 
+	if (currentItemName == "Stone of Jordan") {
+		return percentageString + "SoJ";
+	}
+
+	//If item name is more than one word, get the first word.
+	var findSpace = currentItemName.indexOf(" ");
+	if (findSpace != -1) {
+		var newItemName = currentItemName.substring(0, findSpace);
+		//if the first word is not "The", return
+		if (newItemName != "The") {
+			return percentageString + newItemName;
+		}
+		//Trim the first word from itemString.  Check if there are more than two words
+		//If so, trim all words after the second, and return.
+		//else return second word
+		else {
+			newItemName = currentItemName.substring(findSpace+1, currentItemName.length);
+			findSpace = newItemName.indexOf(" ");
+			if (findSpace != -1) {
+				newItemName = newItemName.substring(0, findSpace);
+				return percentageString + newItemName;
+			}
+			else {
+				return percentageString + newItemName;
+			}
+		}
+	} 	
+	else {
+		return percentageString + currentItemName;
 	}
 }
+
 /*
 	Deletes previous pie chart and creates new pie chart based on allItems array.
 */
@@ -263,47 +430,10 @@ function createPie() {
 	    .attr("class", "enter")
 	    .html(function(d, i) {
 	    	var itemPercentage = ((d.value/itemTotal)*100).toFixed(0);
-	    	var percentageString = itemPercentage + "% ";
-
+	    	var percentageString = itemPercentage + "%";
 	    	//if itemPercentage > 20, add name of item
 	        if (itemPercentage > 20) {
-	        	var currentItemName = itemName[i];
-
-	        	if (currentItemName == "Ring of Royal Grandeur") {
-	        		return percentageString + "RoRG";
-	        	}
-	        	if (currentItemName == "Stone of Jordan") {
-	        		return percentageString + "SoJ";
-	        	}
-
-	        	//If item name is more than one word, get the first word.
-	        	var findSpace = currentItemName.indexOf(" ");
-	        	if (findSpace != -1) {
-	        		var newItemName = currentItemName.substring(0, findSpace);
-	        		//if the first word is not "The", return
-	        		if (newItemName != "The") {
-	        			return percentageString + newItemName;
-	        		}
-		        	//Trim the first word from itemString.  Check if there are more than two words
-		        	//If so, trim all words after the second, and return.
-		        	//else return second word
-	        		else {
-	        			newItemName = currentItemName.substring(findSpace+1, currentItemName.length);
-	        			findSpace = newItemName.indexOf(" ");
-	        			if (findSpace != -1) {
-		        			newItemName = newItemName.substring(0, findSpace);
-		        			return percentageString + newItemName;
-	        			}
-	        			else {
-	        				return percentageString + newItemName;
-	        			}
-	        		}
-	        	}
-	        	else {
-			        return percentageString + currentItemName;
-	        	}
-
-
+	        	return getShortenedItemName(itemName[i], itemPercentage);
 	        }
 	        else if (itemPercentage > 2) {
 	        	return percentageString;
@@ -322,13 +452,11 @@ function createPie() {
 
 $(document).ready(function() {
 
-	$('#itemGraphDiv').hide();
-
 	var itemPickerHTML = "";
 
 	$.each(itemStrings , function(index, item){
 		if (itemStrings.indexOf(item) != itemStrings.length-1) {
-			itemPickerHTML += "<a href=\"#\" class=\"items\" id="+item+" >"+item+"</a> ";
+			itemPickerHTML += "<a href=\"#\" class=\"items\" id="+item+">"+item+"</a> ";
 			if ((itemStrings.indexOf(item) % 3) == 2) {
 				itemPickerHTML += "<br />";
 			}
@@ -338,18 +466,26 @@ $(document).ready(function() {
 		}
 	});
 
-	$('#itemPicker').append(itemPickerHTML)
-	$('#itemPicker').hide()
+	$('#itemPicker').append(itemPickerHTML);
+	$('#itemPicker').hide();
+	$('#itemGraphDiv').hide();
+	$('#skillGraphDiv').hide();
 
 	$('.items').each(function () {
 		$(this).on('click' , function() {
 			var clickedItem = $(this).attr('id');
 			fromTopHeroesGetItem(clickedItem);
 			createPie();
+			$('#statSpan').removeClass('selected');
+			$('.currentGraph').removeClass('currentGraph');
+			$(this).addClass('currentGraph');
 			$('#mainStatsDiv').hide();
+			$('#skillGraphDiv').hide();
 			$('#itemGraphDiv').show();
 		})
 	});
+
+	$()
 
 	addLegend();
 	createGraph(currentTop, currentDataset);
@@ -358,15 +494,79 @@ $(document).ready(function() {
 
 });
 
-$('#items').on('click', function() {
-	$('#itemPicker').show();
+/* 
+	Creating click handler.  Show more options on click if not statBarGraph.  else show statBarGraph
+*/
+$('#graphChooser span').each(function () {
+	var spanID = $(this).attr('id');
+	//skills, items
+	if (spanID != "statSpan") {
+
+		$(this).on('click', function() {
+			$(this).toggleClass('selected');
+
+			if ($(this).attr('class') == "selected") {
+				$('#'+spanID.replace("Span", "Picker")).show();	
+			}
+			else {
+				$('#'+spanID.replace("Span", "Picker")).hide();
+			}
+		});
+	}
+	//Stats
+	else {
+
+		$(this).on('click', function() {
+			$('#itemGraphDiv').hide();
+			$('#skillGraphDiv').hide();
+			
+			$(this).addClass('currentGraph');
+
+			$('#mainStatsDiv').show();
+		});
+	}
 });
 
-$('#stats').on('click', function() {
-	$('#itemPicker').hide();
-	$('#itemGraphDiv').hide();
-	$('#mainStatsDiv').show();
+$('#skillPicker a').each(function () {
+	var id = $(this).attr('id');
+
+	if (id != "Both") {
+		$(this).on('click', function() {
+			$('#mainStatsDiv').hide();
+			$('#itemGraphDiv').hide();
+			$('.currentGraph').removeClass('currentGraph');
+			$(this).addClass('currentGraph');
+			$('#skillGraphDiv').show();
+		});
+	}
 });
+
+
+// $('#items').on('click', function() {
+
+// 	$(this).toggleClass('selected');
+
+// 	if ($(this).attr('class') == "selected") {
+// 		$('#itemPicker').show();	
+// 	}
+// 	else {
+// 		$('#itemPicker').hide();
+// 	}
+
+// });
+
+// $('#skills').on('click', function() {
+
+// 	$(this).toggleClass('selected');
+
+// 	if ($(this).attr('class') == "selected") {
+// 		$('#skillsPicker').show();	
+// 	}
+// 	else {
+// 		$('#skillsPicker').hide();
+// 	}
+
+// });
 
 // d3.select("#hundred").on("click",function() {
 // 	currentDataset = "toughness";

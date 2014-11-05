@@ -14,6 +14,8 @@
 
 		$(document).ready(function () {
 			$('#top').hide();
+			$('#skillPicker').hide();
+
 		})
 
 		$(window).scroll(function() {
@@ -84,7 +86,7 @@
 <aside id="update">
 <% if (lastupdated != 0) { %>
 
-<% var lastUpdated = lastupdated.getMonth() + "/" + lastupdated.getDay() + "/" + (lastupdated.getYear()+1900) %>
+<% var lastUpdated = lastupdated.getMonth()+1 + "/" + lastupdated.getDate() + "/" + (lastupdated.getYear()+1900) %>
 last updated: <%= lastUpdated %><br />
 
 <% } %>
@@ -92,15 +94,19 @@ last updated: <%= lastUpdated %><br />
 </aside>
 <br />
 <div id="graphChooser">
-	<span id="items">Items</span><br />
-	<div id ="itemPicker"></div>
-	<span id="stats">Stats</span><br />
-	Skills<br />
+	<span id="itemSpan">Items</span><br />
+	<div id="itemPicker"></div>
+	
+	<span id="statSpan">Stats</span><br />
+	
+	<span id="skillSpan">Skills</span><br />
+	<div id="skillPicker"><a href="#" id="primary">Primary</a> <a href="#" id="passives">Passives</a> <a href="#" id="both">Both</a></div> 
 </div>
 
 <br />
 <div id="mainStatsDiv"></div>
 <div id="itemGraphDiv"></div>
+<div id="skillGraphDiv"></div>
 
 <!-- List of all the BattleTags for the corresponding Leaderboard -->
 <table>

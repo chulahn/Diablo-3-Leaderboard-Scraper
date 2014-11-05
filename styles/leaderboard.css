@@ -14,7 +14,7 @@ nav {
 	text-align : center;
 }
 
-#graphChooser, #itemGraphDiv, #mainStatsDiv {
+#graphChooser, #itemGraphDiv, #mainStatsDiv, #skillGraphDiv {
 	text-align : center;
 	color : white;
 }
@@ -74,6 +74,9 @@ td, th {
 }
 .selected {
 	font-weight : bold;
+}
+.currentGraph {
+	font-size : 18px;
 }
 
 #update {

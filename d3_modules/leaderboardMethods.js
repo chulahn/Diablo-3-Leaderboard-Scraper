@@ -317,7 +317,7 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 									async.waterfall([
 										function(callback) {
 											leaderboardCollection.find({}).sort({"lastupdated" : -1}).toArray(function(err, results) {
-												if (results[0]["lastupdated"] != undefined) {	
+												if (results[0]["lastupdated"] != undefined) {
 													callback(null, results[0]["lastupdated"]);
 												}
 												else {
@@ -325,6 +325,7 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 												}
 											});
 									}], function(err, date) {
+										console.log(date);
 				    					res.render('ClassLeaderboard.ejs', {title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , all:allData , lastupdated : date});
 									});										
 
