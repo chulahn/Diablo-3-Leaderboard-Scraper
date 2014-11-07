@@ -70,45 +70,42 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 					console.log(leaderboardType);
 					//array for storing all heroes in DB
 		    		var allData = [];
-		    		var allDataCounter = 0;
 		    		setSearchParams(leaderboardType);
 
-		    		leaderboardResults.forEach(function(currentPlayer) {
-		    			delayCounter =0;
+var i= -1;
+					async.eachSeries(leaderboardResults, function (currentPlayerFromDB, foundGRiftHeroCallback) {
+		    			i++;
 		    			var heroCollection = db.collection("hero");
-
-		    			// find the grift hero that matches params.
-		    			// 	if none, search heroes that match params.
-
-		    			heroCollection.find({"battletag" : currentPlayer.Battletag.replace("#", "-"), "class" : getClassNameForDatabase(diabloClass), "seasonal" : searchParamSeason, "hardcore" : searchParamHC, "griftHero" : true}).toArray(function (error, gRiftHeroResults) {
-		    				//if found
-		    				if (gRiftHeroResults.length != 0) {		    					
-		    					heroToPush = heroResults[0];
-		    					//check if extraItemData is not undefined
+		    			// if (i < 100) {
+		    			heroCollection.find({"battletag" : currentPlayerFromDB.Battletag.replace("#", "-"), "class" : getClassNameForDatabase(diabloClass), "seasonal" : searchParamSeason, "hardcore" : searchParamHC, "gRiftHero" : true}).toArray(function (error, gRiftHeroResults) {
+		    				//found grift hero, check if it has extraItemData.  if not add it
+		    				if (gRiftHeroResults.length != 0) {	
+		    					heroToPush = gRiftHeroResults[0];
 		    					if (heroToPush.extraItemData != undefined) {
-	    							allData[currentPlayer.Standing-1] = heroToPush;
-		    						allDataCounter++;
+			    					console.log("found grift hero and extraItemData for " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing) 	    					
+	    							allData[currentPlayerFromDB.Standing-1] = heroToPush;
+	    							foundGRiftHeroCallback();
 		    					}
 		    					//get items, then get extraitemdata, then push, then increment. 
 		    					else {
+				    					console.log("found grift hero attempting to add extraItemData for " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing + " " + heroToPush.heroID)	    					
 		    						//get Items, 
+		    						// async.waterfall([
+		    						// 	function(callback) {
 
-		    						//getExtraItemData
+				    						heroMethods.getItemIDsFromHero(heroToPush.items, heroToPush.heroID, 300, foundGRiftHeroCallback);
+		    						// 	}
 
-		    						//write to db
-
-		    						//push
-		    						//increment
+	    							// ], function finally(err, result) {
+	    							// });
 		    					}
-
 		    				}
-
 		    				//hero wasnt found. try to found it.
 		    				else {
 		    					//find the heroes from player matches params.
-				    			heroCollection.find({"battletag" : currentPlayer.Battletag.replace("#", "-"), "class" : getClassNameForDatabase(diabloClass), "seasonal" : searchParamSeason, "hardcore" : searchParamHC}).toArray(function (error, heroResults) {
+				    			heroCollection.find({"battletag" : currentPlayerFromDB.Battletag.replace("#", "-"), "class" : getClassNameForDatabase(diabloClass), "seasonal" : searchParamSeason, "hardcore" : searchParamHC}).toArray(function (error, heroResults) {
 					    			
-					    			//if the hero matches params, find the highest dps.
+					    			//if the hero matches params, find the highest dps.  then get extraItemData.
 				    				if (heroResults.length > 0) {
 				    					heroToPush=heroResults[0];
 				    					heroResults.forEach(function(hero) {
@@ -116,54 +113,32 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 				    							heroToPush = hero;
 				    						}
 				    					});
-				    					allData[currentPlayer.Standing-1] = heroToPush;
+				    					allData[currentPlayerFromDB.Standing-1] = heroToPush;
 				    					// console.log(heroToPush)
+				    					console.log(heroToPush.extraItemData)
 				    					if (heroToPush.extraItemData == undefined) {
-				    						// async.series([
+				    						console.log("found grift hero, 119, adding extraItemData " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
+				    						heroMethods.getItemIDsFromHero(heroToPush.items, heroToPush.heroID, 300, foundGRiftHeroCallback);
+				    					}
+				    					//player has extraitemData but did not have griftHero
+				    					else {
+				    						console.log("found grift hero, 125, had extraItemData, no griftHero " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
 
-				    						// 	function(callback) {
-
-						    						// heroMethods.getItemIDsFromHero(heroToPush.items, heroToPush.heroID, 1000);
-
-				    						// 	},
-
-				    						// 	function(callback) {
-					    					// 		allData[currentPlayer.Standing-1] = heroToPush;
-					    					// 		callback();
-				    						// 	}
-				    						// ], function(err) {
-				    						// 	if (err) {
-				    						// 		console.log("error")
-				    						// 	}
-				    						// 	else {
-				    						// 		console.log("success")
-				    						// 	}
-				    						// }
-
-
-				    						// )
-
-				    						//GET ITEM DATA,
-				    						
-				    						// EXTRA DATA(set griftHero to true),
-
-				    						// THEN PUSH ADD TO ARRAY AND INCREMENT
-
-							    						// console.log("getting extraItemData from " + heroToPush.battletag);
-							    						// heroMethods.getItemIDsFromHero(heroToPush.items, heroToPush.heroID, itemDelay(),db);
+				    						foundGRiftHeroCallback();
 				    					}
 				    				}
 
 				    				//check if hero has players in leaderboard/battletag data.
 				    				else {
-						    			var currentPlayerHeroes = currentPlayer.Heroes;
+						    			var currentPlayerHeroes = currentPlayerFromDB.Heroes;
 				    					//player deleted all heroes or no matches
 				    					if (currentPlayerHeroes.length == 0) {
 			    							allData[currentPlayer.Standing-1] = 0;
-			    							allDataCount++;
+				    						console.log("Deleted all heroes or no matches 130 " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
+
+			    							foundGRiftHeroCallback();
 				    					}
 				    					else {
-
 					    					var validHero70Count = 0;
 					    					currentPlayerHeroes.forEach(function(currentHero) {
 					    						//find the hero that matches searchParams (class, HC, seasonal, 70)
@@ -172,14 +147,18 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 						    							validHero70Count += 1;
 						    							// console.log(currentHero);
 						    							console.log("before " + delayCounter);
-						    							playerMethods.addHeroData(region, currentPlayer.Battletag.replace("#", "-"), currentHero.id, timeToDelay(),db);
+						    											    						console.log("searching battletag data 143 " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
+
+						    							playerMethods.addHeroData(region, currentPlayer.Battletag.replace("#", "-"), currentHero.id, 300, foundGRiftHeroCallback);
 						    							console.log("after " + delayCounter);
 						    						}
 						    						//error handling for hc players.  heroID is in currentPlayer.Heroes, but was dead
 						    						else {
 						    							// console.log(currentPlayer.Battletag , currentHero);
 						    							allData[currentPlayer.Standing-1] = 0;
-						    							allDataCount++;
+						    											    						console.log("hardcore hero was dead 150 " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
+
+						    							foundGRiftHeroCallback();
 						    						}
 						    					}
 
@@ -190,12 +169,14 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 					    								// console.log( currentPlayerHeroes);
 					    								console.log(validHero70Count);
 					    								allData[currentPlayer.Standing-1] = 0;
-					    								allDataCount++;
+					    												    						console.log("no valid 70s 165 " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
+
+					    								foundGRiftHeroCallback();
 					    							}
 					    							if (validHero70Count == 0) {
 					    								console.log("validHero70Count was 0 for " + currentPlayer.Standing + " " + currentPlayer.Battletag);
 					    								allData[currentPlayer.Standing-1] = 0;
-					    								allDataCount++;
+					    								foundGRiftHeroCallback();
 					    							}
 					    						}
 					    					});
@@ -205,31 +186,40 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 
 
 		    					});
-		    					//grift hero was not found, so try to find it.  
-		    						//if current player has no heroes, set heroToPush to 0
-		    						//increment
-		    					
-		    						//else find none match params, set heroToPush to 0
-		    						//increment
-
-		    						//else found heroes, find highest dps and push.
-				    					//set griftHero to true.
-				    					//get players items,
-				    					//get extraitemdata
-				    					//add to allHero[]
-				    					//increment counter
-		    					//if heroExtraItemData is undefined, add items, then add extraItemData
-		    						//add to all hero
-		    						//increment counter
 
 		    				}
-
-		    				//if counter has reached 100, callback
-
-
 		    			});
+						// }
+		    		}, function(err){
+		    			if (err) {
+		    				console.log("fail");
+		    			}
+		    			else {
+		    				//render
+				    		date = new Date();
+							console.log(diabloClass + " Page rendered "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+							//Takes about half a minute to render.
+							//get the lastupdated time and then render page.
+							async.waterfall([
+								function(callback) {
+									leaderboardCollection.find({}).sort({"lastupdated" : -1}).toArray(function(err, results) {
+										if (results[0]["lastupdated"] != undefined) {	
+											callback(null, results[0]["lastupdated"]);
+										}
+										else {
+											callback(null, 0);
+										}
+									});
+							}], function(err, date) {
+		    					res.render('ClassLeaderboard.ejs', {title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , all:allData , lastupdated : date});
+							});	
+		    			}
 
-
+		    		});
+/*
+		    		leaderboardResults.forEach(function(currentPlayer) {
+		    			delayCounter =0;
+		    			var heroCollection = db.collection("hero");
 
 		    			//get the heroes that matches searchParams
 		    			heroCollection.find({"battletag" : currentPlayer.Battletag.replace("#", "-"), "class" : getClassNameForDatabase(diabloClass), "seasonal" : searchParamSeason, "hardcore" : searchParamHC}).toArray(function (error, heroResults) {
@@ -333,6 +323,7 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 							}
 		    			})//end toArray callback from finding hero.
 		    		})//end for each result from Leaderboard search
+*/
 		  		}
 	  		});//end toArray callbackk from finding leaderboard
 		}//end else

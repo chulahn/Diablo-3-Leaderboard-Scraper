@@ -2,29 +2,29 @@ h1, h2, p, li {
 	color: white;
 }
 a {
-	text-decoration : none;
+	text-decoration: none;
 }
 #profile, #items, #skills {
-	display : inline-block;
-	border-style : solid;
-	border-width : 1px;
-	padding : 5px;
-	border-color : white;
+	display: inline-block;
+	border-style: solid;
+	border-width: 1px;
+	padding: 5px;
+	border-color: white;
 }
 
 .orange {
-	color : orange;
+	color: orange;
 }
 .green {
-	color : green;
+	color: green;
 }
 .yellow {
-	color : yellow;
+	color: yellow;
 }
 .blue {
-	color : blue;
+	color: blue;
 }
 
 body {
-	background-color : #2B2B2B;
+	background-color: #2B2B2B;
 }

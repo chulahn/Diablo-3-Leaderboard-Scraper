@@ -20,7 +20,7 @@ $(document).ready(function() {
 
 	var headerHTML="";
 	for (l=0; l<groups.length; l++) {
-		headerHTML += "<span id=\""+groups[l]+"\">"+groups[l]+"</span> ";
+		headerHTML += "<span id=\""+groups[l]+"\">"+groups[l]+"</span>&nbsp&nbsp&nbsp";
 	}
 
 	$('header').prepend(headerHTML);
@@ -32,7 +32,7 @@ $(document).ready(function() {
 			$(this).toggleClass('selected');
 			diabloClassHTML = "";
 			for (m=0; m<diabloClasses.length; m++) {
-				diabloClassHTML += "<a href=\"/us/"+category+"/"+diabloClasses[m]+"\">"+diabloClasses[m]+"</a>   ";
+				diabloClassHTML += "<a href=\"/us/"+category+"/"+diabloClasses[m]+"\">"+diabloClasses[m]+"</a>&nbsp&nbsp&nbsp";
 			}
 			$('#diabloClass').html(diabloClassHTML);
 

@@ -1,39 +1,39 @@
 h1, th, tr {
-	color : white;
+	color: white;
 }
 
 body {
-	background : #2B2B2B;
+	background: #2B2B2B;
 }
 
 h1 {
-	text-align : center;
+	text-align: center;
 }
 
 nav {
-	text-align : center;
+	text-align: center;
 }
 
 #graphChooser, #itemGraphDiv, #mainStatsDiv, #skillGraphDiv {
-	text-align : center;
-	color : white;
+	text-align: center;
+	color: white;
 }
 
 table {
-	margin-left : auto;
-	margin-right : auto;
-	border-width : 1px;
-	border-color : white;
-	border-style : solid;
-	padding : 5px;
+	margin-left: auto;
+	margin-right: auto;
+	border-width: 1px;
+	border-color: white;
+	border-style: solid;
+	padding: 5px;
 }
 
 td, th {
-	text-align : center;
-	padding : 10px;
+	text-align: center;
+	padding: 10px;
 }
 
-.d3-tip {
+.d3-statsTip, .d3-tip {
 	line-height: 1;
 	font-weight: bold;
 	padding: 12px;
@@ -43,52 +43,68 @@ td, th {
 	text-align: center;
 }
 
-.damage {
-	color : blue;
+.d3-statsTip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+}
+.d3-statsTip.n:after {
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
+}
+.damage, .skillName {
+	color: blue;
 }
 .btag {
-	color : red;
+	color: red;
 }
 .bar {
-	fill : gray;
+	fill: gray;
 }
 .bar:hover {
-	fill : white;
+	fill: white;
 }
 
 .axis path, 
 .axis line {
-	fill : none;
-	stroke : white;
-	shape-rendering : crispEdges;
+	fill: none;
+	stroke: white;
+	shape-rendering: crispEdges;
 }
 .axis text {
     font-family: sans-serif;
     font-size: 11px;
-    fill : white;
+    fill: white;
 }
 .legend text, .category text, .extra text {
 	font-family: sans-serif;
     font-size: 12px;
-    fill : white;
+    fill: white;
 }
 .selected {
-	font-weight : bold;
+	font-weight: bold;
 }
 .currentGraph {
-	font-size : 18px;
+	font-size: 18px;
 }
 
 #update {
-	text-align : right;
-	right : 0px;
-	position : fixed;
-	top : 0px;
-	color : white;
+	text-align: right;
+	right: 0px;
+	position: fixed;
+	top: 0px;
+	color: white;
 }
 
 #top {
-	position : fixed;
-	top : 0px;
-	left : 0px;
+	position: fixed;
+	top: 0px;
+	left: 0px;
 }

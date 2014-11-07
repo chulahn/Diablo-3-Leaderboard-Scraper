@@ -2,6 +2,8 @@ var currentArray = allData.slice(0,100);
 //Data for setting up DPS/Toughness bar graph
 var currentTop = 100;
 var currentDataset = "dps";
+var currentClass = currentArray[0].class;
+var skillURLbase = "http://us.battle.net/d3/en/class/"+currentClass;
 
 var statsBarGraphHeight = 300, statsBarGraphWidth = 800;
 var barPadding = 1;
@@ -12,9 +14,12 @@ var statsBarGraph= d3.select("#mainStatsDiv")
 	.attr("height", statsBarGraphHeight)
 	.attr("width" , statsBarGraphWidth);
 // var axes = true;
-var statsTooltip = d3.tip().attr('class', 'd3-tip').html(function(d,i) {
-	return (i+1)+"."+"<span class=\"btag\">"+d.battletag+"</span><br />DPS:<span class=\"damage\">"+d.stats.damage+"</span><br />Toughness:<span class=\"damage\">"+d.stats.toughness;
-});
+var statsTooltip = d3.tip()
+					.attr('class', 'd3-statsTip')
+					.offset([-10, 0])
+					.html(function(d,i) {
+						return (i+1)+"."+"<span class=\"btag\">"+d.battletag+"</span><br />DPS:<span class=\"damage\">"+d.stats.damage+"</span><br />Toughness:<span class=\"damage\">"+d.stats.toughness;
+					});
 statsBarGraph.call(statsTooltip);
 
 
@@ -32,12 +37,15 @@ var itemsPieChart = d3.select("#itemGraphDiv")
 
 //Data for setting up skills pie chart
 var	allActiveSkills = [ [], [], [], [] ];
-var activeSkillsName = allActiveSkills[0];
-var activeSkillsCount = allActiveSkills[1];
-var skillTotal = 0;
+var activeSkillNames = allActiveSkills[0];
+var activeSkillCount = allActiveSkills[1];
+var activeSkillTotal = 0;
 var	runeNames = allActiveSkills[2];
 var	runeCount = allActiveSkills[3]; 
-var passiveSkills = [[],[]];
+var allPassiveSkills = [[],[]];
+var passiveSkillsName = allPassiveSkills[0];
+var passiveSkillsCount = allPassiveSkills[1];
+var passiveSkillTotal = 0;
 
 var skillsPieChartHeight = 200, skillsPieChartWidth = 400;
 var skillsPieChart = d3.select("#skillGraphDiv")
@@ -47,9 +55,9 @@ var skillsPieChart = d3.select("#skillGraphDiv")
 
 
 fromTopHeroesGetSkills();
-createSkillsPie();
+createActiveSkillPie();
 
-function createSkillsPie() {
+function createActiveSkillPie() {
 	skillsPieChart.selectAll('.enter').attr("class", "exit").remove();
 
 	var pie = d3.layout.pie();
@@ -61,8 +69,11 @@ function createSkillsPie() {
 	var color = d3.scale.category20();
 
 	var arcs = skillsPieChart.selectAll("g.arc")
-					.data(pie(activeSkillsCount))
+					.data(pie(activeSkillCount))
 					.enter()
+					.append("a").attr('xlink:href', function(d,i) {
+						return skillURLbase + "/active/" + activeSkillNames[i].toLowerCase().replace(" " , "-"); 
+					})
 					.append("g")
 					.attr("class", "arc enter")
 					.attr("transform", "translate(" + 200 + ", " + outerRadius + ")")
@@ -81,7 +92,7 @@ function createSkillsPie() {
 	    .attr("text-anchor", "middle")
 	    .attr("class", "enter")
 	    .html(function(d, i) {
-	    	var skillPercentage = (activeSkillsCount[i]/skillTotal*100).toFixed(0)
+	    	var skillPercentage = (activeSkillCount[i]/activeSkillTotal*100).toFixed(0)
 	    	if (skillPercentage > 7) {
 		    	return skillPercentage+"%";
 	    	}
@@ -91,7 +102,8 @@ function createSkillsPie() {
 	    });
 
 	var activeSkillsTooltip = d3.tip().attr('class', 'd3-tip').html(function(d,i) {
-		var activeTooltipString = activeSkillsName[i]+" ("+activeSkillsCount[i]+")<br />";
+		
+		var activeTooltipString = "<span class=\"skillName\">" + activeSkillNames[i]+"</span> ("+activeSkillCount[i]+")<br /><br />";
 
 		//runeName[i] is an array of Runes for that skill
 		var allRunesForSkill = runeNames[i]; 
@@ -100,7 +112,7 @@ function createSkillsPie() {
 		//get runes and count for skill
 		allRunesForSkill.forEach(function(rune) {
 			var runeCount = runeCountsForSkill[allRunesForSkill.indexOf(rune)];
-			var runePercentage = ((runeCount / activeSkillsCount[i])*100).toFixed(0) + "% ";
+			var runePercentage = ((runeCount / activeSkillCount[i])*100).toFixed(0) + "% ";
 			activeTooltipString += runePercentage + rune + " (" + runeCount + ")<br />";
 		});
 		return activeTooltipString;
@@ -110,6 +122,60 @@ function createSkillsPie() {
 		.on("mouseout", activeSkillsTooltip.hide);
 }
 
+function createPassivePie() {
+	skillsPieChart.selectAll('.enter').attr("class", "exit").remove();
+
+	var pie = d3.layout.pie();
+	var outerRadius = skillsPieChartHeight / 2 ;
+	var innerRadius = 0;
+	var arc = d3.svg.arc()
+				.innerRadius(innerRadius)
+				.outerRadius(outerRadius);
+	var color = d3.scale.category20();
+
+	var arcs = skillsPieChart.selectAll("g.arc")
+					.data(pie(passiveSkillCount))
+					.enter()
+					.append("a").attr('xlink:href', function(d,i) {
+						return skillURLbase + "/passive/" + passiveSkillNames[i].toLowerCase().replace(" " , "-"); 
+					})
+					.append("g")
+					.attr("class", "arc enter")
+					.attr("transform", "translate(" + 200 + ", " + outerRadius + ")")
+
+	arcs.append("path")
+		.attr("fill", function(d, i) {
+			return color(i)
+		})
+		.attr("d", arc)
+	    .attr("class", "enter");
+
+	arcs.append("text")
+	    .attr("transform", function(d) {
+	        return "translate(" + arc.centroid(d) + ")";
+	    })
+	    .attr("text-anchor", "middle")
+	    .attr("class", "enter")
+	    .html(function(d, i) {
+	    	var skillPercentage = (passiveSkillCount[i]/passiveSkillTotal*100).toFixed(0)
+	    	if (skillPercentage > 7) {
+		    	return skillPercentage+"%";
+	    	}
+	    	if (skillPercentage > 2) {
+	    		return skillPercentage;
+	    	}
+	    });
+
+	var passiveTooltip = d3.tip().attr('class', 'd3-tip').html(function(d,i) {
+		
+		var passiveString = "<span class=\"skillName\">" + passiveSkillNames[i]+"</span> ("+passiveSkillCount[i]+")";
+
+		return passiveString;
+	});
+	arcs.call(passiveTooltip);
+	arcs.on("mouseover", passiveTooltip.show)
+		.on("mouseout", passiveTooltip.hide);
+}
 
 //used in itemPicker div
 var itemStrings = ["shoulders", "head", "neck", "hands", "torso", "bracers", "leftFinger", "waist", "rightFinger", "mainHand", "legs", "offHand", "feet"];	
@@ -118,14 +184,19 @@ var itemStrings = ["shoulders", "head", "neck", "hands", "torso", "bracers", "le
 	Get active skills and runes for each player.
 */
 function fromTopHeroesGetSkills() {
-	//reset values
+	//reset values.  
 	allActiveSkills = [ [], [], [], [] ];
-	activeSkillsName = allActiveSkills[0];
-	activeSkillsCount = allActiveSkills[1];
+	activeSkillNames = allActiveSkills[0];
+	activeSkillCount = allActiveSkills[1];
 	runeNames = allActiveSkills[2];
 	runeCount = allActiveSkills[3]; 
-
- 	skillTotal = 0;
+ 	activeSkillTotal = 0;
+	
+	allPassiveSkills = [[],[]];
+	passiveSkillNames = allPassiveSkills[0];
+	passiveSkillCount = allPassiveSkills[1];
+	passiveSkillTotal = 0;
+	
 
  	allData.forEach(function (currentPlayer) {
 
@@ -133,47 +204,63 @@ function fromTopHeroesGetSkills() {
  			//add active skills for graph
 	 		var currentPlayerActiveSkills = currentPlayer.skills.active;
 	 		currentPlayerActiveSkills.forEach(function (currentActive) {
+	 			if (currentActive.skill != undefined) {
+		 			var currentSkillName = currentActive.skill.name;
+		 			var currentRuneName;
+		 			//set rune name
+		 			if (currentActive.rune == undefined) {
+		 				currentRuneName = "No Rune";
+		 			}
+		 			else {
+			 			currentRuneName = currentActive.rune.name;
+		 			}
 
-	 			var currentSkillName = currentActive.skill.name;
-	 			var currentRuneName;
-	 			//set rune
-	 			if (currentActive.rune == undefined) {
-	 				currentRuneName = "No Rune";
+		 			//check if skill has been added
+		 			var locationOfCurrentActive = activeSkillNames.indexOf(currentSkillName);
+		 			if (locationOfCurrentActive == -1) {
+		 				activeSkillNames.push(currentSkillName);
+		 				activeSkillCount.push(1);
+
+		 				runeNames.push([currentRuneName]);
+		 				runeCount.push([1]);
+		 				activeSkillTotal += 1;
+		 			}
+		 			else {
+		 				activeSkillCount[locationOfCurrentActive] += 1;
+		 				activeSkillTotal += 1;
+		 				//check if rune was already added.
+		 				var runesForCurrentSkill = runeNames[locationOfCurrentActive]
+		 				var runeCountForCurrentSkill = runeCount[locationOfCurrentActive];
+
+		 				var locationOfCurrentRune = runesForCurrentSkill.indexOf(currentRuneName);
+		 				if (locationOfCurrentRune == -1) {
+		 					runesForCurrentSkill.push(currentRuneName);
+		 					runeCountForCurrentSkill.push(1);
+		 				}
+		 				else {
+		 					runeCountForCurrentSkill[locationOfCurrentRune] += 1;
+		 				}
+		 			}
 	 			}
-	 			else {
-		 			currentRuneName = currentActive.rune.name;
-	 			}
+	 		});//finished adding active skills and runes
 
-	 			var locationOfCurrentActive = activeSkillsName.indexOf(currentSkillName);
-
-	 			if (locationOfCurrentActive == -1) {
-	 				activeSkillsName.push(currentSkillName);
-	 				activeSkillsCount.push(1);
-
-	 				runeNames.push([currentRuneName]);
-	 				runeCount.push([1]);
-	 				skillTotal += 1;
-	 			}
-	 			else {
-	 				activeSkillsCount[locationOfCurrentActive] += 1;
-	 				skillTotal += 1;
-	 				//check if rune was already added.
-	 				var runesForCurrentSkill = runeNames[locationOfCurrentActive]
-	 				var runeCountForCurrentSkill = runeCount[locationOfCurrentActive];
-
-	 				var locationOfCurrentRune = runesForCurrentSkill.indexOf(currentRuneName);
-
-	 				if (locationOfCurrentRune == -1) {
-	 					runesForCurrentSkill.push(currentRuneName);
-	 					runeCountForCurrentSkill.push(1);
-	 				}
-	 				else {
-	 					runeCountForCurrentSkill[locationOfCurrentRune] += 1;
-	 				}
-
-	 			}
-
-	 		});
+			//add passive
+			var currentPlayerPassives = currentPlayer.skills.passive;
+			currentPlayerPassives.forEach(function (currentPassive) {
+				if (currentPassive.skill != undefined) {
+					var currentPassiveName = currentPassive.skill.name;
+					var locationOfCurrentPassive = passiveSkillNames.indexOf(currentPassiveName);
+					if (locationOfCurrentPassive == -1) {
+		 				passiveSkillNames.push(currentPassiveName);
+		 				passiveSkillCount.push(1);
+		 				passiveSkillTotal += 1;
+		 			}
+		 			else {
+		 				passiveSkillCount[locationOfCurrentPassive] += 1;
+		 				passiveSkillTotal += 1;
+		 			}
+				}
+			});
  		}
  	});
 }
@@ -307,29 +394,33 @@ function createGraph(currentTop, currentDataset) {
 					.ticks(5);
 
 	//add bars and links
-	statsBarGraph.selectAll("rect").data(currentArray).enter()
+	statsBarGraph
+		.selectAll("rect")
+		.data(currentArray)
+		.enter()
 		.append("a").attr('xlink:href', function(d,i) {
 			return "#"+(i+1);
-		}).append("rect")
-			.attr("x" , function(d,i) {
-				return xScale(i); 
-			})
-			.attr("y" , function(d) { 
-				return yScale(getY(d, currentDataset));
-			})
-			//width of one bar is (widthOfGraph / # of datapoints) - spaceInBetweenBars
-			.attr("width", (statsBarGraphWidth-(2*xPadding)) / currentArray.length - barPadding)
-			.attr("height", function(d) {
-				// if (d == null || d == 0) {
-				// 	return 0;
-				// }
-				// else {
-					return statsBarGraphHeight-yScale(getY(d, currentDataset))-yPadding;
-				// }	
-			})
-			.attr("class" , "enter bar")
-			.on('mouseover', statsTooltip.show)
-			.on('mouseout', statsTooltip.hide);
+		})
+		.append("rect")
+		.attr("x" , function(d,i) {
+			return xScale(i); 
+		})
+		.attr("y" , function(d) { 
+			return yScale(getY(d, currentDataset));
+		})
+		//width of one bar is (widthOfGraph / # of datapoints) - spaceInBetweenBars
+		.attr("width", (statsBarGraphWidth-(2*xPadding)) / currentArray.length - barPadding)
+		.attr("height", function(d) {
+			// if (d == null || d == 0) {
+			// 	return 0;
+			// }
+			// else {
+				return statsBarGraphHeight-yScale(getY(d, currentDataset))-yPadding;
+			// }	
+		})
+		.attr("class" , "enter bar")
+		.on('mouseover', statsTooltip.show)
+		.on('mouseout', statsTooltip.hide);
 	//add xAxis
 	statsBarGraph.append("g")
 		.attr("class", "enter axis")
@@ -343,7 +434,7 @@ function createGraph(currentTop, currentDataset) {
 }
 
 /*
-	Helper method used in createPie
+	Helper method used in createItemPie
 	Get and count the item(head, torso, etc..) that players are using and sets allItems, itemTotal. 
 */
 function fromTopHeroesGetItem(item) {
@@ -374,7 +465,7 @@ function fromTopHeroesGetItem(item) {
 }
 
 /* 
-	Helper method used in createPie
+	Helper method used in createItemPie
 	Returns a string that will fit the pieChart.
 
 */
@@ -419,7 +510,7 @@ function getShortenedItemName(currentItemName, itemPercentage) {
 /*
 	Deletes previous pie chart and creates new pie chart based on allItems array.
 */
-function createPie() {
+function createItemPie() {
 	itemsPieChart.selectAll('.enter').attr("class", "exit").remove();
 
 	var pie = d3.layout.pie();
@@ -498,7 +589,7 @@ $(document).ready(function() {
 		$(this).on('click' , function() {
 			var clickedItem = $(this).attr('id');
 			fromTopHeroesGetItem(clickedItem);
-			createPie();
+			createItemPie();
 			$('#statSpan').removeClass('selected');
 			$('.currentGraph').removeClass('currentGraph');
 			$(this).addClass('currentGraph');
@@ -513,7 +604,7 @@ $(document).ready(function() {
 	addLegend();
 	createGraph(currentTop, currentDataset);
 	fromTopHeroesGetItem("head");
-	createPie();
+	createItemPie();
 
 });
 
@@ -542,9 +633,9 @@ $('#graphChooser span').each(function () {
 		$(this).on('click', function() {
 			$('#itemGraphDiv').hide();
 			$('#skillGraphDiv').hide();
+			$('.currentGraph').removeClass('currentGraph');			
 			
 			$(this).addClass('currentGraph');
-
 			$('#mainStatsDiv').show();
 		});
 	}
@@ -552,16 +643,21 @@ $('#graphChooser span').each(function () {
 
 $('#skillPicker a').each(function () {
 	var id = $(this).attr('id');
+	
+	$(this).on('click', function() {
+		$('#mainStatsDiv').hide();
+		$('#itemGraphDiv').hide();
+		$('.currentGraph').removeClass('currentGraph');
+		$(this).addClass('currentGraph');
+		if (id == "primary") {
+			createActiveSkillPie();
+		}
+		else {
+			createPassivePie();
+		}
+		$('#skillGraphDiv').show();
+	});
 
-	if (id != "Both") {
-		$(this).on('click', function() {
-			$('#mainStatsDiv').hide();
-			$('#itemGraphDiv').hide();
-			$('.currentGraph').removeClass('currentGraph');
-			$(this).addClass('currentGraph');
-			$('#skillGraphDiv').show();
-		});
-	}
 });
 
 

@@ -1,12 +1,16 @@
 .selected {
-	font-weight : bold;
+	font-weight: bold;
 }
 
 header {
-	text-align : center;
+	text-align: center;
 }
 
 body {
-	color : white;
-	background : #2B2B2B;
+	color: white;
+	background: #2B2B2B;
+}
+
+span, a {
+	font-size: 32px;
 }

@@ -24,45 +24,45 @@
 }
 
 .selected {
-	font-weight : bold;
+	font-weight: bold;
 }
 
 .mule {
-	-webkit-transform : scale(.75);
-    -ms-transform : scale(.75);
-    transform : scale(.75);
+	-webkit-transform: scale(.75);
+    -ms-transform: scale(.75);
+    transform: scale(.75);
 
     -webkit-transform-origin:0 0;
     -moz-transform-origin:0 0;
     -ms-transform-origin:0 0;
     transform-origin:0 0;
-	width : 100%;
+	width: 100%;
 }
 
 .mule:hover {
-	-webkit-transform : scale(1);
-    -ms-transform : scale(1);
-    transform : scale(1);
+	-webkit-transform: scale(1);
+    -ms-transform: scale(1);
+    transform: scale(1);
 
 }
 
 .hero {
-	width : 50%;
+	width: 50%;
 }
 
 div {
-	transition : background 1s;
-	-webkit-transition : background 1s;
+	transition: background 1s;
+	-webkit-transition: background 1s;
 	-webkit-transition-timing-function: ease;
 	transition-timing-function: ease;
 }
 div:hover {
-	background : #404040;
+	background: #404040;
 
 }
 
 body {
-	background : #2B2B2B;
+	background: #2B2B2B;
 }
 
 h1 , div {

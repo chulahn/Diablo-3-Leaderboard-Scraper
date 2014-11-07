@@ -42,7 +42,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 					var heroItems = heroData.items;
 					//add items to DB if extraItemData is undefined
 					if (heroData.level == 70 && heroData.extraItemData == undefined) {
-						exports.getItemIDsFromHero(heroItems,heroID,10);
+						// exports.getItemIDsFromHero(heroItems,heroID,10);
 					}
 					res.render("hero.ejs", {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
 					date = new Date();
@@ -54,7 +54,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 						var heroData = JSON.parse(data);
 						var heroItems = heroData.items;
 						if (heroData.level == 70) {
-							exports.getItemIDsFromHero(heroItems,heroID,10);
+							// exports.getItemIDsFromHero(heroItems,heroID,10);
 						}
 						res.render("hero.ejs", {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
 						date = new Date();
@@ -68,11 +68,11 @@ exports.getHeroDetails = function(heroID, req, res) {
 }
 
 //get all items from json heroItems, and call findItemInCollection for each.
-exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
+exports.getItemIDsFromHero = function(heroItems, heroID, delay, foundGRiftHeroCallback) {
 	MongoClient.connect(databaseURL, function(err, db) {
 		if (err) {
 			return console.log("getHeroDetails error connecting to db")
-			getItemIDsFromHero(heroItems, heroID, delay);
+			getItemIDsFromHero(heroItems, heroID, delay, foundGRiftHeroCallback);
 		}
 		else {
 			db.collection("item").find({}).toArray(function(err, results) {
@@ -91,17 +91,7 @@ exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
 			
 			if (db != undefined) {
 
-				findItemsInCollection(allItems, heroID, delay, db);
-
-				// allItems.forEach(function(item, i) {
-				// 	console.log(item.name + " " + i + " delay " + delay);
-				// 	itemID = item.tooltipParams.replace("item/" , "");
-				// 	findItemInCollection(itemID, heroID, delay ,db);
-				// 	delay = delay + 100;
-				// 	i++;
-				// });
-		// console.log("delay " + delay + " itemsLength: " + items.length)
-		// findItemsInCollection(items, heroID, delay, db);
+				findItemsInCollection(allItems, heroID, delay, db, foundGRiftHeroCallback);
 
 			}
 			else {
@@ -113,13 +103,14 @@ exports.getItemIDsFromHero = function(heroItems, heroID, delay) {
 	});
 }
 
-function findItemsInCollection(allItems, heroID, delay, db){
-	console.log("passed in delay "+ delay );
-	
+function findItemsInCollection(allItems, heroID, delay, db, foundGRiftHeroCallback){
+	console.log("findItemsInCollection passed in delay "+ delay +" for hero " + heroID);
+	 
 	async.series([ 
 
 		function(addedExtraInfoCallback) {
-			async.each(allItems, function (currentItem, foundItemCallback) {
+			//for every all of heroes items passed in, find the item inside itemCollection
+			async.eachSeries(allItems, function (currentItem, foundItemCallback) {
 			// allItems.forEach(function (currentItem) {
 				//database error handling
 				if (db == undefined) {
@@ -150,14 +141,16 @@ function findItemsInCollection(allItems, heroID, delay, db){
 								else {
 									requestedItem = JSON.parse(data);
 									if (requestedItem.code == 403) {
-										console.log("403 " + delay + " , findItemsInCollection " + currentItem.name + " " + heroID)
+										console.log("403 " + delay + " , findItemsInCollection " + currentItem.name + " " + heroID);
+										console.log(requestedItem);
 										findItemInCollection(itemID, heroID, delay+1000, foundItemCallback);
 									}
 									else{
 
 										(function(requestedItem) {
 											var requestedItemType = itemMethods.getItemType(requestedItem.type.id);
-											console.log(delay + " findItems in request " +requestedItem.name + " " + heroID);
+											console.log("findItems in request for " +requestedItem.name + " " + heroID + " delay " +delay);
+
 											//find if hero has an item in that spot.  if there is check for differences.
 											itemCollection.find({"heroID": parseInt(heroID) , "type" :requestedItemType}).toArray(function(err, matchedItems) {
 												if (matchedItems.length != 0) {
@@ -169,20 +162,30 @@ function findItemsInCollection(allItems, heroID, delay, db){
 															insertInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
 														}
 													}
-
-													async.each(matchedItems, function (equippedItem, foundItemCallback) {
+													//compare each item.
+													// matchedItems.forEach(function (equippedItem) {
+													// 	if (equippedItem.itemID == undefined) {
+													// 		console.log(equippedItem[0]);
+													// 	}
+													// 	console.log("-----comparing " + equippedItem.name + " " + requestedItem.name + matchedItems.length)
+													// 	compareItems(itemCollection, heroID, equippedItem, requestedItem, foundItemCallback);														
+													// })
+													async.eachSeries(matchedItems, function (equippedItem, foundItemCallback) {
+//error handling
 														if (equippedItem.itemID == undefined) {
-															console.log(equippedItem[0]);
+															console.log("undefined for " + equippedItem , matchedItems);
 														}
+														console.log("-----comparing " + equippedItem.name + " " + requestedItem.name + matchedItems.length +  " " + allItems.length);
 														compareItems(itemCollection, heroID, equippedItem, requestedItem, foundItemCallback);
 													}, function(err) {
 														if (err) {
-															console.log("failed")
+															console.log("failed");
 														} else {
-															console.log("successfully found all Items")
+															console.log("-x-x-x-x-x-x-xcompared all items for " + heroID + " " + requestedItem.name)
+															foundItemCallback();
+
 														}
 													});
-
 												}//end if found a item in that spot
 
 												//there no item in that spot, insert
@@ -195,8 +198,8 @@ function findItemsInCollection(allItems, heroID, delay, db){
 								}//end else data was not undefined			
 							});//end request
 						},delay) ;//end settimeout
-					})(delay);
-					delay += 300;	
+					})(delay);  //end self-invoking
+					delay += 100;	
 				}
 			},	function(err) {
 					if (err) {
@@ -211,7 +214,7 @@ function findItemsInCollection(allItems, heroID, delay, db){
 		},
 
 		function(redirectCallback) {
-			console.log("importantstats added.  redirected");
+			console.log("importantstats added for  " + heroID + " redirected");
 			redirectCallback();
 		}
 		], function(err) {
@@ -220,6 +223,7 @@ function findItemsInCollection(allItems, heroID, delay, db){
 			}
 			else {	
 				console.log("successfully redirected");
+				foundGRiftHeroCallback();
 			}
 		});
 }
@@ -248,25 +252,28 @@ function getImportantStats(heroID, updatedStatsCallback) {
 					console.log(currentItem.name)
 					//get CDR from hat
 					if (currentItem.type == "Head") {
-						//if it has a diamond
-						if ((currentItem.gems[0].item.name).indexOf("Diamond") != -1) {
-							diamondText = currentItem.gems[0].attributes.primary[0].text;
-							diamondCooldown = parseFloat(diamondText.substring(diamondText.indexOf("by ") + 3, diamondText.length-2));
-						}
+						//if it has gem and it is a diamond a diamond
+						if (currentItem.gems[0] != undefined ) {
+						
+							if ((currentItem.gems[0].item.name).indexOf("Diamond") != -1) {
+								diamondText = currentItem.gems[0].attributes.primary[0].text;
+								diamondCooldown = parseFloat(diamondText.substring(diamondText.indexOf("by ") + 3, diamondText.length-2));
+							}
 
-						if (currentItem.name == "Leoric's Crown") {
-							currentItem.affixes.secondary.forEach(function (secondary) {
-								if (secondary.color == "orange") {
-									diamondCooldown = diamondCooldown * (1 + parseFloat(secondary.text.substring(secondary.text.indexOf("by ") + 3, secondary.text.length-2)/100));
-								}
-							});
+							if (currentItem.name == "Leoric's Crown") {
+								currentItem.affixes.secondary.forEach(function (secondary) {
+									if (secondary.color == "orange") {
+										diamondCooldown = diamondCooldown * (1 + parseFloat(secondary.text.substring(secondary.text.indexOf("by ") + 3, secondary.text.length-2)/100));
+									}
+								});
+							}
+
 						}
 					}
 					//get eliteDam from Furnace
 					if (currentItem.name == "The Furnace") {
 						furnaceElite = currentItem.affixes.passive[0].text;
 						furnaceElite = parseFloat(furnaceElite.substring(furnaceElite.indexOf("by ")+3, furnaceElite.length-2));
-						console.log(furnaceElite);
 						eliteDam += furnaceElite;
 					}
 					//get CDR and elementalDam
@@ -341,7 +348,7 @@ function getImportantStats(heroID, updatedStatsCallback) {
 					if (err) {
 						return console.log(err);
 					}
-					console.log("added extraItemData");
+					console.log("------------added extraItemData for " + heroID);
 					updatedStatsCallback();
 				});
 			});//end  finditem for hero
@@ -535,8 +542,7 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 	else {
 		if (itemMethods.isSocketable(requestedItemType)) {
 			if(itemMethods.doesRequestedHaveMoreGems(requestedItem, equippedItem)) {
-				updateInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
-				unequipItem(itemCollection, equippedItem, heroID);
+				updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
 			}
 
 			//Update+unequip itemif gem in request has better stats
@@ -549,8 +555,7 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 						
 						if (itemMethods.isHat(requestedItemType)) {
 							if (!gemMethods.isHatGemUtility(equippedGems) && gemMethods.isHatGemUtility(requestedGems)) {
-								updateInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
-								unequipItem(itemCollection, equippedItem, heroID);
+								updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
 							}
 						}//end if item was hat
 
@@ -560,8 +565,9 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 								if (gemMethods.isGemBoon(equippedGems[0])) {
 									//if replacement is not boon or has a higher rank, replace  
 									if (gemMethods.requestedRankHigher(requestedGems[0], equippedGems[0]) || !gemMethods.isGemBoon(requestedGems[0])) {
-										updateInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
-										unequipItem(itemCollection, equippedItem, heroID);
+										updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
+									}
+									else {
 									}
 								}
 								//If equipped was not Boon, compare.
@@ -574,8 +580,12 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 											itemCollection.find( {"itemID" :equippedItem.itemID} ).toArray(function(err, matchedRings) {
 												if (matchedRings.length == 2) {
 													console.log("two matching rings "+ equippedItem.name + "  equipping " + requestedItem.name);
-													updateInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
-													unequipItem(itemCollection, equippedItem, heroID);
+													updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
+												}
+												else {
+							console.log("compareItems line 587")
+
+							foundItemCallback();
 												}
 											});
 										},delay);
@@ -587,16 +597,14 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 										//Update if rank was higher.  !!!!ADD if same rank, compare stats
 										if (gemMethods.requestedRankHigher(requestedGems[0], equippedGems[0])) {
 											console.log("---here " + delay);
-											updateInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
-											unequipItem(itemCollection, equippedItem, heroID);
+											updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
 										}
 									}
 								}
 							}
 							//Update+unequip if equipped is nonLeg and requested is
 							else if (!gemMethods.isGemLegendary(equippedGems[0]) && gemMethods.isGemLegendary(requestedGems[0])) {
-								updateInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
-								unequipItem(itemCollection, equippedItem, heroID);
+								updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
 							}
 						}//end if item was ring or neck
 						//ADD if item is a weapon,
@@ -604,27 +612,37 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 
 					//!!!!!!TO DOgems were same compare itemstats
 					else {
-						updateInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
-						unequipItem(itemCollection, equippedItem, heroID);
+						updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
 					}
 				}//end if item had gems, and had same gemcount
+				else {
+					//item either had no gems, or different gem counts
+// console.log (itemMethods.sameGemCount(requestedItem, equippedItem))
+// console.log(itemMethods.isGemCountZero(requestedItem), itemMethods.isGemCountZero(equippedItem))
+															foundItemCallback();
+															console.log("caleldFOundItemCallback 624")
+
+				}
 			}//end if item did not have more gems
 		}//end if item is socketable
 
 		//!!!not a socketable item
 		//!!!TO DOcompare stats
 		else {
-			updateInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
-			unequipItem(itemCollection, equippedItem, heroID);
+			updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
 		}
 	}//end if item was not the same
 
 }
 
+function updateAndUnequip(itemCollection, heroID, currentItem, itemToUnequip, callback) {
+	unequipItem(itemCollection, itemToUnequip, heroID);
+	updateInItemCollection(itemCollection, currentItem, heroID, callback);
+}
+
 function updateInItemCollection(itemCollection, currentItem, heroID, callback) {
 	itemCollection.update({"heroID": parseInt(heroID) , "type" :itemMethods.getItemType(currentItem.type.id)}, {"itemID" : currentItem.tooltipParams.replace("item/",""), "name" : currentItem.name, "displayColor" : currentItem.displayColor, "type" : itemMethods.getItemType(currentItem.type.id), "affixes" : currentItem.attributes, "randomAffixes" : currentItem.randomAffixes, "gems" : currentItem.gems, "socketEffects" : currentItem.socketEffects, "heroID" : parseInt(heroID), "equipped" : true}, function(err, result) {
 		console.log("Successfully updated/equipped " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
-		console.log("callback called");
 		callback();
 	});
 }
@@ -632,7 +650,6 @@ function updateInItemCollection(itemCollection, currentItem, heroID, callback) {
 function insertInItemCollection(itemCollection, currentItem, heroID, callback) {
 	itemCollection.insert({"itemID" : currentItem.tooltipParams.replace("item/",""), "name" : currentItem.name, "displayColor" : currentItem.displayColor, "type" : itemMethods.getItemType(currentItem.type.id), "affixes" : currentItem.attributes, "randomAffixes" : currentItem.randomAffixes, "gems" : currentItem.gems, "socketEffects" : currentItem.socketEffects, "heroID" : parseInt(heroID), "equipped" : true}, function(err, result) {
 		console.log("Successfully inserted " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
-		console.log("callback called");
 		callback();
 	});
 }
