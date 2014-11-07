@@ -14,7 +14,6 @@ var databaseURL = process.env.DBURL || "mongodb://admin:admin@ds039850.mongolab.
 
 app.get("/", function(req, res) {
 	res.sendfile("index.html");
-	heroMethods.getItemIDsFromHero(43712118);
 });
 
 //shows leaderboard page
