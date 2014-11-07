@@ -74,7 +74,6 @@ function createSkillsPie() {
 		.attr("d", arc)
 	    .attr("class", "enter");
 
-
 	arcs.append("text")
 	    .attr("transform", function(d) {
 	        return "translate(" + arc.centroid(d) + ")";
@@ -82,13 +81,29 @@ function createSkillsPie() {
 	    .attr("text-anchor", "middle")
 	    .attr("class", "enter")
 	    .html(function(d, i) {
-	    	// console.log(d);
-	    	return (activeSkillsCount[i]/skillTotal*100).toFixed(0);
-	        
+	    	var skillPercentage = (activeSkillsCount[i]/skillTotal*100).toFixed(0)
+	    	if (skillPercentage > 7) {
+		    	return skillPercentage+"%";
+	    	}
+	    	if (skillPercentage > 2) {
+	    		return skillPercentage;
+	    	}
 	    });
 
 	var activeSkillsTooltip = d3.tip().attr('class', 'd3-tip').html(function(d,i) {
-		return activeSkillsName[i]+" ("+activeSkillsCount[i]+")";
+		var activeTooltipString = activeSkillsName[i]+" ("+activeSkillsCount[i]+")<br />";
+
+		//runeName[i] is an array of Runes for that skill
+		var allRunesForSkill = runeNames[i]; 
+		var runeCountsForSkill = runeCount[i];
+
+		//get runes and count for skill
+		allRunesForSkill.forEach(function(rune) {
+			var runeCount = runeCountsForSkill[allRunesForSkill.indexOf(rune)];
+			var runePercentage = ((runeCount / activeSkillsCount[i])*100).toFixed(0) + "% ";
+			activeTooltipString += runePercentage + rune + " (" + runeCount + ")<br />";
+		});
+		return activeTooltipString;
 	});
 	arcs.call(activeSkillsTooltip);
 	arcs.on("mouseover", activeSkillsTooltip.show)
@@ -120,13 +135,21 @@ function fromTopHeroesGetSkills() {
 	 		currentPlayerActiveSkills.forEach(function (currentActive) {
 
 	 			var currentSkillName = currentActive.skill.name;
-	 			var currentRuneName = currentActive.rune.name;
+	 			var currentRuneName;
+	 			//set rune
+	 			if (currentActive.rune == undefined) {
+	 				currentRuneName = "No Rune";
+	 			}
+	 			else {
+		 			currentRuneName = currentActive.rune.name;
+	 			}
 
 	 			var locationOfCurrentActive = activeSkillsName.indexOf(currentSkillName);
 
 	 			if (locationOfCurrentActive == -1) {
 	 				activeSkillsName.push(currentSkillName);
 	 				activeSkillsCount.push(1);
+
 	 				runeNames.push([currentRuneName]);
 	 				runeCount.push([1]);
 	 				skillTotal += 1;
