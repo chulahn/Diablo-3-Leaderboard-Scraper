@@ -46,6 +46,7 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 	MongoClient.connect(databaseURL, function(err, db) {
 	//Takes about 1/10th second
 		date = new Date();
+
 		console.log(diabloClass + " Page before request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
 		if (err) {
 			return console.log(err);
@@ -72,7 +73,7 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 					//array for storing all heroes in DB
 		    		var allData = [];
 		    		setSearchParams(leaderboardType);
-/*
+
 var i= -1;
 					async.eachSeries(leaderboardResults, function (currentPlayerFromDB, foundGRiftHeroCallback) {
 		    			i++;
@@ -217,9 +218,7 @@ var i= -1;
 		    			}
 
 		    		});
-
-*/
-
+/*
 		    		leaderboardResults.forEach(function(currentPlayer) {
 		    			delayCounter =0;
 		    			var heroCollection = db.collection("hero");
@@ -326,7 +325,7 @@ var i= -1;
 							}
 		    			})//end toArray callback from finding hero.
 		    		})//end for each result from Leaderboard search
-
+*/
 		  		}
 	  		});//end toArray callbackk from finding leaderboard
 		}//end else
