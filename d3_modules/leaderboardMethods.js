@@ -5,6 +5,7 @@ var mongo = require("mongodb");
 var playerMethods = require("../d3_modules/playerMethods");
 var heroMethods = require("../d3_modules/heroMethods");
 var async = require("async");
+var colors = require("colors");
 
 var MongoClient = mongo.MongoClient;
 
@@ -71,7 +72,7 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 					//array for storing all heroes in DB
 		    		var allData = [];
 		    		setSearchParams(leaderboardType);
-
+/*
 var i= -1;
 					async.eachSeries(leaderboardResults, function (currentPlayerFromDB, foundGRiftHeroCallback) {
 		    			i++;
@@ -216,7 +217,9 @@ var i= -1;
 		    			}
 
 		    		});
-/*
+
+*/
+
 		    		leaderboardResults.forEach(function(currentPlayer) {
 		    			delayCounter =0;
 		    			var heroCollection = db.collection("hero");
@@ -323,7 +326,7 @@ var i= -1;
 							}
 		    			})//end toArray callback from finding hero.
 		    		})//end for each result from Leaderboard search
-*/
+
 		  		}
 	  		});//end toArray callbackk from finding leaderboard
 		}//end else
