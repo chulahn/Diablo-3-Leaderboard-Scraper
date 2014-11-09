@@ -18,7 +18,22 @@ var statsTooltip = d3.tip()
 					.attr('class', 'd3-statsTip')
 					.offset([-10, 0])
 					.html(function(d,i) {
-						return (i+1)+"."+"<span class=\"btag\">"+d.battletag+"</span><br />DPS:<span class=\"damage\">"+d.stats.damage+"</span><br />Toughness:<span class=\"damage\">"+d.stats.toughness;
+						var rankAndBTag = (i+1)+"."+"<span class=\"btag\">"+d.battletag+"</span>";
+						var dpsString = "DPS:<span class=\"damage\">"+d.stats.damage+"</span>";
+						var toughnessString = "Toughness:<span class=\"damage\">"+d.stats.toughness+"</span>";
+						var element = d.extraItemData.elementalDam[0][0];
+						var elementInc = d.extraItemData.elementalDam[0][1];
+						var elementalString = "<span class="+element.toLowerCase()+">" + element + " DPS:" + (d.stats.damage * (1+(elementInc/100))).toFixed(0) + "</span>";
+
+						var completeString = rankAndBTag+"<br />"+
+								dpsString+"<br />"+
+								toughnessString;
+								
+						if (elementInc > 0) {
+							completeString += "<br />"+elementalString;
+						}
+
+						return completeString;
 					});
 statsBarGraph.call(statsTooltip);
 

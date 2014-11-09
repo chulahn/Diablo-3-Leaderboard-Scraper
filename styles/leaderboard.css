@@ -108,3 +108,31 @@ td, th {
 	top: 0px;
 	left: 0px;
 }
+
+.fire {
+	color: red;
+}
+
+.cold {
+	color: blue;
+}
+
+.lightning {
+	color: yellow;
+}
+
+.arcane {
+	color: purple;
+}
+
+.poison {
+	color: green;
+}
+
+.holy {
+	color : #FAFAD2;
+}
+
+.physical {
+	color: gray;
+}

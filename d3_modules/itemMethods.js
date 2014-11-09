@@ -45,83 +45,69 @@ var exports = module.exports = {
 	},
 
 	isJewlery : function (itemType) {
-		if (itemType == "Ring" || itemType == "Neck") {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return (itemType === "Ring" || itemType === "Neck");
 	},
 
 	isRing : function (itemType) {
-		if (itemType == "Ring") {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return (itemType === "Ring");
 	},
 
 	isHat : function (itemType) {
-		if (itemType == "Head") {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return (itemType === "Head");
 	},
 
 	isSocketable : function (itemType) {
-		if (itemType == "Ring" || itemType == "Neck" || itemType == "1 Hand" || itemType == "2 Hand" || itemType == "Chest" || itemType == "Legs" || itemType == "Head") {
-			// console.log("is Socketable");
-			return true;
-		}
-		else {
-			return false;
-		}
+		return (itemType === "Ring" || itemType === "Neck" || itemType === "1 Hand" || itemType === "2 Hand" || itemType === "Chest" || itemType === "Legs" || itemType === "Head");
 	},
 
 	//currentItem is Requested from API.  equippedItem is item currently in Collection.
 	doesRequestedHaveMoreGems : function (requestedItem, equippedItem) {
-		if (requestedItem.gems.length > equippedItem.gems.length) {
-			// console.log("has more gems");
-			return true;
-		}
-		else {
-			// console.log("doesnt have more gems");
-			return false;
-		}
+
+		var requestedGems = 0;
+		var equippedGems = 0;
+
+		requestedItem.gems.forEach(function(gem) {
+			if (gem !== undefined) {
+				requestedGems += 1;
+			}
+		});
+		equippedItem.gems.forEach(function(gem) {
+			if (gem !== undefined) {
+				equippedGems += 1;
+			}
+		});
+
+		return (requestedGems > equippedGems);
+
 	},
 
 	isGemCountZero : function (requestedItem) {
-		if (requestedItem.gems.length == 0) {
-			return true;
-		}
-		else {
-			// console.log("has gems");
-			return false;
-		}
+		requestedItem.gems.every(function (gem) {
+			return (gem === undefined);
+		});
 	},
 
 	sameGemCount : function (requestedItem, equippedItem) {
-		if (requestedItem.gems.length == requestedItem.gems.length) {
-			return true;
-		}
-		else {
-			console.log("different gem counts requested:" + requestedItem + " equipped:" + equippedItem );
-			return false;
-		}
+		var requestedGems = 0;
+		var equippedGems = 0;
+
+		requestedItem.gems.forEach(function(gem) {
+			if (gem !== undefined) {
+				requestedGems += 1;
+			}
+		});
+		equippedItem.gems.forEach(function(gem) {
+			if (gem !== undefined) {
+				equippedGems += 1;
+			}
+		});
+
+		return (requestedGems === equippedGems);
+
 	},
 
 	hasNewEnchant : function (requestedItem, equippedItem) {
-		if (JSON.stringify(requestedItem.attributes) != JSON.stringify(equippedItem.affixes)) {
-			// console.log("----------has new enchant");
-			return true;
-		}
-		else {
-			// console.log("--------had same attributes");
-			return false;
-		}
+		return (JSON.stringify(requestedItem.attributes) !== JSON.stringify(equippedItem.affixes));
 	}
 
 }

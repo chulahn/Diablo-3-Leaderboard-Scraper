@@ -1,13 +1,7 @@
 var exports = module.exports = {
 
 	sameGems : function (requestedGems, equippedGems) {
-		if (JSON.stringify(requestedGems) == JSON.stringify(equippedGems)) {
-			// console.log("has the same gems");
-			return true;
-		}
-		else {
-			return false;
-		}
+		return (JSON.stringify(requestedGems) === JSON.stringify(equippedGems));
 	}, 
 
 	isHatGemUtility : function (hatGem) {
@@ -21,38 +15,18 @@ var exports = module.exports = {
 	}, 
 
 	isGemBoon : function (jewelryGem) {
-		if (jewelryGem.item.name == "Boon of the Hoarder") {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return (jewelryGem.item.name === "Boon of the Hoarder");
 	},
 
 	requestedRankHigher : function(requestedGem, equippedGem) {
-		if (requestedGem.jewelRank > equippedGem.jewelRank) {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return (requestedGem.jewelRank > equippedGem.jewelRank);
 	},
 
 	sameRank : function(requestedGem, equippedGem) {
-		if (requestedGem.jewelRank == equippedGem.jewelRank) {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return (requestedGem.jewelRank === equippedGem.jewelRank);
 	},
 
 	isGemLegendary : function (jewelryGem) {
-		if (jewelryGem.item.displayColor == "orange") {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return (jewelryGem.item.displayColor === "orange");
 	}
 };

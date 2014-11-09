@@ -4,6 +4,7 @@ var mongo = require("mongodb");
 var gemMethods = require("../d3_modules/gemMethods.js");
 var itemMethods = require("../d3_modules/itemMethods.js");
 var async = require("async");
+var colors = require("colors")
 var MongoClient = mongo.MongoClient;
 
 var databaseURL = process.env.DBURL || "mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders";
@@ -240,7 +241,7 @@ function getImportantStats(heroID, updatedStatsCallback) {
 			var diamondCooldown = 0;
 			//fire,light,cold,arcane,poison,phys
 			var elementalDam = [
-			["Fire", 0], ["Lightning", 0], ["Cold", 0], ["Arcane", 0], ["Poison", 0], ["Physical", 0]
+			["Fire", 0], ["Lightning", 0], ["Cold", 0], ["Arcane", 0], ["Poison", 0], ["Physical", 0], ["Holy", 0]
 			];
 			var meleeDamRed = 0;
 			var rangeDamRed = 0;
@@ -442,7 +443,17 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 
 	//if equippedItem and requestItem have same ID, check for differences.
 	//If no new enchants, check if it is socketable to check gems.
-	if (equippedItem.itemID == requestedItem.tooltipParams.replace("item/" , "")) {
+	/*
+		For same item, update under following conditions :
+		--new enchant
+		--more gems
+		--if gem in hat before was not a amethyst or diamond but current is
+		--if gem was boon before, and current is not or a higher level
+		--if gem rank before is less than gem rank after
+		--if gem before was not leg, but current is
+	*/ 
+	function sameItemCompare(itemCollection, heroID, equippedItem, requestedItem, foundItemCallback) {
+		console.log ("Items were same".red)
 		if (!itemMethods.hasNewEnchant(requestedItem, equippedItem)) {											
 			//If replacement has more gems update it
 			if (itemMethods.isSocketable(requestedItemType)) {
@@ -464,7 +475,7 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 									updateInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
 								}
 								else {
-									console.log("foundItemCallback called 490");
+									console.log("sameItem: gem was ame or diamond.");
 									foundItemCallback();
 								}
 								
@@ -480,7 +491,7 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 											updateInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
 										}
 										else {
-											console.log("foundItemCallback called 506");
+											console.log("sameItem: jewelery gem was same level boon");
 											foundItemCallback();
 										}
 									}
@@ -491,7 +502,7 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 											updateInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
 										}
 										else {
-											console.log("foundItemCallback called 517");
+											console.log("sameItem: jewelery gem was not Boon, gem was same rank");
 											foundItemCallback();
 										}
 									}
@@ -501,14 +512,14 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 									updateInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
 								}
 								else {
-									console.log("foundItemCallback called 527");
+									console.log("sameItem: jewelery (both werent legendary) and not (previous leg, next leg)");
 									foundItemCallback();
 								}
 							}//end if item was ring or neck
 							
-							//if item is a weapon,
+							//if item is a weapon, or chest, or pants
 							else {
-								console.log("foundItemCallback called 534");
+								console.log("sameItem: weapon/chest/pants had same enchant but different gems");
 								foundItemCallback();
 							}
 						}//end if had gems and gems were same
@@ -516,17 +527,17 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 							console.log("foundItemCallback called 539");
 							foundItemCallback();
 						}
-
 					}//end if item had gems and had same gemcount
 					
+					//did not have more gems, either did not have sameGemCount or gemCount was 0).
 					else {
-						console.log("foundItemCallback called 546");
+						console.log("did not have sameGemCount or gemCount for current was less");
 						foundItemCallback();
 					}
 				}//end else item did not have more gems
 			}//end if item is socketable
 			else {
-				console.log("foundItemCallback called 552");
+				console.log("sameItem: item is not socketable and no new enchants");
 				foundItemCallback();
 			}
 		}//end if item did not have new enchant
@@ -535,31 +546,62 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 		else {
 			updateInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
 		}
+	}
+	if (equippedItem.itemID == requestedItem.tooltipParams.replace("item/" , "")) {
+		sameItemCompare(itemCollection, heroID, equippedItem, requestedItem, foundItemCallback);
 	}//end if items are the same
 
 
 	//Item is not the same, update+unequip socketable items if there are more gems in request.
 	else {
+	/*
+		Items were different so first check if item has sockets.  Update if:
+		--current has more gems than previous
+		--previous hat did not have ame/dia but current does
+
+
+
+
+		If it has sockets, check if there are more gems.  If so update,
+		Else check if it actually have gems
+	*/
+	function diffItemCompare(itemCollection, heroID, equippedItem, requestedItem, foundItemCallback) {
+		console.log("diffItemCompare".green);
 		if (itemMethods.isSocketable(requestedItemType)) {
+			console.log("item socketable")
 			if(itemMethods.doesRequestedHaveMoreGems(requestedItem, equippedItem)) {
 				updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
 			}
 
-			//Update+unequip itemif gem in request has better stats
 			else { 
-				//if item actually has gems, and have same gemCount  
+				console.log("item had gems")
+				//if item actually has gems, and have same gemCount
+					//check if gems are not same
+						//for a hat
+							//check if gem before wasnt ame/diamon and current is  
+							//check if better stats
+						//if jewelry
+							//if cuurent boon, check current is higher rank or not boon
+							//if current not boon, check if higher rank.  check STATS
 				if (!itemMethods.isGemCountZero(requestedItem) && itemMethods.sameGemCount(requestedItem, equippedItem)) {
+					console.log("not 0 and same count")
 					var requestedGems = requestedItem.gems;
 					var equippedGems = equippedItem.gems;
 					if (!gemMethods.sameGems(requestedGems, equippedGems)) {
+						console.log("not same gems")
 						
 						if (itemMethods.isHat(requestedItemType)) {
 							if (!gemMethods.isHatGemUtility(equippedGems) && gemMethods.isHatGemUtility(requestedGems)) {
 								updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
 							}
+							else {
+								console.log("diffItem: hat gems had utility gem before.  shouuld check stats");
+							}
 						}//end if item was hat
 
-						//If Jewelry, compare gems
+						//If Jewelry, compare gems.
+							//if equipped is boon, update if higher rank or diff gem.  or better stats.
+							//if not boon, update if higher rank.  or better stats
 						if (itemMethods.isJewlery(requestedItemType)) {
 							if (gemMethods.isGemLegendary(equippedGems[0]) && gemMethods.isGemLegendary(requestedGems[0])) {
 								if (gemMethods.isGemBoon(equippedGems[0])) {
@@ -568,46 +610,51 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 										updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
 									}
 									else {
+										console.log("diffItems: equipped gem was boon, and current was not higher rank or boon.  CHECK STATS")
+										foundItemCallback();
 									}
 								}
-								//If equipped was not Boon, compare.
+
+								//If equipped was not Boon, check if higher rank
 								else {
-									//gets called before finishes updating
-									if (itemMethods.isRing(requestedItemType)) {
-										delay = 1000;
-										setTimeout( function() {
+									if (gemMethods.requestedRankHigher(requestedGems[0], equippedGems[0])) {
+										updateInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
+									}
+
+									//not higher rank
+										//if ring, compare both rings,
+										//else compare just ammy
+									else {
+										if (itemMethods.isRing(requestedItemType)) {
 											//COMPARE STATS, for now update+unequip
 											itemCollection.find( {"itemID" :equippedItem.itemID} ).toArray(function(err, matchedRings) {
 												if (matchedRings.length == 2) {
-													console.log("two matching rings "+ equippedItem.name + "  equipping " + requestedItem.name);
+													console.log("diffItem: ring not boon, comparing stats two matching rings "+ equippedItem.name + "  equipping " + requestedItem.name + "".red);
 													updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
 												}
 												else {
-							console.log("compareItems line 587")
-
-							foundItemCallback();
+													console.log("diffItem: rings and length wasnt 2" + matchedRings + "".red)
+													foundItemCallback();
 												}
 											});
-										},delay);
-
-
-									}
-									//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!not a ring
-									else { //CHANGE THIS LATER.  RING WILL NOT UPDATE IF THERE WAS HIGHER RANK
-										//Update if rank was higher.  !!!!ADD if same rank, compare stats
-										if (gemMethods.requestedRankHigher(requestedGems[0], equippedGems[0])) {
-											console.log("---here " + delay);
-											updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
 										}
 									}
 								}
 							}
+
 							//Update+unequip if equipped is nonLeg and requested is
 							else if (!gemMethods.isGemLegendary(equippedGems[0]) && gemMethods.isGemLegendary(requestedGems[0])) {
 								updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
 							}
 						}//end if item was ring or neck
-						//ADD if item is a weapon,
+
+						//item is weapon/chest/legs and gems are different.  check if diamond/emerald, then update.
+						//if not check stats
+						else {
+							console.log("weapon CHECK stats");
+							foundItemCallback();
+							//CHECK STATS.  WEAPON/CHEST/LEGS had same # of gems, but gems not same
+						}
 					}//end if gems were not same
 
 					//!!!!!!TO DOgems were same compare itemstats
@@ -615,13 +662,12 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 						updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
 					}
 				}//end if item had gems, and had same gemcount
-				else {
-					//item either had no gems, or different gem counts
-// console.log (itemMethods.sameGemCount(requestedItem, equippedItem))
-// console.log(itemMethods.isGemCountZero(requestedItem), itemMethods.isGemCountZero(equippedItem))
-															foundItemCallback();
-															console.log("caleldFOundItemCallback 624")
 
+
+				//item either had no gems, or different gem counts.  COMPARE STATS.  for now just callback
+				else {
+					foundItemCallback();
+					console.log("diffItem: requestedItem had 0 gems, or less")
 				}
 			}//end if item did not have more gems
 		}//end if item is socketable
@@ -629,9 +675,13 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 		//!!!not a socketable item
 		//!!!TO DOcompare stats
 		else {
+			console.log("item not socketable")
 			updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
 		}
 	}//end if item was not the same
+
+	diffItemCompare(itemCollection, heroID, equippedItem, requestedItem, foundItemCallback);
+	}
 
 }
 
