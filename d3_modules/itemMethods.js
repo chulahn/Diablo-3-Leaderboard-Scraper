@@ -9,12 +9,12 @@ var exports = module.exports = {
 		else if (itemType.indexOf("shoulders") != -1) {
 			return "Shoulders";
 		}
-		else if (itemType.indexOf("hand") != -1 || itemType.indexOf("fist") != -1 || itemType.indexOf("mace") != -1 || itemType.indexOf("1h") != -1 || itemType.indexOf("axe") != -1 || itemType.indexOf("wand") != -1 || itemType.indexOf("dagger") != -1) {
-			return "1 Hand";
-		}
 		else if (itemType.indexOf("2h") != -1 || itemType.indexOf("staff") != -1) {
 			return "2 Hand";
 		}	
+		else if (itemType.indexOf("hand") != -1 || itemType.indexOf("fist") != -1 || itemType.indexOf("mace") != -1 || itemType.indexOf("1h") != -1 || itemType.indexOf("axe") != -1 || itemType.indexOf("wand") != -1 || itemType.indexOf("dagger") != -1) {
+			return "1 Hand";
+		}
 		else if (itemType.indexOf("boots") != -1) {
 			return "Feet";
 		}

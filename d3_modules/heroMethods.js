@@ -244,6 +244,9 @@ function getImportantStats(heroID, updatedStatsCallback) {
 			var meleeDamRed = 0;
 			var rangeDamRed = 0;
 			var eliteDamRed = 0;
+
+			var myRe = new RegExp("[0-9]+\.?[0-9]?");
+
 			console.log("getImportantStats " + heroID);
 			itemCollection.find({"heroID" : heroID, "equipped" : true}).toArray(function(error, heroItems) {
 
@@ -255,14 +258,19 @@ function getImportantStats(heroID, updatedStatsCallback) {
 						if (currentItem.gems[0] != undefined ) {
 						
 							if ((currentItem.gems[0].item.name).indexOf("Diamond") != -1) {
-								diamondText = currentItem.gems[0].attributes.primary[0].text;
-								diamondCooldown = parseFloat(diamondText.substring(diamondText.indexOf("by ") + 3, diamondText.length-2));
+								var diamondText = currentItem.gems[0].attributes.primary[0].text;
+								var searchData = myRe.exec(diamondText);
+								diamondCooldown = parseFloat(searchData[0]);
 							}
 
 							if (currentItem.name == "Leoric's Crown") {
 								currentItem.affixes.secondary.forEach(function (secondary) {
 									if (secondary.color == "orange") {
-										diamondCooldown = diamondCooldown * (1 + parseFloat(secondary.text.substring(secondary.text.indexOf("by ") + 3, secondary.text.length-2)/100));
+
+										var leoricText = secondary.text;
+										var searchData = myRe.exec(leoricText);
+
+										diamondCooldown = diamondCooldown * (1 + parseFloat(searchData[0]));
 									}
 								});
 							}
@@ -271,50 +279,64 @@ function getImportantStats(heroID, updatedStatsCallback) {
 					}
 					//get eliteDam from Furnace
 					if (currentItem.name == "The Furnace") {
-						furnaceElite = currentItem.affixes.passive[0].text;
-						furnaceElite = parseFloat(furnaceElite.substring(furnaceElite.indexOf("by ")+3, furnaceElite.length-2));
+						var furnaceElite = currentItem.affixes.passive[0].text;
+						var searchData = myRe.exec(furnaceElite);
+
+						furnaceElite = parseFloat(searchData[0]);
+						// furnaceElite = parseFloat(furnaceElite.substring(furnaceElite.indexOf("by ")+3, furnaceElite.length-2));
 						eliteDam += furnaceElite;
 					}
 					//get CDR and elementalDam
 					for (j=0; j<currentItem.affixes.primary.length; j++) {
 						//get cooldown reduction from every item
 						if (currentItem.affixes.primary[j].text.indexOf("cooldown") != -1) {
-							cooldownString = currentItem.affixes.primary[j].text;
+							var cooldownString = currentItem.affixes.primary[j].text;
+							var searchData = myRe.exec(cooldownString);
+
 							// console.log(currentItem.Name + " " + cooldownString.substring(cooldownString.lastIndexOf(" ")+1,cooldownString.length-2 )+"%");
-							cooldown += parseFloat(cooldownString.substring(cooldownString.lastIndexOf(" ")+1,cooldownString.length-2 ));
+							cooldown += parseFloat(searchData[0]);
 						}
 						//get element damage from every item
 						if (currentItem.affixes.primary[j].text.indexOf("skills deal") != -1) {
 
-							skillsString = currentItem.affixes.primary[j].text;
-							number = parseInt(skillsString.substring(skillsString.indexOf("deal ")+5, skillsString.indexOf("%")));
-							element = skillsString.substring(0, skillsString.indexOf(" skills"));
+							var skillsString = currentItem.affixes.primary[j].text;
+							console.log(skillsString)
+							var searchData = myRe.exec(skillsString);
+							console.log(searchData)
+							var number = parseFloat(searchData[0]);
+							var element = skillsString.substring(0, skillsString.indexOf(" skills"));
 
 							switch (element) {
 								case "Fire" :
 									elementalDam[0][1] += number;
 									break;
-								case "Cold" :
+								case "Lightning" :
 									elementalDam[1][1] += number;
 									break;
-								case "Lightning" :
+								case "Cold" :
 									elementalDam[2][1] += number;
 									break;
-								case "Poison" :
+								case "Arcane" :
 									elementalDam[3][1] += number;
 									break;
-								case "Arcane" :
+								case "Poison" :
 									elementalDam[4][1] += number;
 									break;
 								case "Physical" :
 									elementalDam[5][1] += number;
+									break;
+								case "Holy" :
+									elementalDam[6][1] += number;
 									break;
 							}
 						}
 						//get elite damage
 						if (currentItem.affixes.primary[j].text.indexOf("Increases damage against elites by") != -1) {
 							eliteString = currentItem.affixes.primary[j].text;
-							eliteString = parseFloat(eliteString.substring(eliteString.indexOf("Increases damage against elites by")+35, eliteString.length-1));
+
+							var searchData = myRe.exec(eliteString);
+
+							eliteString = parseFloat(searchData[0]);
 							eliteDam += eliteString;
 						}
 
