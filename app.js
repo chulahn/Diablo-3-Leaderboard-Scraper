@@ -115,6 +115,9 @@ app.get("/images/wizard-female.png", function(req,res) {
 app.get("/images/wizard-male.png", function(req,res) {
 	res.sendfile("images/wizard-male.png");
 });
+app.get("/images/legendary.png", function(req,res) {
+	res.sendfile("images/legendary.png");
+});
 
 
 

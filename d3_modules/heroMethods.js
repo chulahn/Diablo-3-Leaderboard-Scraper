@@ -4,7 +4,8 @@ var mongo = require("mongodb");
 var gemMethods = require("../d3_modules/gemMethods.js");
 var itemMethods = require("../d3_modules/itemMethods.js");
 var async = require("async");
-var colors = require("colors")
+var colors = require("colors");
+var debug = require("../d3_modules/debugMethods.js");
 var MongoClient = mongo.MongoClient;
 
 var databaseURL = process.env.DBURL || "mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders";
@@ -27,8 +28,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 	// console.log("https://" + region + apiURL + "/profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey  );
 	var heroRequestURL = "https://" + region + apiURL + "/profile/" +req.params.battletag+"/hero/"+heroID+"?locale="+locale+"&apikey="+apiKey;
 
-	date = new Date();
-	console.log(heroID + " Page before request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+	debug.timeString(heroID + " Page before request ");
 
 //Takes 200ms.  Only has information from DB.  Not always up to Date
 	MongoClient.connect(databaseURL, function(err, db) {
@@ -46,8 +46,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 						// exports.getItemIDsFromHero(heroItems,heroID,10);
 					}
 					res.render("hero.ejs", {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
-					date = new Date();
-					console.log(heroID + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+					debug.timeString(heroID + " Page after request ");
 				}
 				//not in database.  must request data from Blizzard site.
 				else {
@@ -58,8 +57,7 @@ exports.getHeroDetails = function(heroID, req, res) {
 							// exports.getItemIDsFromHero(heroItems,heroID,10);
 						}
 						res.render("hero.ejs", {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
-						date = new Date();
-						console.log(heroID + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+						debug.timeString(heroID + " Page after request ");
 					});
 				}
 			});

@@ -2,6 +2,8 @@ var exports = module.exports = {};
 var request = require("request");
 var express = require("express");
 var heroMethods = require("../d3_modules/heroMethods.js");
+var async = require("async");
+var debug = require("../d3_modules/debugMethods.js");
 
 var mongo = require('mongodb');
 var MongoClient = mongo.MongoClient;
@@ -24,38 +26,71 @@ function timeToDelay() {
 //for a given Battletag, it makes a request to get all heroes for that tag.  After getting heroes, call addHeroData and create the page for that Battletag
 //addHeroData is currently uncommented until it has been updated.
 exports.getHeroes = function(battletag, req, res) {
-	MongoClient.connect(databaseURL, function(err, db) {
-		var heroCollection = db.collection("hero");
-	});
+	var gRiftHeroes = 0;
+	var playersHeroes;
 
-	var requestURL = "https://" + region + apiURL + "profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey;
-	date = new Date();
-	console.log(battletag + " Page before request"+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
-	request(requestURL, function (error, response, playerInformation) {
-		var playerJSON = JSON.parse(playerInformation);
-		if (playerJSON.code == "NOTFOUND") {
-			res.send("Invalid Battletag");
-			//request the tag again.
-			getHeroes(battletag,req,res);
-		}
-		var playersHeroes = playerJSON.heroes;
-		if (playersHeroes == undefined) {
-			console.log("getHeroes playerJSON.heroes undefined");
-			getHeroes(battletag,req,res);
+	async.series([
+
+		//find gRiftHero then pass in.
+		function findGRiftHero(foundGRiftHeroCallback) {
+			debug.timeString(battletag + " Page before db search");
+			MongoClient.connect(databaseURL, function(err, db) {
+				var heroCollection = db.collection("hero");
+				heroCollection.find({"battletag" : battletag , "gRiftHero" : true}).toArray(function (err, heroResults) {
+					debug.timeString(battletag + " Page after db search");
+					if (heroResults.length > 0) {
+						gRiftHeroes = heroResults;
+						foundGRiftHeroCallback();
+					}
+					else {
+						console.log(heroResults);
+						foundGRiftHeroCallback();
+					}
+				});//end find in heroCollection
+			});			
+		},
+		function getAllHeroes(gotHeroesCallback) {
+			var requestURL = "https://" + region + apiURL + "profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey;
+			debug.timeString(battletag + " Page before request");
+			request(requestURL, function (error, response, playerInformation) {
+				var playerJSON = JSON.parse(playerInformation);
+				if (playerJSON.code == "NOTFOUND") {
+					res.send("Invalid Battletag");
+					//request the tag again.
+					getHeroes(battletag,req,res);
+				}
+				playersHeroes = playerJSON.heroes;
+				if (playersHeroes == undefined) {
+					console.log("getHeroes playerJSON.heroes undefined");
+					getHeroes(battletag,req,res);
+				}
+				else {
+					for (i=0; i<playersHeroes.length; i++) {
+						// exports.addHeroData(battletag, playersHeroes[i].id, 0,timeToDelay());
+					}
+					debug.timeString(battletag + " Page after request");
+					gotHeroesCallback();
+				}
+			});
+
+		},
+	],function renderPage(err) {
+
+		if (err) {
+			console.log(err);
+			getHeroes(battletag, req, res);
 		}
 		else {
-			for (i=0; i<playersHeroes.length; i++) {
-				// exports.addHeroData(battletag, playersHeroes[i].id, 0,timeToDelay());
-			}
-			res.render('player.ejs', { ejs_btag : battletag , ejs_heroes : playersHeroes });
-			date = new Date();
-			console.log(battletag + " Page after request"+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+			debug.timeString(battletag + " Page rendered");
+			res.render('player.ejs', { ejs_btag : battletag , ejs_heroes : playersHeroes , ejs_grift_heroes : gRiftHeroes });
 		}
 	});
+
+
 }
 
 //add hero's data to hero collection if the hero is level 70 and has certain damage.  damageFiler currently set to 0 for instance hero probably unequipped weapon
- exports.addHeroData = function(region, battletag, heroID, delay,db) {
+ exports.addHeroData = function(region, battletag, heroID, delay, db, callback) {
  	setRegion(region);
 	console.log("inside addHeroData for " + battletag + " " + heroID + "delay is " + delay);
 	var requestURL = "https://" + region + apiURL + "profile/" + battletag.replace("#", "-") + "/hero/" + heroID + "?locale=" + locale + "&apikey=" + apiKey;
@@ -78,14 +113,14 @@ exports.getHeroes = function(battletag, req, res) {
 				//check if data is not null
 				else if (items == null) {
 					console.log("addHeroData items was null for " + battletag + " " + heroID + " calling again");
-					exports.addHeroData(region, battletag, heroID, timeToDelay());
+					exports.addHeroData(region, battletag, heroID, timeToDelay(), callback);
 					console.log(requestedHeroData);
 				}					
 				else {
 					//database was null
 					if (db == null) {
 						console.log("addHeroData database was null for " + battletag + " " + heroID + " calling again");
-						exports.addHeroData(region, battletag, heroID, timeToDelay());							
+						exports.addHeroData(region, battletag, heroID, timeToDelay(), callback);							
 					}
 					//end error handling
 					//If the Hero is level 70 and has damage > than CURRENTLY 0, search heroCollection.  If hero is there, determine whether or not to update, else add hero.
@@ -99,11 +134,11 @@ exports.getHeroes = function(battletag, req, res) {
 								if (results.length == 1) {
 //!!!!!!!							//check if there is damage increase, check if all items are equipped and call get Important INFO
 									// if (requestedHeroData.stats.damage > 300000){
-									updateInHeroCollection(heroCollection, battletag, requestedHeroData, region);
+									updateInHeroCollection(heroCollection, battletag, requestedHeroData, region, callback);
 									// }
 								}
 								else {
-									insertInHeroCollection(heroCollection, battletag, requestedHeroData, region);
+									insertInHeroCollection(heroCollection, battletag, requestedHeroData, region, callback);
 								}
 							});//end update/insert 
 						}//end else DB not null
@@ -136,26 +171,28 @@ function setRegion(region) {
 	}
 }
 
-function insertInHeroCollection(heroCollection, battletag, requestedHeroData, region) {
+function insertInHeroCollection(heroCollection, battletag, requestedHeroData, region, callback) {
 	heroCollection.insert({"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats, "region" : region}, function(err, results) {
 			if (err) {
 				return console.log("insertInHeroCollection error, " + err);
 			}
 			else {
 				console.log("addHeroData not found, inserting "+ battletag + " " + requestedHeroData.id);
+				callback()
 			}
 		// console.log("adding items")
 		// heroMethods.getItemIDsFromHero(requestedHeroData.items, requestedHeroData.id, timeToDelay());
 	});//end insertion.
 }
 
-function updateInHeroCollection(heroCollection, battletag, requestedHeroData, region) {
+function updateInHeroCollection(heroCollection, battletag, requestedHeroData, region, callback) {
 	heroCollection.update({"heroID" : requestedHeroData.id}, {$set: {"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats, "region" : region}}, function(err, results) {
 		if (err) {
 			return console.log("updateInHeroCollection error, " + err)
 		}
 		else {
 			console.log("updateInHeroCollection found, updating "+ battletag + " " + requestedHeroData.id);
+			callback();
 		}
 	});//end update.	
 }

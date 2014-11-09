@@ -6,6 +6,7 @@ var playerMethods = require("../d3_modules/playerMethods");
 var heroMethods = require("../d3_modules/heroMethods");
 var async = require("async");
 var colors = require("colors");
+var debug = require("../d3_modules/debugMethods.js");
 
 var MongoClient = mongo.MongoClient;
 
@@ -45,9 +46,9 @@ function itemDelay() {
 exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, req, res) {    
 	MongoClient.connect(databaseURL, function(err, db) {
 	//Takes about 1/10th second
-		date = new Date();
 
-		console.log(diabloClass + " Page before request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+
+		debug.timeString(diabloClass + " Page before request ");
 		if (err) {
 			return console.log(err);
 		}	
@@ -67,18 +68,14 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 	    		}
 	    		//leaderboard has 1000
 	    		else {
-		    		date = new Date();
-					console.log(diabloClass + " Page after request "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+	    			debug.timeString(diabloClass + " Page after request ");
 					console.log(leaderboardType);
 					//array for storing all heroes in DB
 		    		var allData = [];
 		    		setSearchParams(leaderboardType);
 
-var i= -1;
 					async.eachSeries(leaderboardResults, function (currentPlayerFromDB, foundGRiftHeroCallback) {
-		    			i++;
 		    			var heroCollection = db.collection("hero");
-		    			// if (i < 100) {
 		    			heroCollection.find({"battletag" : currentPlayerFromDB.Battletag.replace("#", "-"), "class" : getClassNameForDatabase(diabloClass), "seasonal" : searchParamSeason, "hardcore" : searchParamHC, "gRiftHero" : true}).toArray(function (error, gRiftHeroResults) {
 		    				//found grift hero, check if it has extraItemData.  if not add it
 		    				if (gRiftHeroResults.length != 0) {	
@@ -135,7 +132,7 @@ var i= -1;
 						    			var currentPlayerHeroes = currentPlayerFromDB.Heroes;
 				    					//player deleted all heroes or no matches
 				    					if (currentPlayerHeroes.length == 0) {
-			    							allData[currentPlayer.Standing-1] = 0;
+			    							allData[currentPlayerFromDB.Standing-1] = 0;
 				    						console.log("Deleted all heroes or no matches 130 " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
 
 			    							foundGRiftHeroCallback();
@@ -149,16 +146,16 @@ var i= -1;
 						    							validHero70Count += 1;
 						    							// console.log(currentHero);
 						    							console.log("before " + delayCounter);
-						    											    						console.log("searching battletag data 143 " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
+								    						console.log("searching battletag data 143 " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
 
-						    							playerMethods.addHeroData(region, currentPlayerFromDB.Battletag.replace("#", "-"), currentHero.id, 300, foundGRiftHeroCallback);
+						    							playerMethods.addHeroData(region, currentPlayerFromDB.Battletag.replace("#", "-"), currentHero.id, 300, db, foundGRiftHeroCallback);
 						    							console.log("after " + delayCounter);
 						    						}
-						    						//error handling for hc players.  heroID is in currentPlayer.Heroes, but was dead
+						    						//error handling for hc players.  heroID is in currentPlayerFromDB.Heroes, but was dead
 						    						else {
-						    							// console.log(currentPlayer.Battletag , currentHero);
-						    							allData[currentPlayer.Standing-1] = 0;
-						    											    						console.log("hardcore hero was dead 150 " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
+						    							// console.log(currentPlayerFromDB.Battletag , currentHero);
+						    							allData[currentPlayerFromDB.Standing-1] = 0;
+								    						console.log("hardcore hero was dead 150 " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
 
 						    							foundGRiftHeroCallback();
 						    						}
@@ -167,17 +164,17 @@ var i= -1;
 						    					//reached lastHero, if there were no valid 70s, add 0.  player, has heroes, but deleted grift hero hero
 					    						if (currentPlayerHeroes.indexOf(currentHero) == currentPlayerHeroes.length-1) {
 					    							//notfound in addHero
-					    							if (currentPlayer.Battletag == "Buhbuhlooske#1480" ||currentPlayer.Battletag == "AchillesRbrn#1782" || currentPlayer.Battletag == "Bwnage#1400") {
+					    							if (currentPlayerFromDB.Battletag == "Buhbuhlooske#1480" ||currentPlayerFromDB.Battletag == "AchillesRbrn#1782" || currentPlayerFromDB.Battletag == "Bwnage#1400") {
 					    								// console.log( currentPlayerHeroes);
 					    								console.log(validHero70Count);
-					    								allData[currentPlayer.Standing-1] = 0;
+					    								allData[currentPlayerFromDB.Standing-1] = 0;
 					    												    						console.log("no valid 70s 165 " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
 
 					    								foundGRiftHeroCallback();
 					    							}
 					    							if (validHero70Count == 0) {
-					    								console.log("validHero70Count was 0 for " + currentPlayer.Standing + " " + currentPlayer.Battletag);
-					    								allData[currentPlayer.Standing-1] = 0;
+					    								console.log("validHero70Count was 0 for " + currentPlayerFromDB.Standing + " " + currentPlayerFromDB.Battletag);
+					    								allData[currentPlayerFromDB.Standing-1] = 0;
 					    								foundGRiftHeroCallback();
 					    							}
 					    						}
@@ -198,8 +195,7 @@ var i= -1;
 		    			}
 		    			else {
 		    				//render
-				    		date = new Date();
-							console.log(diabloClass + " Page rendered "+ date.getMinutes() +":"+ date.getSeconds() +":"+ date.getMilliseconds());
+							debug.timeString(diabloClass + " Page rendered ");
 							//Takes about half a minute to render.
 							//get the lastupdated time and then render page.
 							async.waterfall([
@@ -370,8 +366,7 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 		if(!err) {
 			setRegion(region);
 			exports.setGRiftCategory(leaderboardType);
-			date = new Date();
-			console.log(region + " " + diabloClass + " " + gRiftCategory + " Leaders before request "+ date.getMinutes() +":"+ date.getSeconds());
+			debug.timeString(region + " " + diabloClass + " " + gRiftCategory + " Leaders before request ");
 			var requestURL = "https://" + region + ".battle.net/d3/en/rankings/" + gRiftCategory + getClassNameForLeaderboard(diabloClass);
 			request(requestURL, function (error, response, body) {
 				console.log("getLeaderboardFromDB inside request")
