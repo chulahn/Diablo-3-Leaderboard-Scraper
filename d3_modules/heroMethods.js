@@ -135,32 +135,44 @@ function findItemsInCollection(allItems, heroID, delay, db, foundGRiftHeroCallba
 							request(itemRequestURL, function (error, response, data) {
 								if (data == undefined) {
 									console.log("undefined, findItemInCOllection")
-									findItemInCollection(itemID, heroID, delay+1000, foundItemCallback);	
+									findItemInCollection(itemID, heroID, delay+1000, db, foundItemCallback);	
 								}
 								else {
 									requestedItem = JSON.parse(data);
 									if (requestedItem.code == 403) {
-										console.log("403 " + delay + " , findItemsInCollection " + currentItem.name + " " + heroID);
+										console.log("403 too many requests" + delay + " , findItemsInCollection " + currentItem.name + " " + heroID.red);
 										console.log(requestedItem);
-										findItemInCollection(itemID, heroID, delay+1000, foundItemCallback);
+										findItemInCollection(itemID, heroID, delay+1000, db, foundItemCallback);
 									}
 									else{
 
 										(function(requestedItem) {
-											var requestedItemType = itemMethods.getItemType(requestedItem.type.id);
+											var requestedItemType = itemMethods.getItemType(requestedItem);
 											console.log("findItems in request for " +requestedItem.name + " " + heroID + " delay " +delay);
 
+											//if if itemtype is 2h, search 2h,  
+												//results, then replace.  if not, search 1h offhand.
+													//if 1h or offhand, remove 
+											//if itemtype is 1h,
+												//if class is dh, barb, monk
+													//DH check 2h
+														//results replace
+														//else check 1h
+															//results replace
+													//BARB check 2h
+														//results replace
+														//
+											//
 											//find if hero has an item in that spot.  if there is check for differences.
 											itemCollection.find({"heroID": parseInt(heroID) , "type" :requestedItemType}).toArray(function(err, matchedItems) {
 												if (matchedItems.length != 0) {
 
 													//check to see if player has only one ring, and if its not the same as the ring in DB, add it
-													if (itemMethods.isRing(requestedItemType)) {
-														if (matchedItems.length == 1 && matchedItems[0].itemID != itemID) {
-															console.log("Inserted 2nd ring");
-															insertInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
-														}
+													if (itemMethods.isRing(requestedItemType) && matchedItems.length == 1 && matchedItems[0].itemID != itemID) {
+														console.log("Inserted 2nd ring");
+														insertInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
 													}
+
 													//compare each item.
 													// matchedItems.forEach(function (equippedItem) {
 													// 	if (equippedItem.itemID == undefined) {
@@ -169,22 +181,27 @@ function findItemsInCollection(allItems, heroID, delay, db, foundGRiftHeroCallba
 													// 	console.log("-----comparing " + equippedItem.name + " " + requestedItem.name + matchedItems.length)
 													// 	compareItems(itemCollection, heroID, equippedItem, requestedItem, foundItemCallback);														
 													// })
-													async.eachSeries(matchedItems, function (equippedItem, foundItemCallback) {
-//error handling
-														if (equippedItem.itemID == undefined) {
-															console.log("undefined for " + equippedItem , matchedItems);
-														}
-														console.log("-----comparing " + equippedItem.name + " " + requestedItem.name + matchedItems.length +  " " + allItems.length);
-														compareItems(itemCollection, heroID, equippedItem, requestedItem, foundItemCallback);
-													}, function(err) {
-														if (err) {
-															console.log("failed");
-														} else {
-															console.log("-x-x-x-x-x-x-xcompared all items for " + heroID + " " + requestedItem.name)
-															foundItemCallback();
+													
+													else {
+														
+														async.eachSeries(matchedItems, function (equippedItem, foundItemCallback) {
+	//error handling
+															if (equippedItem.itemID == undefined) {
+																console.log("undefined for " + equippedItem , matchedItems);
+															}
+															console.log("-----comparing " + equippedItem.name + " " + requestedItem.name + matchedItems.length +  " " + allItems.length);
+															compareItems(itemCollection, heroID, equippedItem, requestedItem, foundItemCallback);
+														 }, function(err) {
+															if (err) {
+																console.log("failed");
+															} else {
+																console.log("-x-x-x-x-x-x-xcompared all items for " + heroID + " " + requestedItem.name)
+																foundItemCallback();
 
-														}
-													});
+															}
+														});
+
+													}
 												}//end if found a item in that spot
 
 												//there no item in that spot, insert
@@ -226,6 +243,7 @@ function findItemsInCollection(allItems, heroID, delay, db, foundGRiftHeroCallba
 			}
 		});
 }
+
 function getImportantStats(heroID, updatedStatsCallback) {
 	MongoClient.connect(databaseURL, function(err, db) {
 		if (err) {
@@ -391,9 +409,7 @@ function findItemInCollection(itemID, heroID, delay, db, foundItemCallback){
 				findItemInCollection(itemID, heroID, delay, db, foundItemCallback);	
 				return console.log("findItem error connecting to db", err)
 			}
-
 			findItemInCollection(itemID, heroID, delay, db, foundItemCallback);	
-		
 		});
 	}
 	else {
@@ -405,12 +421,12 @@ function findItemInCollection(itemID, heroID, delay, db, foundItemCallback){
 		console.log(itemID)
 			request(itemRequestURL, function (error, response, data) {
 				if (data == undefined) {
-					findItemInCollection(itemID,heroID,delay+1000);	
+					findItemInCollection(itemID,heroID,delay+1000,db,foundItemCallback);	
 				}
 				else {
 					requestedItem = JSON.parse(data);
 					if (requestedItem.code == 403) {
-						findItemInCollection(itemID,heroID,delay+1000);
+						findItemInCollection(itemID,heroID,delay+1000,db,foundItemCallback);
 					}
 					else{
 
@@ -711,23 +727,51 @@ function updateAndUnequip(itemCollection, heroID, currentItem, itemToUnequip, ca
 }
 
 function updateInItemCollection(itemCollection, currentItem, heroID, callback) {
-	itemCollection.update({"heroID": parseInt(heroID) , "type" :itemMethods.getItemType(currentItem.type.id)}, {"itemID" : currentItem.tooltipParams.replace("item/",""), "name" : currentItem.name, "displayColor" : currentItem.displayColor, "type" : itemMethods.getItemType(currentItem.type.id), "affixes" : currentItem.attributes, "randomAffixes" : currentItem.randomAffixes, "gems" : currentItem.gems, "socketEffects" : currentItem.socketEffects, "heroID" : parseInt(heroID), "equipped" : true}, function(err, result) {
-		console.log("Successfully updated/equipped " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
-		callback();
+	itemCollection.update(
+		{"heroID": parseInt(heroID) , "type" :itemMethods.getItemType(currentItem.type.id)},
+		{$set :
+			{"itemID" : currentItem.tooltipParams.replace("item/",""), 
+			"name" : currentItem.name, "displayColor" : currentItem.displayColor, 
+			"type" : itemMethods.getItemType(currentItem.type.id), 
+			"affixes" : currentItem.attributes, 
+			"randomAffixes" : currentItem.randomAffixes, 
+			"gems" : currentItem.gems, 
+			"socketEffects" : currentItem.socketEffects,
+			"heroID" : parseInt(heroID), 
+			"equipped" : true, 
+			"lastupdated" : new Date()}
+		}, function(err, result) {
+			console.log("Successfully updated/equipped " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
+			callback();
 	});
 }
 
 function insertInItemCollection(itemCollection, currentItem, heroID, callback) {
-	itemCollection.insert({"itemID" : currentItem.tooltipParams.replace("item/",""), "name" : currentItem.name, "displayColor" : currentItem.displayColor, "type" : itemMethods.getItemType(currentItem.type.id), "affixes" : currentItem.attributes, "randomAffixes" : currentItem.randomAffixes, "gems" : currentItem.gems, "socketEffects" : currentItem.socketEffects, "heroID" : parseInt(heroID), "equipped" : true}, function(err, result) {
-		console.log("Successfully inserted " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
-		callback();
+	itemCollection.insert(
+		{"itemID" : currentItem.tooltipParams.replace("item/",""), 
+			"name" : currentItem.name, 
+			"displayColor" : currentItem.displayColor, 
+			"type" : itemMethods.getItemType(currentItem.type.id), 
+			"affixes" : currentItem.attributes, 
+			"randomAffixes" : currentItem.randomAffixes, 
+			"gems" : currentItem.gems, 
+			"socketEffects" : currentItem.socketEffects, 
+			"heroID" : parseInt(heroID), 
+			"equipped" : true,
+			"lastupdated" : new Date()},
+		function(err, result) {
+			console.log("Successfully inserted " + currentItem.name + " " + currentItem.tooltipParams.replace("item/","").substring(0,5));
+			callback();
 	});
 }
 
 function unequipItem(itemCollection, itemToUnequip, heroID) {
-		itemCollection.update({"heroID": parseInt(heroID) , "itemID" : itemToUnequip.itemID },  {$set : {"Equipped" : false}}, function(err, result) {
-		console.log("Successfully unequipped " + itemToUnequip.name + " " + itemToUnequip.itemID.substring(0,5));
-	});
+		itemCollection.update(
+			{"heroID": parseInt(heroID) , "itemID" : itemToUnequip.itemID },
+			{$set : {"Equipped" : false}}, 
+				function(err, result) {
+					console.log("Successfully unequipped " + itemToUnequip.name + " " + itemToUnequip.itemID.substring(0,5));
+				});
 }
 
 //sets the Region for requests.  used when adding to DB

@@ -87,16 +87,8 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 		    					}
 		    					//get items, then get extraitemdata, then push, then increment. 
 		    					else {
-				    					console.log("found grift hero attempting to add extraItemData for " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing + " " + heroToPush.heroID)	    					
-		    						//get Items, 
-		    						// async.waterfall([
-		    						// 	function(callback) {
-
-				    						heroMethods.getItemIDsFromHero(heroToPush.items, heroToPush.heroID, 300, foundGRiftHeroCallback);
-		    						// 	}
-
-	    							// ], function finally(err, result) {
-	    							// });
+			    					console.log("found grift hero attempting to add extraItemData for " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing + " " + heroToPush.heroID);	
+		    						heroMethods.getItemIDsFromHero(heroToPush.items, heroToPush.heroID, 300, foundGRiftHeroCallback);
 		    					}
 		    				}
 		    				//hero wasnt found. try to found it.
@@ -168,7 +160,8 @@ exports.getLeaderboardFromDB = function(region, diabloClass, leaderboardType, re
 					    								// console.log( currentPlayerHeroes);
 					    								console.log(validHero70Count);
 					    								allData[currentPlayerFromDB.Standing-1] = 0;
-					    												    						console.log("no valid 70s 165 " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
+
+					    								console.log("no valid 70s 165 " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
 
 					    								foundGRiftHeroCallback();
 					    							}

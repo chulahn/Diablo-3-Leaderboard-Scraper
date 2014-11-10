@@ -5,50 +5,63 @@ var currentDataset = "dps";
 var currentClass = currentArray[0].class;
 var skillURLbase = "http://us.battle.net/d3/en/class/"+currentClass;
 
-var statsBarGraphHeight = 300, statsBarGraphWidth = 800;
-var barPadding = 1;
-var xPadding = 60;
-var yPadding=  25;
-var statsBarGraph= d3.select("#mainStatsDiv")
-	.append("svg")
-	.attr("height", statsBarGraphHeight)
-	.attr("width" , statsBarGraphWidth);
-// var axes = true;
-var statsTooltip = d3.tip()
-					.attr('class', 'd3-statsTip')
-					.offset([-10, 0])
-					.html(function(d,i) {
-						var rankAndBTag = (i+1)+"."+"<span class=\"btag\">"+d.battletag+"</span>";
-						var dpsString = "DPS:<span class=\"damage\">"+d.stats.damage+"</span>";
-						var toughnessString = "Toughness:<span class=\"damage\">"+d.stats.toughness+"</span>";
-						var element = d.extraItemData.elementalDam[0][0];
-						var elementInc = d.extraItemData.elementalDam[0][1];
-						var elementalString = "<span class="+element.toLowerCase()+">" + element + " DPS:" + (d.stats.damage * (1+(elementInc/100))).toFixed(0) + "</span>";
+var globalData = {};
 
-						var completeString = rankAndBTag+"<br />"+
-								dpsString+"<br />"+
-								toughnessString;
-								
-						if (elementInc > 0) {
-							completeString += "<br />"+elementalString;
-						}
+var statsGraphData = {
+	h: 300,
+	w: 800,
+	barPad: 1,
+	xPad: 60,
+	yPad: 25
+};
 
-						return completeString;
-					});
-statsBarGraph.call(statsTooltip);
+var stats = {
+	graph: d3.select("#mainStatsDiv")
+				.append("svg")
+				.attr("height", statsGraphData.h)
+				.attr("width", statsGraphData.w),
+	tooltip: d3.tip()
+				.attr('class', 'd3-statsTip')
+				.offset([-10, 0])
+				.html(function(d,i) {
+					var rankAndBTag = (i+1)+"."+"<span class=\"btag\">"+d.battletag+"</span>";
+					var dpsString = "DPS:<span class=\"damage\">"+d.stats.damage+"</span>";
+					var toughnessString = "Toughness:<span class=\"damage\">"+d.stats.toughness+"</span>";
+					var element = d.extraItemData.elementalDam[0][0];
+					var elementInc = d.extraItemData.elementalDam[0][1];
+					var elementalString = "<span class="+element.toLowerCase()+">" + element + " DPS:" + (d.stats.damage * (1+(elementInc/100))).toFixed(0) + "</span>";
+
+					var completeString = rankAndBTag+"<br />"+
+							dpsString+"<br />"+
+							toughnessString;
+							
+					if (elementInc > 0) {
+						completeString += "<br />"+elementalString;
+					}
+
+					return completeString;
+				}),
+};
+stats.graph.call(stats.tooltip);
 
 
+var itemPieData = {
+	h: 200,
+	w: 200
+};
+var items = {
+	graph: d3.select("#itemGraphDiv")
+				.append("svg")
+				.attr("height", itemPieData.h)
+				.attr("width" , itemPieData.w)
+};
 //Data for setting up item pie chart
 var allItems = [[],[]];
 var itemName = allItems[0];
 var itemCount = allItems[1];
 var itemTotal = 0;
 
-var pieChartHeight = 200, pieChartWidth = 200;
-var itemsPieChart = d3.select("#itemGraphDiv")
-	.append("svg")
-	.attr("height", pieChartHeight)
-	.attr("width" , pieChartWidth);
+
 
 //Data for setting up skills pie chart
 var	allActiveSkills = [ [], [], [], [] ];
@@ -285,7 +298,7 @@ function fromTopHeroesGetSkills() {
 */
 function addLegend() {
 
-	var legend = statsBarGraph.selectAll(".legend")
+	var legend = stats.graph.selectAll(".legend")
 					.data([10,20,50,100])
 					.enter()
 					.append("g")
@@ -313,7 +326,7 @@ function addLegend() {
 				d3.select(this).style("font-weight" , "");
 			});
 
-	var category = statsBarGraph.selectAll(".category")
+	var category = stats.graph.selectAll(".category")
 					.data(["dps" , "toughness"])
 					.enter()
 					.append("g")
@@ -388,16 +401,16 @@ function createGraph(currentTop, currentDataset) {
 	currentArray = allData.slice(0,currentTop);
 		// d3.selectAll('.enter').attr("class", "exit").exit().transition().remove();
 
-	statsBarGraph.selectAll('.enter').attr("class", "exit").remove();
+	stats.graph.selectAll('.enter').attr("class", "exit").remove();
 
 	var xScale = d3.scale.linear()
 					.domain([0, currentArray.length])
-					.range([xPadding, statsBarGraphWidth-xPadding]);
+					.range([statsGraphData.xPad, statsGraphData.w - statsGraphData.xPad]);
 	var yScale = d3.scale.linear()
 					.domain([0, d3.max(currentArray, function(d) { 	
 						return getY(d, currentDataset);		
 					})])
-					.range([statsBarGraphHeight-yPadding, yPadding]);
+					.range([statsGraphData.h - statsGraphData.yPad, statsGraphData.yPad]);
 
 	var xAxis = d3.svg.axis()
 					.scale(xScale)
@@ -409,7 +422,7 @@ function createGraph(currentTop, currentDataset) {
 					.ticks(5);
 
 	//add bars and links
-	statsBarGraph
+	stats.graph
 		.selectAll("rect")
 		.data(currentArray)
 		.enter()
@@ -424,27 +437,27 @@ function createGraph(currentTop, currentDataset) {
 			return yScale(getY(d, currentDataset));
 		})
 		//width of one bar is (widthOfGraph / # of datapoints) - spaceInBetweenBars
-		.attr("width", (statsBarGraphWidth-(2*xPadding)) / currentArray.length - barPadding)
+		.attr("width", (statsGraphData.w-(2*statsGraphData.xPad)) / currentArray.length - statsGraphData.barPad)
 		.attr("height", function(d) {
 			// if (d == null || d == 0) {
 			// 	return 0;
 			// }
 			// else {
-				return statsBarGraphHeight-yScale(getY(d, currentDataset))-yPadding;
+				return statsGraphData.h-yScale(getY(d, currentDataset))-statsGraphData.yPad;
 			// }	
 		})
 		.attr("class" , "enter bar")
-		.on('mouseover', statsTooltip.show)
-		.on('mouseout', statsTooltip.hide);
+		.on('mouseover', stats.tooltip.show)
+		.on('mouseout', stats.tooltip.hide);
 	//add xAxis
-	statsBarGraph.append("g")
+	stats.graph.append("g")
 		.attr("class", "enter axis")
-		.attr("transform", "translate(0," + (statsBarGraphHeight-yPadding) + ")")
+		.attr("transform", "translate(0," + (statsGraphData.h-statsGraphData.yPad) + ")")
 		.call(xAxis);
 	//add yAxis
-	statsBarGraph.append("g")
+	stats.graph.append("g")
 		.attr("class", "enter axis")
-		.attr("transform", "translate("+xPadding+", 0)")
+		.attr("transform", "translate("+statsGraphData.xPad+", 0)")
 		.call(yAxis);	
 }
 
@@ -526,10 +539,11 @@ function getShortenedItemName(currentItemName, itemPercentage) {
 	Deletes previous pie chart and creates new pie chart based on allItems array.
 */
 function createItemPie() {
+	var itemsPieChart = items.graph;
 	itemsPieChart.selectAll('.enter').attr("class", "exit").remove();
 
 	var pie = d3.layout.pie();
-	var outerRadius = pieChartHeight / 2 ;
+	var outerRadius = itemPieData.h / 2 ;
 	var innerRadius = 0;
 	var arc = d3.svg.arc()
 				.innerRadius(innerRadius)

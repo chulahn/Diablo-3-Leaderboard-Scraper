@@ -29,38 +29,10 @@
 		        $('#top').hide();
 		    }
 		});
-		//itemName, itemCount
-		var allItems = [[],[]];
-		var itemName = allItems[0];
-		var itemCount = allItems[1];
-
-		function getItems() {	
-			for(i=0; i<allData.length; i++) {
-				if (allData[i].items.head != undefined) {
-					if (itemName.indexOf(allData[i].items.head.name) == -1) {
-						itemName.push(allData[i].items.head.name);
-						itemCount.push(1);
-					}
-					else {
-						itemCount[itemName.indexOf(allData[i].items.head.name)] += 1;
-					}
-				}
-			}
-		}
-		/*
-		var playerItems = allData[0].items;
-
-		function getItemsFromPlayer() {
-			for (itemName in playerItems) {
-				if (playerItems.hasOwnProperty(itemName)) {
-					console.log(playerItems[itemName].name);
-				}
-			}
-		}
-		*/
 	</script>
 
 	<script>
+	//google analytics
 	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
 	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
@@ -75,60 +47,58 @@
 
 
 <body>
-<header>
-	<h1 id="#"> <%- region.toUpperCase() %> <%- leaderboardType.toUpperCase() %> <%- title.toUpperCase() %></h1>
-</header>
+	<header>
+		<h1 id="#"> <%- region.toUpperCase() %> <%- leaderboardType.toUpperCase() %> <%- title.toUpperCase() %></h1>
+	</header>
 
-<aside id="top">
-	<a href="#">top</a>
-</aside>
+	<aside id="top">
+		<a href="#">top</a>
+	</aside>
 
-<aside id="update">
-<% if (lastupdated != 0) { %>
-
-<% var lastUpdated = lastupdated.getMonth()+1 + "/" + lastupdated.getDate() + "/" + (lastupdated.getYear()+1900) %>
-last updated: <%= lastUpdated %><br />
-
-<% } %>
-<a class="update" href="/update/<%- region %>/<%- leaderboardType %>/<%- title %>">update leaderboard</a>
-</aside>
-<br />
-<div id="graphChooser">
-	<span id="itemSpan">Items</span><br />
-	<div id="itemPicker"></div>
-	
-	<span id="statSpan">Stats</span><br />
-	
-	<span id="skillSpan">Skills</span><br />
-	<div id="skillPicker"><a href="#" id="primary">Primary</a> <a href="#" id="passives">Passives</a></div> 
-</div>
-
-<br />
-<div id="mainStatsDiv"></div>
-<div id="itemGraphDiv"></div>
-<div id="skillGraphDiv"></div>
-
-<!-- List of all the BattleTags for the corresponding Leaderboard -->
-<table>
-	<tr>
-		<th>Standing</th>
-		<th>Battletag</th>
-		<th>Greater Rift</th>
-		<th>Time Spent</th>
-		<th>Date Completed</th>
-	</tr>
-	<% ejs_battletags.slice(0,100).forEach(function (tag) { %>
+	<aside id="update">
+		<% if (lastupdated != 0) { %>
+			<% var lastUpdated = lastupdated.getMonth()+1 + "/" + lastupdated.getDate() + "/" + (lastupdated.getYear()+1900) %>
+			last updated: <%= lastUpdated %><br />
+		<% } %>
+		<a class="update" href="/update/<%- region %>/<%- leaderboardType %>/<%- title %>">update leaderboard</a>
+	</aside>
+	<br />
+	<div id="graphChooser">
+		<span id="itemSpan">Items</span><br />
+		<div id="itemPicker"></div>
 		
-		<tr id="<%= tag.Standing %>">
-			<td><%= tag.Standing %></td>
-			<td><a href = "/player/<%= tag.Battletag.replace("#","-") %>" ><%= tag.Battletag %></a></td>
-			<td><%= tag["Greater Rift"] %></td>
-			<td><%= tag["Time Spent"] %></td>
-			<td><%= tag["Date Completed"] %></td>
-		</tr>
+		<span id="statSpan">Stats</span><br />
+		
+		<span id="skillSpan">Skills</span><br />
+		<div id="skillPicker"><a href="#" id="primary">Primary</a> <a href="#" id="passives">Passives</a></div> 
+	</div>
 
-	<% }) %>
-</table>
+	<br />
+	<div id="mainStatsDiv"></div>
+	<div id="itemGraphDiv"></div>
+	<div id="skillGraphDiv"></div>
+
+	<!-- List of all the BattleTags for the corresponding Leaderboard -->
+	<table>
+		<tr>
+			<th>Standing</th>
+			<th>Battletag</th>
+			<th>Greater Rift</th>
+			<th>Time Spent</th>
+			<th>Date Completed</th>
+		</tr>
+		<% ejs_battletags.slice(0,100).forEach(function (tag) { %>
+			
+			<tr id="<%= tag.Standing %>">
+				<td><%= tag.Standing %></td>
+				<td><a href = "/player/<%= tag.Battletag.replace("#","-") %>" ><%= tag.Battletag %></a></td>
+				<td><%= tag["Greater Rift"] %></td>
+				<td><%= tag["Time Spent"] %></td>
+				<td><%= tag["Date Completed"] %></td>
+			</tr>
+
+		<% }) %>
+	</table>
 
 	<script src="../../../d3functions.js"></script>
 </body>

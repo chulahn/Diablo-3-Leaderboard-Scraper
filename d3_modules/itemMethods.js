@@ -2,45 +2,51 @@ var exports = module.exports = {
 
 	//returns the itemType that will be used when searching collection
 	getItemType : function (itemType) {
-		itemType = itemType.toLowerCase();
-		if (itemType.indexOf("helm") != -1 || itemType.indexOf("mask") != -1 || itemType.indexOf("spiritstone") != -1) {
-			return "Head";
-		}
-		else if (itemType.indexOf("shoulders") != -1) {
-			return "Shoulders";
-		}
-		else if (itemType.indexOf("2h") != -1 || itemType.indexOf("staff") != -1) {
+		var itemType = item.type;
+
+		if (itemType.twoHanded === true) {
 			return "2 Hand";
-		}	
-		else if (itemType.indexOf("hand") != -1 || itemType.indexOf("fist") != -1 || itemType.indexOf("mace") != -1 || itemType.indexOf("1h") != -1 || itemType.indexOf("axe") != -1 || itemType.indexOf("wand") != -1 || itemType.indexOf("dagger") != -1) {
-			return "1 Hand";
 		}
-		else if (itemType.indexOf("boots") != -1) {
-			return "Feet";
-		}
-		else if (itemType.indexOf("chest") != -1) {
-			return "Chest";
-		}
-		else if (itemType.indexOf("bracers") != -1) {
-			return "Bracers";
-		}
-		else if (itemType.indexOf("legs") != -1) {
-			return "Legs";
-		}
-		else if (itemType.indexOf("amulet") != -1) {
-			return "Neck";
-		}
-		else if (itemType.indexOf("belt") != -1) {
-			return "Belt";
-		}
-		else if (itemType.indexOf("gloves") != -1) {
-			return "Hands";
-		}
-		else if (itemType.indexOf("mojo") != -1 || itemType.indexOf("quiver") != -1 || itemType.indexOf("orb") != -1 || itemType.indexOf("shield") != -1) {
-			return "offHand";
-		}
-		else if (itemType.indexOf("ring") != -1) {
-			return "Ring";
+
+		else {
+			itemType = itemType.id;
+			if (itemType === "VoodooMask" || itemType === "Helm" || itemType === "SpiritStone_Monk") {
+				return "Head";
+			}
+			//shield or crusader shield
+			else if (itemType.indexOf("Shield") !== -1 || itemType === "Mojo" || itemType === "Quiver" || itemType === "Orb") {
+				return "offHand";
+			}
+			//dagger and ceremonial
+			else if (itemType === "Mace" || itemType.indexOf("Dagger") !== -1 || itemType === "Mace" || itemType === "Flail1H" || itemType === "FistWeapon" || itemType === "Wand" || itemType === "Sword" || itemType === "HandXbow" || itemType === "Axe" || itemType === "Spear") {
+				return "1 Hand";
+			}
+			else if (itemType === "Bracers") {
+				return "Wrists";
+			}
+			else if (itemType === "Gloves") {
+				return "Hands";
+			}
+			else if (itemType === "ChestArmor") {
+				return "Chest";
+			}
+			//belt and mighty belt
+			else if (itemType.indexOf("Belt") !== -1) {
+				return "Waist";
+			}
+			else if (itemType === "Ring") {
+				return "Finger";
+			}
+			else if (itemType === "Amulet") {
+				return "Neck";
+			}
+			else if (itemType === "Boots") {
+				return "Feet";
+			}
+			//return legs, shoulders
+			else {
+				return itemType;
+			}
 		}
 	},
 

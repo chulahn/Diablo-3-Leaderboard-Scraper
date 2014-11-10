@@ -115,8 +115,7 @@
 				<% if (ejs_heroData.items == 1) { %> No Items <% } %>
 				<% if (ejs_heroData.items.head != undefined) { %>
 				<li>Head : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.head.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.head.displayColor %>"><%= ejs_heroData.items.head.name %></a></li>
-<!--				<ul>
-					<li>  -->
+
 				<% } %>
 				<% if (ejs_heroData.items.torso != undefined) { %>
 				<li title="Insert data from tooltip params">Torso : <a href = "http://us.battle.net/d3/en/<%= ejs_heroData.items.torso.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.torso.displayColor %>"><%= ejs_heroData.items.torso.name %></a></li>

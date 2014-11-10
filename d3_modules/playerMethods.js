@@ -172,7 +172,20 @@ function setRegion(region) {
 }
 
 function insertInHeroCollection(heroCollection, battletag, requestedHeroData, region, callback) {
-	heroCollection.insert({"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats, "region" : region}, function(err, results) {
+	heroCollection.insert(
+		{"heroID" : requestedHeroData.id , 
+			"battletag": battletag,
+			"name" : requestedHeroData.name, 
+			"class" : requestedHeroData.class ,
+			"level" : requestedHeroData.level, 
+			"Paragon" : requestedHeroData.paragonLevel, 
+			"hardcore" : requestedHeroData.hardcore, 
+			"seasonal" : requestedHeroData.seasonal, 
+			"skills" : requestedHeroData.skills, 
+			"items" : requestedHeroData.items, 
+			"stats" : requestedHeroData.stats, 
+			"region" : region}, 
+		function(err, results) {
 			if (err) {
 				return console.log("insertInHeroCollection error, " + err);
 			}
@@ -186,13 +199,27 @@ function insertInHeroCollection(heroCollection, battletag, requestedHeroData, re
 }
 
 function updateInHeroCollection(heroCollection, battletag, requestedHeroData, region, callback) {
-	heroCollection.update({"heroID" : requestedHeroData.id}, {$set: {"heroID" : requestedHeroData.id , "battletag": battletag,  "name" : requestedHeroData.name, "class" : requestedHeroData.class , "level" : requestedHeroData.level, "Paragon" : requestedHeroData.paragonLevel, "hardcore" : requestedHeroData.hardcore, "seasonal" : requestedHeroData.seasonal, "skills" : requestedHeroData.skills, "items" : requestedHeroData.items, "stats" : requestedHeroData.stats, "region" : region}}, function(err, results) {
-		if (err) {
-			return console.log("updateInHeroCollection error, " + err)
-		}
-		else {
-			console.log("updateInHeroCollection found, updating "+ battletag + " " + requestedHeroData.id);
-			callback();
-		}
+	heroCollection.update(
+		{"heroID" : requestedHeroData.id}, 
+		{$set: {"heroID" : requestedHeroData.id , 
+			"battletag": battletag, 
+			"name" : requestedHeroData.name, 
+			"class" : requestedHeroData.class , 
+			"level" : requestedHeroData.level, 
+			"Paragon" : requestedHeroData.paragonLevel, 
+			"hardcore" : requestedHeroData.hardcore, 
+			"seasonal" : requestedHeroData.seasonal, 
+			"skills" : requestedHeroData.skills, 
+			"items" : requestedHeroData.items, 
+			"stats" : requestedHeroData.stats, 
+			"region" : region}}, 
+		function(err, results) {
+			if (err) {
+				return console.log("updateInHeroCollection error, " + err)
+			}
+			else {
+				console.log("updateInHeroCollection found, updating "+ battletag + " " + requestedHeroData.id);
+				callback();
+			}
 	});//end update.	
 }
