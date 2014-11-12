@@ -150,9 +150,6 @@ function findItemsInCollection(allItems, heroID, delay, db, foundGRiftHeroCallba
 											var requestedItemType = itemMethods.getItemType(requestedItem);
 											console.log("findItems in request for " +requestedItem.name + " " + heroID + " delay " +delay);
 
-											//if if itemtype is 2h, search 2h,  
-												//results, then replace.  if not, search 1h offhand.
-													//if 1h or offhand, remove 
 											//if itemtype is 1h,
 												//if class is dh, barb, monk
 													//DH check 2h
@@ -163,8 +160,47 @@ function findItemsInCollection(allItems, heroID, delay, db, foundGRiftHeroCallba
 														//results replace
 														//
 											//
+
 											//find if hero has an item in that spot.  if there is check for differences.
-											itemCollection.find({"heroID": parseInt(heroID) , "type" :requestedItemType}).toArray(function(err, matchedItems) {
+											itemCollection.find({"heroID": parseInt(heroID) , "type" :requestedItemType , "equipped": true}).toArray(function(err, matchedItems) {
+
+
+												//if itemtype is 2h, and there were no matches, check 1hand and off
+												if (requestedItemType == "2 Hand" && matchedItems.length == 0) {
+
+													//check 1hand,  If there is a 1hand, unequip.
+													//Then, if not crusader, remove equipped offHand 
+													itemCollection.find({"heroID": parseInt(heroID) , "type" :requestedItemType , "equipped": true}).toArray(function(err, matched1Handers) {
+														
+														if (matched1Handers.length > 0) {
+
+															unequipItem(itemCollection, matched1Handers[0], heroID);
+
+															itemCollection.find({"heroID": parseInt(heroID), "type": "offHand", "equipped" : true}).toArray(function(err, matchedOffHands) {
+																if (matchedOffHands.length > 0) {
+																	unequipItem(itemCollection, matchedOffHands[0], heroID);
+																}
+															});
+														}
+
+															//unequip1h equip 2h.
+														insertInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
+													});
+												}
+
+
+												//1hand and no 1handers equipped, check for 2hands.
+												if (requestedItemType == "1 Hand" && matchedItems.length == 0) {
+													itemCollection.find({"heroID": parseInt(heroID) , "type" :"2 Hand" , "equipped": true}).toArray(function(err, matched2Handers) {
+														if (matched2Handers.length > 0) {
+															unequipItem(itemCollection, matched2Handers[0], heroID);
+														}
+														insertInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
+													});
+												}
+
+
+
 												if (matchedItems.length != 0) {
 
 													//check to see if player has only one ring, and if its not the same as the ring in DB, add it
@@ -172,6 +208,8 @@ function findItemsInCollection(allItems, heroID, delay, db, foundGRiftHeroCallba
 														console.log("Inserted 2nd ring");
 														insertInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
 													}
+
+
 
 													//compare each item.
 													// matchedItems.forEach(function (equippedItem) {
@@ -429,34 +467,34 @@ function findItemInCollection(itemID, heroID, delay, db, foundItemCallback){
 						findItemInCollection(itemID,heroID,delay+1000,db,foundItemCallback);
 					}
 					else{
-
-						(function(requestedItem) {
-							var requestedItemType = itemMethods.getItemType(requestedItem.type.id);
+						//check if the there is an item in spot.
+						(function itemCheck(requestedItem) {
+							var requestedItemType = itemMethods.getItemType(requestedItem);
 							console.log(delay + " findItem in request " +requestedItem.name + " " + requestedItemType);
 							//find if hero has an item in that spot.  if there is check for differences.
 							itemCollection.find({"heroID": parseInt(heroID) , "type" :requestedItemType}).toArray(function(err, matchedItems) {
 								if (matchedItems.length != 0) {
 
-									//check to see if player has only one ring, and if its not the same as the ring in DB, add it
-									if (itemMethods.isRing(requestedItemType)) {
-										if (matchedItems.length == 1 && matchedItems[0].itemID != itemID) {
-											console.log("Inserted 2nd ring");
-											insertInItemCollection(itemCollection, currentItem, heroID, callback);
-										}
+									//if ring was searched, and there was only one result and is not requestedItem, insert
+									if (itemMethods.isRing(requestedItemType) && matchedItems.length == 1 && matchedItems[0].itemID != itemID) {
+										console.log("Inserted 2nd ring");
+										insertInItemCollection(itemCollection, currentItem, heroID, callback);
 									}
 
-									async.each(matchedItems, function (equippedItem, foundItemCallback) {
-										if (equippedItem.itemID == undefined) {
-											console.log(equippedItem[0]);
-										}
-										compareItems(itemCollection, heroID, equippedItem, requestedItem, foundItemCallback);
-									}, function(err) {
-										if (err) {
-											console.log("failed")
-										} else {
-											console.log("successfully found all Items")
-										}
-									});
+									else {
+										async.each(matchedItems, function (equippedItem, foundItemCallback) {
+											if (equippedItem.itemID == undefined) {
+												console.log(equippedItem[0]);
+											}
+											compareItems(itemCollection, heroID, equippedItem, requestedItem, foundItemCallback);
+										}, function(err) {
+											if (err) {
+												console.log("failed")
+											} else {
+												console.log("successfully found all Items")
+											}
+										});
+									}
 								}//end if found a item in that spot
 								//there no item in that spot, update
 								else {
@@ -473,7 +511,7 @@ function findItemInCollection(itemID, heroID, delay, db, foundItemCallback){
 }
 
 function compareItems(itemCollection, heroID, equippedItem, requestedItem, foundItemCallback) {
-	var requestedItemType = itemMethods.getItemType(requestedItem.type.id);
+	var requestedItemType = itemMethods.getItemType(requestedItem);
 
 	console.log("comparing items " + equippedItem.name + " " + requestedItem.name);
 
@@ -728,11 +766,11 @@ function updateAndUnequip(itemCollection, heroID, currentItem, itemToUnequip, ca
 
 function updateInItemCollection(itemCollection, currentItem, heroID, callback) {
 	itemCollection.update(
-		{"heroID": parseInt(heroID) , "type" :itemMethods.getItemType(currentItem.type.id)},
+		{"heroID": parseInt(heroID) , "type" :itemMethods.getItemType(currentItem)},
 		{$set :
 			{"itemID" : currentItem.tooltipParams.replace("item/",""), 
 			"name" : currentItem.name, "displayColor" : currentItem.displayColor, 
-			"type" : itemMethods.getItemType(currentItem.type.id), 
+			"type" : itemMethods.getItemType(currentItem), 
 			"affixes" : currentItem.attributes, 
 			"randomAffixes" : currentItem.randomAffixes, 
 			"gems" : currentItem.gems, 
@@ -751,7 +789,7 @@ function insertInItemCollection(itemCollection, currentItem, heroID, callback) {
 		{"itemID" : currentItem.tooltipParams.replace("item/",""), 
 			"name" : currentItem.name, 
 			"displayColor" : currentItem.displayColor, 
-			"type" : itemMethods.getItemType(currentItem.type.id), 
+			"type" : itemMethods.getItemType(currentItem), 
 			"affixes" : currentItem.attributes, 
 			"randomAffixes" : currentItem.randomAffixes, 
 			"gems" : currentItem.gems, 

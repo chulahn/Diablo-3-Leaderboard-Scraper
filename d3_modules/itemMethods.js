@@ -1,7 +1,7 @@
 var exports = module.exports = {
 
 	//returns the itemType that will be used when searching collection
-	getItemType : function (itemType) {
+	getItemType : function (item) {
 		var itemType = item.type;
 
 		if (itemType.twoHanded === true) {
@@ -51,11 +51,11 @@ var exports = module.exports = {
 	},
 
 	isJewlery : function (itemType) {
-		return (itemType === "Ring" || itemType === "Neck");
+		return (itemType === "Finger" || itemType === "Neck");
 	},
 
 	isRing : function (itemType) {
-		return (itemType === "Ring");
+		return (itemType === "Finger");
 	},
 
 	isHat : function (itemType) {
@@ -63,7 +63,7 @@ var exports = module.exports = {
 	},
 
 	isSocketable : function (itemType) {
-		return (itemType === "Ring" || itemType === "Neck" || itemType === "1 Hand" || itemType === "2 Hand" || itemType === "Chest" || itemType === "Legs" || itemType === "Head");
+		return (itemType === "Finger" || itemType === "Neck" || itemType === "1 Hand" || itemType === "2 Hand" || itemType === "Chest" || itemType === "Legs" || itemType === "Head");
 	},
 
 	//currentItem is Requested from API.  equippedItem is item currently in Collection.
