@@ -11,10 +11,79 @@
 
 	<script>
 		var allData = <%-JSON.stringify(all)%>;
+		var gRift = <%- JSON.stringify(ejs_battletags) %>;
+
+
+
+		//GRift Median
+		//Elemental DPS
+		//CDR
+		//Toughness
+		//Life
+		//CC CHD cc:chd ratio
+
+		var allStats = allData.reduce(function (prev, currentValue) {
+						 	var newVar = {};
+						 	for (key in currentValue.stats) {
+						 		newVar[key] = (prev[key] || 0) + currentValue.stats[key]; 
+						 	}
+						 	var elemDam = currentValue.extraItemData.elementalDam[0][1];
+						 	elemDam = 1 + (elemDam/100);
+
+						 	var eliteDam = currentValue.extraItemData.eliteDam;
+						 	eliteDam = 1 + (eliteDam/100);
+
+						 	newVar.elemDam = (prev.elemDam || 0) + 
+						 	(elemDam * currentValue.stats.damage);
+
+						 	newVar.eliteElemDam = (prev.eliteElemDam || 0) + 
+						 	(elemDam * eliteDam * currentValue.stats.damage);
+
+						 	newVar.cooldown = (prev.cooldown || 0) + parseFloat(currentValue.extraItemData.cooldown);
+						 	newVar.paragon = (prev.paragon || 0) + parseFloat(currentValue.Paragon);
+							return newVar;
+						},0);
+
+		var allRes = 0;
+		for (key in allStats) {
+			if (key.indexOf("Resist") != -1) {
+				allRes += allStats[key];
+				console.log(allStats[key],allRes, key)
+			}
+			allStats[key] /= allData.length;
+			if (key === "arcaneResist") {
+				allStats.allRes = allRes / (6*allData.length);
+			}
+		}
+
+		// var avgGrift = gRift.reduce(function (prev, currentValue) {
+		// 					return prev + parseFloat(currentValue["Greater Rift"]);
+		// 				},0) / allData.length;
+		
+		var medianGrift =  parseInt(gRift[gRift.length/2]["Greater Rift"]) + parseInt(gRift[(gRift.length/2) - 1]["Greater Rift"])
+		medianGrift /= 2;
+
+		var statHTML = "";
+
+		statHTML += "Elemental Damage: " + Number(allStats.elemDam.toFixed(0)).toLocaleString('en') + "<br/>";
+		statHTML += "Elite Elemental Damage: " + Number(allStats.eliteElemDam.toFixed(0)).toLocaleString('en') + "</br/>";
+		statHTML += "Toughness: " + allStats.toughness.toFixed(0) + "<br />";
+		statHTML += "Life: " + allStats.life.toFixed(0) + "<br />";
+		statHTML += "All Resist: " + allStats.allRes.toFixed(0) + "<br />"
+		statHTML += "Average Cooldown Reduction: " + allStats.cooldown.toFixed(2) + "%<br />";
+		statHTML += "Average Paragon: " + allStats.paragon.toFixed(0) +"<br />";
+		statHTML += "Median GRift Level: " + medianGrift + "<br />";
+		statHTML += "Crit Chance: " + (allStats.critChance * 100).toFixed(0) + "%<br />";
+		statHTML += "Crit Dam: " + (allStats.critDamage * 100).toFixed(0) + "%<br />";
+		statHTML += "CD/CC: " + (allStats.critDamage / allStats.critChance).toFixed(2) + "<br />";
+
+
+
 
 		$(document).ready(function () {
 			$('#top').hide();
 			$('#skillPicker').hide();
+			$('#statistics').html(statHTML);
 
 		})
 
@@ -42,6 +111,7 @@
 	  ga('send', 'pageview');
 
 	</script>
+
 		
 </head>
 
@@ -49,20 +119,25 @@
 <body>
 	<header>
 		<h1 id="#"> <%- region.toUpperCase() %> <%- leaderboardType.toUpperCase() %> <%- title.toUpperCase() %></h1>
+		<a href="#" id="top">top</a>
+		<div id="update">
+			<% if (lastupdated != 0) { %>
+				<% var lastUpdated = lastupdated.getMonth()+1 + "/" + lastupdated.getDate() + "/" + (lastupdated.getYear()+1900) %>
+				last updated: <%= lastUpdated %><br />
+			<% } %>
+			<a class="update" href="/update/<%- region %>/<%- leaderboardType %>/<%- title %>">update leaderboard</a>
+		</div>
 	</header>
 
-	<aside id="top">
-		<a href="#">top</a>
-	</aside>
 
-	<aside id="update">
-		<% if (lastupdated != 0) { %>
-			<% var lastUpdated = lastupdated.getMonth()+1 + "/" + lastupdated.getDate() + "/" + (lastupdated.getYear()+1900) %>
-			last updated: <%= lastUpdated %><br />
-		<% } %>
-		<a class="update" href="/update/<%- region %>/<%- leaderboardType %>/<%- title %>">update leaderboard</a>
-	</aside>
-	<br />
+<div id = "container">
+
+	<div id="statistics">
+
+
+
+	</div>
+
 	<div id="graphChooser">
 		<span id="itemSpan">Items</span><br />
 		<div id="itemPicker"></div>
@@ -73,11 +148,13 @@
 		<div id="skillPicker"><a href="#" id="primary">Primary</a> <a href="#" id="passives">Passives</a></div> 
 	</div>
 
-	<br />
-	<div id="mainStatsDiv"></div>
-	<div id="itemGraphDiv"></div>
-	<div id="skillGraphDiv"></div>
-
+	<div id="graph">
+		<br />
+		<div id="mainStatsDiv"></div>
+		<div id="itemGraphDiv"></div>
+		<div id="skillGraphDiv"></div>
+	</div>
+</div>
 	<!-- List of all the BattleTags for the corresponding Leaderboard -->
 	<table>
 		<tr>

@@ -326,7 +326,7 @@ function getImportantStats(heroID, updatedStatsCallback) {
 										var leoricText = secondary.text;
 										var searchData = myRe.exec(leoricText);
 
-										diamondCooldown = diamondCooldown * (1 + parseFloat(searchData[0]));
+										diamondCooldown = diamondCooldown * (1 + parseFloat(searchData[0])/100);
 									}
 								});
 							}

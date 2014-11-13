@@ -14,12 +14,47 @@ nav {
 	text-align: center;
 }
 
+#container {
+	margin-left:auto;
+	margin-right:auto;
+	width: 100%;
+	height:500px;
+	left:50%;
+}
+
+#statistics, #graph, #graphChooser {
+	color: white;
+	display: inline-block;
+	position: relative;
+	float: left;
+}
+
+#statistics, #graphChooser {
+	width:20%;
+}
+#graph {
+	width:60%;
+}
+
+#graphChooser span, #graphChooser a {
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+   -webkit-transform: translateY(-50%);
+     	-ms-transform: translateY(-50%);
+}
+
+#graphChooser {
+	width: 190px;
+}
+
 #graphChooser, #itemGraphDiv, #mainStatsDiv, #skillGraphDiv {
 	text-align: center;
 	color: white;
 }
 
 table {
+	clear: both;
 	margin-left: auto;
 	margin-right: auto;
 	border-width: 1px;

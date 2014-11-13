@@ -609,6 +609,7 @@ $(document).ready(function() {
 		}
 	});
 
+
 	$('#itemPicker').append(itemPickerHTML);
 	$('#itemPicker').hide();
 	$('#itemGraphDiv').hide();
