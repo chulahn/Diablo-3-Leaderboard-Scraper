@@ -9,7 +9,7 @@ var globalData = {};
 
 var statsGraphData = {
 	h: 300,
-	w: 800,
+	w: 700,
 	barPad: 1,
 	xPad: 60,
 	yPad: 25
@@ -475,7 +475,7 @@ function fromTopHeroesGetItem(item) {
 	allData.forEach(function (currentPlayer) {
 
 	// for(i=0; i<allData.length; i++) {
-		var currentItem = currentPlayer.items[item];
+		var currentItem = (currentPlayer.items && currentPlayer.items[item]);
 		if (currentItem != undefined) {
 			var locationOfCurrentItem = itemName.indexOf(currentItem.name);
 			if (locationOfCurrentItem == -1) {

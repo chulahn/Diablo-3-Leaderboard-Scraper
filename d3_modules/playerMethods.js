@@ -22,73 +22,6 @@ function timeToDelay() {
 	return (1100* (Math.floor(delayCounter/10)+1) + 2000);
 }
 
-//localhost:3000/player/BATTLETAG
-//for a given Battletag, it makes a request to get all heroes for that tag.  After getting heroes, call addHeroData and create the page for that Battletag
-//addHeroData is currently uncommented until it has been updated.
-exports.getHeroes = function(battletag, req, res) {
-	var gRiftHeroes = 0;
-	var playersHeroes;
-
-	async.series([
-
-		//find gRiftHero then pass in.
-		function findGRiftHero(foundGRiftHeroCallback) {
-			debug.timeString(battletag + " Page before db search");
-			MongoClient.connect(databaseURL, function(err, db) {
-				var heroCollection = db.collection("hero");
-				heroCollection.find({"battletag" : battletag , "gRiftHero" : true}).toArray(function (err, heroResults) {
-					debug.timeString(battletag + " Page after db search");
-					if (heroResults.length > 0) {
-						gRiftHeroes = heroResults;
-						foundGRiftHeroCallback();
-					}
-					else {
-						console.log(heroResults);
-						foundGRiftHeroCallback();
-					}
-				});//end find in heroCollection
-			});			
-		},
-		function getAllHeroes(gotHeroesCallback) {
-			var requestURL = "https://" + region + apiURL + "profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey;
-			debug.timeString(battletag + " Page before request");
-			request(requestURL, function (error, response, playerInformation) {
-				var playerJSON = JSON.parse(playerInformation);
-				if (playerJSON.code == "NOTFOUND") {
-					res.send("Invalid Battletag");
-					//request the tag again.
-					getHeroes(battletag,req,res);
-				}
-				playersHeroes = playerJSON.heroes;
-				if (playersHeroes == undefined) {
-					console.log("getHeroes playerJSON.heroes undefined");
-					getHeroes(battletag,req,res);
-				}
-				else {
-					for (i=0; i<playersHeroes.length; i++) {
-						// exports.addHeroData(battletag, playersHeroes[i].id, 0,timeToDelay());
-					}
-					debug.timeString(battletag + " Page after request");
-					gotHeroesCallback();
-				}
-			});
-
-		},
-	],function renderPage(err) {
-
-		if (err) {
-			console.log(err);
-			getHeroes(battletag, req, res);
-		}
-		else {
-			debug.timeString(battletag + " Page rendered");
-			res.render('player.ejs', { ejs_btag : battletag , ejs_heroes : playersHeroes , ejs_grift_heroes : gRiftHeroes });
-		}
-	});
-
-
-}
-
 //add hero's data to hero collection if the hero is level 70 and has certain damage.  damageFiler currently set to 0 for instance hero probably unequipped weapon
  exports.addHeroData = function(region, battletag, heroID, delay, db, callback) {
  	setRegion(region);
@@ -184,7 +117,8 @@ function insertInHeroCollection(heroCollection, battletag, requestedHeroData, re
 			"skills" : requestedHeroData.skills, 
 			"items" : requestedHeroData.items, 
 			"stats" : requestedHeroData.stats, 
-			"region" : region}, 
+			"region" : region,
+			"lastupdated" : new Date()}, 
 		function(err, results) {
 			if (err) {
 				return console.log("insertInHeroCollection error, " + err);
@@ -212,7 +146,8 @@ function updateInHeroCollection(heroCollection, battletag, requestedHeroData, re
 			"skills" : requestedHeroData.skills, 
 			"items" : requestedHeroData.items, 
 			"stats" : requestedHeroData.stats, 
-			"region" : region}}, 
+			"region" : region,
+			"lastupdated" : new Date()}}, 
 		function(err, results) {
 			if (err) {
 				return console.log("updateInHeroCollection error, " + err)

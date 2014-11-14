@@ -1,6 +1,7 @@
 var leaderboardMethods = require("./d3_modules/leaderboardMethods");
 var playerMethods = require("./d3_modules/playerMethods");
 var heroMethods = require("./d3_modules/heroMethods");
+var render = require("./d3_modules/renderMethods")
 var async = require("async");
 var asyncMethods = require('./asyncMethods.js')
 
@@ -18,15 +19,15 @@ app.get("/", function(req, res) {
 
 //shows leaderboard page
 app.get("/:region/:category/:diabloClass", function(req,res) {
-	leaderboardMethods.getLeaderboardFromDB(req.params.region, req.params.diabloClass, req.params.category, req, res);
+	render.leaderboardPage(req.params.region, req.params.diabloClass, req.params.category, req, res);
 });
 //shows a player page, with heroes.
 app.get("/player/:battletag", function(req,res) {
-	playerMethods.getHeroes(req.params.battletag, req, res);
+	render.getHeroes(req.params.battletag, req, res);
 });
 //shows a hero page
 app.get("/player/:battletag/hero/:heroID", function(req, res) {
-	heroMethods.getHeroDetails(parseInt(req.params.heroID), req, res);
+	render.heroPage(parseInt(req.params.heroID), req, res);
 	//getImportantStats(parseInt(req.params.heroID));
 });
 
@@ -43,7 +44,6 @@ app.get("/update/player/:battletag/hero/:heroID", function(req, res) {
 			return console.log(err);
 		}
 		else {
-			console.log(req.params.battletag)
 			playerMethods.addHeroData("us",req.params.battletag, parseInt(req.params.heroID), 50, db);
 			res.redirect("/player/"+req.params.battletag+"/hero/"+req.params.heroID);
 		}	

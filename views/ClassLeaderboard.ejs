@@ -12,6 +12,7 @@
 	<script>
 		var allData = <%-JSON.stringify(all)%>;
 		var gRift = <%- JSON.stringify(ejs_battletags) %>;
+		var zeroCount = 0;
 
 
 
@@ -24,25 +25,36 @@
 
 		var allStats = allData.reduce(function (prev, currentValue) {
 						 	var newVar = {};
+						 	if (currentValue == 0) {
+						 		zeroCount++;
+						 	}
 						 	for (key in currentValue.stats) {
 						 		newVar[key] = (prev[key] || 0) + currentValue.stats[key]; 
 						 	}
-						 	var elemDam = currentValue.extraItemData.elementalDam[0][1];
+						 	var elemDam = (currentValue.extraItemData && currentValue.extraItemData.elementalDam[0][1]) || 0;
 						 	elemDam = 1 + (elemDam/100);
 
-						 	var eliteDam = currentValue.extraItemData.eliteDam;
+						 	var eliteDam = (currentValue.extraItemData && currentValue.extraItemData.eliteDam) || 0;
 						 	eliteDam = 1 + (eliteDam/100);
 
+						 	//when 0 is passed due to dead hc players
+						 	var damage = (currentValue.stats && currentValue.stats.damage) || 0;
+
 						 	newVar.elemDam = (prev.elemDam || 0) + 
-						 	(elemDam * currentValue.stats.damage);
+						 	(elemDam * damage);
 
 						 	newVar.eliteElemDam = (prev.eliteElemDam || 0) + 
-						 	(elemDam * eliteDam * currentValue.stats.damage);
+						 	(elemDam * eliteDam * damage);
 
-						 	newVar.cooldown = (prev.cooldown || 0) + parseFloat(currentValue.extraItemData.cooldown);
-						 	newVar.paragon = (prev.paragon || 0) + parseFloat(currentValue.Paragon);
+						 	var cooldown = parseFloat(currentValue.extraItemData && currentValue.extraItemData.cooldown) || 0;
+
+						 	newVar.cooldown = (prev.cooldown || 0) + cooldown;
+						 	newVar.paragon = (prev.paragon || 0) + parseFloat(currentValue.Paragon || 0);
 							return newVar;
 						},0);
+
+		//if zero was passed in, dont include in average calc (dead hc heroes lowered average)
+		var actualLength = allData.length - zeroCount;
 
 		var allRes = 0;
 		for (key in allStats) {
@@ -50,9 +62,9 @@
 				allRes += allStats[key];
 				console.log(allStats[key],allRes, key)
 			}
-			allStats[key] /= allData.length;
+			allStats[key] /= actualLength;
 			if (key === "arcaneResist") {
-				allStats.allRes = allRes / (6*allData.length);
+				allStats.allRes = allRes / (6*actualLength);
 			}
 		}
 
@@ -123,7 +135,7 @@
 		<div id="update">
 			<% if (lastupdated != 0) { %>
 				<% var lastUpdated = lastupdated.getMonth()+1 + "/" + lastupdated.getDate() + "/" + (lastupdated.getYear()+1900) %>
-				last updated: <%= lastUpdated %><br />
+				leaderboard last updated: <%= lastUpdated %><br />
 			<% } %>
 			<a class="update" href="/update/<%- region %>/<%- leaderboardType %>/<%- title %>">update leaderboard</a>
 		</div>

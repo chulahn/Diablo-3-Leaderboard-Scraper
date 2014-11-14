@@ -34,9 +34,11 @@
 
 <body>
 <h1><%= ejs_heroData.name %> <small><%= ejs_btag %></small>  </h1>
-
 <p><a href = "http://us.battle.net/d3/en/profile/<%= ejs_btag %>/hero/<%= ejs_heroID %>" > Battle.net Profile </a>
-<p><a href = "/update/player/<%= ejs_btag %>/hero/<%= ejs_heroID %>">Update </a>
+<% var lastupdated = ejs_heroData.lastupdated %>
+<% lastupdated = lastupdated.getMonth()+1 + "/" + lastupdated.getDate() + "/" + (lastupdated.getYear()+1900) %>
+<p>last updated: <%= lastupdated %> <br />
+<a href = "/update/player/<%= ejs_btag %>/hero/<%= ejs_heroID %>">Update </a>
 <% if (ejs_heroData.extraItemData == undefined) { %>
 	<p>Refresh to show more data</p>
 <% } %>

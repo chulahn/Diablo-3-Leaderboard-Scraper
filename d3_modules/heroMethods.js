@@ -22,50 +22,6 @@ function itemDelay() {
 }
 
 
-//localhost:3000/player/:battletag/hero/:heroID
-//for a given heroID, it searches heroCollection, and renders hero's page.  if not in data base, make an API request
-exports.getHeroDetails = function(heroID, req, res) {
-	// console.log("https://" + region + apiURL + "/profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey  );
-	var heroRequestURL = "https://" + region + apiURL + "/profile/" +req.params.battletag+"/hero/"+heroID+"?locale="+locale+"&apikey="+apiKey;
-
-	debug.timeString(heroID + " Page before request ");
-
-//Takes 200ms.  Only has information from DB.  Not always up to Date
-	MongoClient.connect(databaseURL, function(err, db) {
-		if (err) {
-			return console.log("getHeroDetails error connecting to db")
-		}
-		else {
-			heroCollection = db.collection("hero");
-			heroCollection.find({"heroID" : parseInt(heroID)}).toArray(function(err, matchedHero) {
-				if (matchedHero.length > 0) {
-					var heroData = matchedHero[0];
-					var heroItems = heroData.items;
-					//add items to DB if extraItemData is undefined
-					if (heroData.level == 70 && heroData.extraItemData == undefined) {
-						// exports.getItemIDsFromHero(heroItems,heroID,10);
-					}
-					res.render("hero.ejs", {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
-					debug.timeString(heroID + " Page after request ");
-				}
-				//not in database.  must request data from Blizzard site.
-				else {
-					request(heroRequestURL, function (error, response, data) {
-						var heroData = JSON.parse(data);
-						var heroItems = heroData.items;
-						if (heroData.level == 70) {
-							// exports.getItemIDsFromHero(heroItems,heroID,10);
-						}
-						res.render("hero.ejs", {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
-						debug.timeString(heroID + " Page after request ");
-					});
-				}
-			});
-		}
-	});
-//Takes about same time.  Can crash if too many requests were 
-}
-
 //get all items from json heroItems, and call findItemInCollection for each.
 exports.getItemIDsFromHero = function(heroItems, heroID, delay, foundGRiftHeroCallback) {
 	MongoClient.connect(databaseURL, function(err, db) {
@@ -143,6 +99,10 @@ function findItemsInCollection(allItems, heroID, delay, db, foundGRiftHeroCallba
 										console.log("403 too many requests" + delay + " , findItemsInCollection " + currentItem.name + " " + heroID.red);
 										console.log(requestedItem);
 										findItemInCollection(itemID, heroID, delay+1000, db, foundItemCallback);
+									}
+									if (requestedItem == undefined) {
+										console.log(data);
+										findItemInCollection(itemID, heroID, delay+1000, db, foundItemCallback);	
 									}
 									else{
 
