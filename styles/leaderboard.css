@@ -14,34 +14,39 @@ nav {
 	text-align: center;
 }
 
+/* Div that holds three sub divs at top */
+
 #container {
 	margin: 10px auto;
 	width: 80%;
-	height:350px;
+	height:370px;
 	border: 3px solid white;
 	position: relative;
 	padding: 10px;
+	text-align: center;
 	box-sizing: border-box;
 	-webkit-box-sizing: border-box;
 }
 
-#statistics, #graph, #graphChooser {
+#statistics, #graphChooser, #graph,  {
 	color: white;
 	display: inline-block;
-	float: left;
-	padding: 10px;
-	margin: 5px auto;
+	padding: 6px;
 	border: 2px solid red;
-	vertical-align: middle;
+	vertical-align: top;
 	box-sizing: border-box;
 	-webkit-box-sizing: border-box;
 }
 
 #statistics {
 	width:20%;
+	text-align: left;
 }
-#graph {
-	width:60%;
+
+
+#graphChooser {
+	width: 190px;
+	text-align: center;
 }
 
 #graphChooser span, #graphChooser a {
@@ -52,9 +57,8 @@ nav {
      	-ms-transform: translateY(-50%);
 }
 
-#graphChooser {
-	width: 190px;
-	text-align: center;
+#graph {
+	width:700px;
 }
 
 #itemGraphDiv, #mainStatsDiv, #skillGraphDiv {

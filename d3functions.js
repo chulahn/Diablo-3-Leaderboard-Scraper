@@ -390,6 +390,15 @@ function getY(d, currentDataset) {
 			case "toughness":
 				return d.stats.toughness;
 				break;
+			case "elemDps":
+				var elem = (d.extraItemData && d.extraItemData.elementalDam[0][1]) || 0;
+				return d.stats.damage * (1 + (elem/100));
+				break;
+			case "eliteElemDps":
+				var elem = (d.extraItemData && d.extraItemData.elementalDam[0][1]) || 0;
+				var elite = (d.extraItemData && d.extraItemData.eliteDam) || 0;
+				return d.stats.damage * (1 + (elem/100)) * (1 + (elite/100));
+				break;
 		}
 	}
 }
@@ -661,12 +670,16 @@ $('#graphChooser span').each(function () {
 	else {
 
 		$(this).on('click', function() {
-			$('#itemGraphDiv').hide();
-			$('#skillGraphDiv').hide();
-			$('.currentGraph').removeClass('currentGraph');			
-			
-			$(this).addClass('currentGraph');
-			$('#mainStatsDiv').show();
+			$(this).toggleClass('selected');
+
+			if ($(this).attr('class') == "selected") {
+				$('#'+spanID.replace("Span", "Picker")).show();	
+			}
+			else {
+				$('#'+spanID.replace("Span", "Picker")).hide();
+			}
+
+
 		});
 	}
 });
@@ -687,7 +700,6 @@ $('#skillPicker a').each(function () {
 		}
 		$('#skillGraphDiv').show();
 	});
-
 });
 
 

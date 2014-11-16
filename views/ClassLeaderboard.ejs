@@ -82,7 +82,7 @@
 		statHTML += "Toughness: " + allStats.toughness.toFixed(0) + "<br />";
 		statHTML += "Life: " + allStats.life.toFixed(0) + "<br />";
 		statHTML += "All Resist: " + allStats.allRes.toFixed(0) + "<br />"
-		statHTML += "Average Cooldown Reduction: " + allStats.cooldown.toFixed(2) + "%<br />";
+		statHTML += "Cooldown Reduction: " + allStats.cooldown.toFixed(2) + "%<br />";
 		statHTML += "Average Paragon: " + allStats.paragon.toFixed(0) +"<br />";
 		statHTML += "Median GRift Level: " + medianGrift + "<br />";
 		statHTML += "Crit Chance: " + (allStats.critChance * 100).toFixed(0) + "%<br />";
@@ -90,12 +90,45 @@
 		statHTML += "CD/CC: " + (allStats.critDamage / allStats.critChance).toFixed(2) + "<br />";
 
 
-
+		var statsArray = ['dps', 'toughness', 'elemDps', 'eliteElemDps'];
+		var statsOnPage = ['DPS', 'Toughness', 'Elemental DPS', 'Elite Elemental DPS'];
 
 		$(document).ready(function () {
 			$('#top').hide();
 			$('#skillPicker').hide();
 			$('#statistics').html(statHTML);
+
+			var statsPickHTML = "";
+
+			statsArray.forEach(function (stat) {
+				statsPickHTML += "<a href=\"#\" id=" + stat + ">";
+				var statsOutputInd = statsArray.indexOf(stat);
+				statsPickHTML += statsOnPage[statsOutputInd];
+				statsPickHTML += "</span><br/>"
+				console.log(statsPickHTML);
+			});
+
+			$('#statPicker').append(statsPickHTML); 
+			$('#statPicker').hide(); 
+
+			$('#statPicker a').each(function () {
+				var statToCalc = $(this).attr('id');
+				
+				$(this).on('click' , function() {
+					
+
+					createGraph(currentTop, statToCalc);
+
+					$('#itemGraphDiv').hide();
+					$('#skillGraphDiv').hide();
+					$('.currentGraph').removeClass('currentGraph');			
+					
+					$(this).addClass('currentGraph');
+					$('#mainStatsDiv').show();
+
+				});
+			});
+
 
 		})
 
@@ -155,7 +188,8 @@
 		<div id="itemPicker"></div>
 		
 		<span id="statSpan">Stats</span><br />
-		
+		<div id="statPicker"></div>	
+
 		<span id="skillSpan">Skills</span><br />
 		<div id="skillPicker"><a href="#" id="primary">Primary</a> <a href="#" id="passives">Passives</a></div> 
 	</div>
