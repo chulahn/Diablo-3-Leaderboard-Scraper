@@ -455,7 +455,30 @@ function createGraph(currentTop, currentDataset) {
 				return statsGraphData.h-yScale(getY(d, currentDataset))-statsGraphData.yPad;
 			// }	
 		})
-		.attr("class" , "enter bar")
+		.attr("class" , function(d,i) {
+			console.log(currentDataset);
+			if ((currentDataset !== "elemDps" && currentDataset !== "eliteElemDps") || d.extraItemData === undefined) {
+				console.log("no element");
+				return "enter bar none"
+			}
+			else {
+				console.log(d.extraItemData && d.extraItemData.elementalDam[0][0]);
+				var elementStats = d.extraItemData.elementalDam[0];
+
+				if (elementStats[1] !== 0) {
+					var element = (d.extraItemData.elementalDam[0][0]).toLowerCase();
+					console.log(element)
+					return "enter bar " + element;
+				}
+
+				//might have extraItemData but no actual element damage inc
+				else {
+					return "enter bar none";
+				}
+
+			}
+
+		})
 		.on('mouseover', stats.tooltip.show)
 		.on('mouseout', stats.tooltip.hide);
 	//add xAxis

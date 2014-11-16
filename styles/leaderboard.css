@@ -28,7 +28,7 @@ nav {
 	-webkit-box-sizing: border-box;
 }
 
-#statistics, #graphChooser, #graph,  {
+#statistics, #graphChooser, #graph  {
 	color: white;
 	display: inline-block;
 	padding: 6px;
@@ -116,10 +116,10 @@ td, th {
 	color: red;
 }
 .bar {
-	fill: gray;
+	fill-opacity: .4;
 }
 .bar:hover {
-	fill: white;
+	fill-opacity: 1;
 }
 
 .axis path, 
@@ -161,28 +161,40 @@ td, th {
 
 .fire {
 	color: red;
+	fill: red;
 }
 
 .cold {
 	color: blue;
+	fill: blue;
 }
 
 .lightning {
 	color: yellow;
+	fill: yellow;
 }
 
 .arcane {
 	color: purple;
+	fill: purple;
 }
 
 .poison {
 	color: green;
+	fill: green;
 }
 
 .holy {
 	color : #FAFAD2;
+	fill: #FAFAD2;
 }
 
 .physical {
 	color: gray;
+	fill: gray;
+}
+
+.none {
+	color: white;
+	fill: white;
 }
