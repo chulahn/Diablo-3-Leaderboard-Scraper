@@ -18,7 +18,7 @@ var exports = module.exports = {
 		return (jewelryGem.item.name === "Boon of the Hoarder");
 	},
 
-	requestedRankHigher : function(requestedGem, equippedGem) {
+	requestedGemRankHigher : function(requestedGem, equippedGem) {
 		return (requestedGem.jewelRank > equippedGem.jewelRank);
 	},
 

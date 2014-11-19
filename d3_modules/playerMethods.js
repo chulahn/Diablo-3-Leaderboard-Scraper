@@ -127,9 +127,7 @@ function insertInHeroCollection(heroCollection, battletag, requestedHeroData, re
 				console.log("addHeroData not found, inserting "+ battletag + " " + requestedHeroData.id);
 				callback()
 			}
-		// console.log("adding items")
-		// heroMethods.getItemIDsFromHero(requestedHeroData.items, requestedHeroData.id, timeToDelay());
-	});//end insertion.
+	});
 }
 
 function updateInHeroCollection(heroCollection, battletag, requestedHeroData, region, callback) {

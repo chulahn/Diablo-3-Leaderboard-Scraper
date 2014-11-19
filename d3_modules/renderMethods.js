@@ -126,7 +126,11 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 		    					//get items, then get extraitemdata, then push, then increment. 
 		    					else {
 			    					console.log("found grift hero attempting to add extraItemData for " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing + " " + heroToPush.heroID);	
-		    						heroMethods.getItemIDsFromHero(heroToPush.items, heroToPush.heroID, 300, foundGRiftHeroCallback);
+		    						
+			    					var thisHero = {items : heroToPush.items,
+			    									heroID : heroToPush.heroID,
+			    									class : heroToPush.class}
+		    						heroMethods.getItemIDsFromHero(thisHero, 300, foundGRiftHeroCallback);
 		    					}
 		    				}
 		    				//hero wasnt found. try to found it.
@@ -145,7 +149,12 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 				    					allData[currentPlayerFromDB.Standing-1] = heroToPush;
 				    					if (heroToPush.extraItemData == undefined) {
 				    						console.log("found grift hero, 119, adding extraItemData " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
-				    						heroMethods.getItemIDsFromHero(heroToPush.items, heroToPush.heroID, 300, foundGRiftHeroCallback);
+					    					var thisHero = {items : heroToPush.items,
+			    									heroID : heroToPush.heroID,
+			    									class : heroToPush.class}
+				    						heroMethods.getItemIDsFromHero(thisHero, 300, foundGRiftHeroCallback);				    						
+
+				    						
 				    					}
 				    					//player has extraitemData but did not have griftHero
 				    					else {

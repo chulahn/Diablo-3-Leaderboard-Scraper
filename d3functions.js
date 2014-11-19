@@ -15,7 +15,7 @@ var statsGraphData = {
 	yPad: 25
 };
 
-var stats = {
+var statsd3 = {
 	graph: d3.select("#mainStatsDiv")
 				.append("svg")
 				.attr("height", statsGraphData.h)
@@ -27,33 +27,35 @@ var stats = {
 					var rankAndBTag = (i+1)+"."+"<span class=\"btag\">"+d.battletag+"</span>";
 					var dpsString = "DPS:<span class=\"damage\">"+d.stats.damage+"</span>";
 					var toughnessString = "Toughness:<span class=\"damage\">"+d.stats.toughness+"</span>";
-					var element = d.extraItemData.elementalDam[0][0];
-					var elementInc = d.extraItemData.elementalDam[0][1];
+
+					var element = d.extraItemData && d.extraItemData.elementalDam[0][0];
+					var elementInc = d.extraItemData && d.extraItemData.elementalDam[0][1];
 					var elementalString = "<span class="+element.toLowerCase()+">" + element + " DPS:" + (d.stats.damage * (1+(elementInc/100))).toFixed(0) + "</span>";
 
 					var completeString = rankAndBTag+"<br />"+
 							dpsString+"<br />"+
 							toughnessString;
 							
-					if (elementInc > 0) {
+					if (elementInc > 0 && element !== undefined) {
 						completeString += "<br />"+elementalString;
 					}
 
 					return completeString;
 				}),
 };
-stats.graph.call(stats.tooltip);
+statsd3.graph.call(statsd3.tooltip);
 
 
 var itemPieData = {
 	h: 200,
 	w: 200
 };
-var items = {
+var itemsd3 = {
 	graph: d3.select("#itemGraphDiv")
 				.append("svg")
 				.attr("height", itemPieData.h)
-				.attr("width" , itemPieData.w)
+				.attr("width" , itemPieData.w),
+
 };
 //Data for setting up item pie chart
 var allItems = [[],[]];
@@ -293,88 +295,6 @@ function fromTopHeroesGetSkills() {
  	});
 }
 
-/*
-	Add legend for DPS/toughness graph.  Allows to switch top (10,20,50,100) and DPS/toughness
-*/
-function addLegend() {
-
-	var legend = stats.graph.selectAll(".legend")
-					.data([10,20,50,100])
-					.enter()
-					.append("g")
-					.attr("class", "legend")
-	     			.attr("transform", function(d, i) { 
-	     				return "translate("+(i*40)+",0)"; 
-	     			});
-
-	legend.append("text")
-			.attr("x", 10)
-			.attr("y", 13)
-			.text(function(d) {
-				return "Top " + d;
-			})
-			.on("click" , function(d) {
-				currentTop=parseInt(d);
-				createGraph(d, currentDataset);
-				legend.selectAll(".selected").classed("selected",false);
-				d3.select(this).attr("class", "selected");
-			})
-			.on("mouseover" , function() {
-				d3.select(this).style("font-weight", "bold");
-			})
-			.on("mouseout" , function() {
-				d3.select(this).style("font-weight" , "");
-			});
-
-	var category = stats.graph.selectAll(".category")
-					.data(["dps" , "toughness"])
-					.enter()
-					.append("g")
-					.attr("class", "category")
-					.attr("transform", function(d, i) {
-	    				return "translate("+(i*40)+",0)"; 
-	     			});
-
-	category.append("text")
-			.attr("x", 200)
-			.attr("y", 13)
-			.text(function(d) {
-				return d;
-			})
-			.on("click" , function(d) {
-				currentDataset = d;
-				createGraph(currentTop, d);
-				category.selectAll(".selected").classed("selected",false);
-				d3.select(this).attr("class", "selected");
-			})
-			.on("mouseover" , function() {
-				d3.select(this).style("font-weight", "bold");
-			})
-			.on("mouseout" , function() {
-				d3.select(this).style("font-weight" , "");
-			});
-
-
-	// var extra = statsBarGraph.selectAll(".extra")
-	// 				.data(["axis on", "axes off"])
-	// 				.enter()
-	// 				.append("g")
-	// 				.attr("class" , "extra")
-	// 				.attr("transform", function(d, i) {
-	//     				return "translate("+(i*60)+",0)"; 
-	// 				});
-	// extra.append("text")
-	// 		.attr("x", 500)
-	// 		.attr("y", 13)
-	// 		.text(function(d) {
-	// 			return d;
-	// 		})
-	// 		.on("click" , function() {
-	// 			currentDataset = d;
-	// 			d3.select(this).classed("selected");
-	// 		})
-}
-
 /* 
 	Helper method for createGraph to know what Y value to return.
 */
@@ -410,7 +330,7 @@ function createGraph(currentTop, currentDataset) {
 	currentArray = allData.slice(0,currentTop);
 		// d3.selectAll('.enter').attr("class", "exit").exit().transition().remove();
 
-	stats.graph.selectAll('.enter').attr("class", "exit").remove();
+	statsd3.graph.selectAll('.enter').attr("class", "exit").remove();
 
 	var xScale = d3.scale.linear()
 					.domain([0, currentArray.length])
@@ -431,7 +351,7 @@ function createGraph(currentTop, currentDataset) {
 					.ticks(5);
 
 	//add bars and links
-	stats.graph
+	statsd3.graph
 		.selectAll("rect")
 		.data(currentArray)
 		.enter()
@@ -456,22 +376,18 @@ function createGraph(currentTop, currentDataset) {
 			// }	
 		})
 		.attr("class" , function(d,i) {
-			console.log(currentDataset);
+			//dont show colors if not in elem, or no item data
 			if ((currentDataset !== "elemDps" && currentDataset !== "eliteElemDps") || d.extraItemData === undefined) {
-				console.log("no element");
 				return "enter bar none"
 			}
 			else {
-				console.log(d.extraItemData && d.extraItemData.elementalDam[0][0]);
 				var elementStats = d.extraItemData.elementalDam[0];
-
+				//only show color if player has element boost
 				if (elementStats[1] !== 0) {
 					var element = (d.extraItemData.elementalDam[0][0]).toLowerCase();
-					console.log(element)
 					return "enter bar " + element;
 				}
 
-				//might have extraItemData but no actual element damage inc
 				else {
 					return "enter bar none";
 				}
@@ -479,15 +395,15 @@ function createGraph(currentTop, currentDataset) {
 			}
 
 		})
-		.on('mouseover', stats.tooltip.show)
-		.on('mouseout', stats.tooltip.hide);
+		.on('mouseover', statsd3.tooltip.show)
+		.on('mouseout', statsd3.tooltip.hide);
 	//add xAxis
-	stats.graph.append("g")
+	statsd3.graph.append("g")
 		.attr("class", "enter axis")
 		.attr("transform", "translate(0," + (statsGraphData.h-statsGraphData.yPad) + ")")
 		.call(xAxis);
 	//add yAxis
-	stats.graph.append("g")
+	statsd3.graph.append("g")
 		.attr("class", "enter axis")
 		.attr("transform", "translate("+statsGraphData.xPad+", 0)")
 		.call(yAxis);	
@@ -571,7 +487,7 @@ function getShortenedItemName(currentItemName, itemPercentage) {
 	Deletes previous pie chart and creates new pie chart based on allItems array.
 */
 function createItemPie() {
-	var itemsPieChart = items.graph;
+	var itemsPieChart = itemsd3.graph;
 	itemsPieChart.selectAll('.enter').attr("class", "exit").remove();
 
 	var pie = d3.layout.pie();
@@ -663,7 +579,6 @@ $(document).ready(function() {
 
 	$()
 
-	addLegend();
 	createGraph(currentTop, currentDataset);
 	fromTopHeroesGetItem("head");
 	createItemPie();
