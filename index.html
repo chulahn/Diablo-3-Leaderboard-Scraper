@@ -27,7 +27,7 @@ $(document).ready(function() {
 
 	$('header span').each(function() {
 		var category = $(this).text();
-		$(this).on('click', function() {
+		$(this).click(function() {
 			$('header span').removeClass();
 			$(this).toggleClass('selected');
 			diabloClassHTML = "";
@@ -57,6 +57,8 @@ $(document).ready(function() {
 <header>
 <div id="diabloClass"></div>
 </header>
+
+
 
 <p>&nbsp;</p>
 

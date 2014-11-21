@@ -50,6 +50,7 @@ exports.getItemIDsFromHero = function(hero, delay, foundGRiftHeroCallback) {
 			
 			if (db != undefined) {
 				hero.items = allItems;
+				console.log(allItems[0]);
 				findItemsInCollection(hero, delay, db, foundGRiftHeroCallback);
 
 			}
@@ -136,21 +137,25 @@ function findItemsInCollection(hero, delay, db, foundGRiftHeroCallback){
 											//
 
 											//find if hero has an item in that spot.  if there is check for differences.
-											itemCollection.find({"heroID": parseInt(heroID) , "type" :requestedItemType , "equipped": true}).toArray(function(err, matchedItems) {
+											itemCollection.find({"heroID": parseInt(heroID) , "type": requestedItemType , "equipped": true}).toArray(function(err, matchedItems) {
 
 
 												//if itemtype is 2h, and there were no matches, check 1hand and off
 												if (requestedItemType == "2 Hand" && matchedItems.length == 0) {
-																										console.log("2hands".yellow)
+													
+													console.log("2hands".yellow)
 
 													//check 1hand,  If there is a 1hand, unequip.
 													//Then, if not crusader, remove equipped offHand 
-													itemCollection.find({"heroID": parseInt(heroID) , "type" :requestedItemType , "equipped": true}).toArray(function(err, matched1Handers) {
+													itemCollection.find({"heroID": parseInt(heroID) , "type": "1 Hand" , "equipped": true}).toArray(function(err, matched1Handers) {
 														
 														if (matched1Handers.length > 0) {
 
-															unequipItem(itemCollection, matched1Handers[0], heroID);
+															console.log(colors.red(matched1Handers[0]));
 
+															unequipItem(itemCollection, matched1Handers[0], heroID);
+	asdfsaa
+															//assumes all crusaders will have the 2h + shield passive
 															if (hero.class !== "crusader") {
 																console.log("hero is not a crusader, finding offHand");
 																itemCollection.find({"heroID": parseInt(heroID), "type": "offHand", "equipped" : true}).toArray(function(err, matchedOffHands) {
@@ -162,28 +167,38 @@ function findItemsInCollection(hero, delay, db, foundGRiftHeroCallback){
 															}
 
 														}
-
-															//unequip1h equip 2h.
-															console.log(colors.red(matchedItems.length))
 														insertInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
 													});
 												}
 
 
-												//1hand and no 1handers equipped, check for 2hands.
+												//only 1hander, check for 2hands.
 												else if (requestedItemType == "1 Hand" && matchedItems.length == 0) {
+													console.log("only 1 hand, chekcing for 2 hands, insert".yellow)
+													itemCollection.find({"heroID": parseInt(heroID) , "type" :"2 Hand" , "equipped": true}).toArray(function(err, matched2Handers) {
+														if (matched2Handers.length > 0) {
+															console.log("removed 2hander")
+															unequipItem(itemCollection, matched2Handers[0], heroID);
+														}
+
+														insertInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
+													});
+												}
+
+												//if only offhand, remove any 2h's and then insert
+												else if (requestedItemType == "offHand" && matchedItems.length == 0) {
+													console.log("only offhand, chekcing for 2 hands, insert".yellow)
 													itemCollection.find({"heroID": parseInt(heroID) , "type" :"2 Hand" , "equipped": true}).toArray(function(err, matched2Handers) {
 														if (matched2Handers.length > 0) {
 															unequipItem(itemCollection, matched2Handers[0], heroID);
 														}
-														console.log("1 hand, but no 1 handers, chekcing for 2 hands, insert".yellow)
 
 														insertInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
 													});
 												}
 
 
-
+												//if there were matched items.
 												else if (matchedItems.length != 0) {
 
 													//check to see if player has only one ring, and if its not the same as the ring in DB, add it
@@ -193,15 +208,15 @@ function findItemsInCollection(hero, delay, db, foundGRiftHeroCallback){
 													}
 
 
+													if (requestedItemType === "1 Hand") {
+
+													}
+
+
+
 
 													//compare each item.
-													// matchedItems.forEach(function (equippedItem) {
-													// 	if (equippedItem.itemID == undefined) {
-													// 		console.log(equippedItem[0]);
-													// 	}
-													// 	console.log("-----comparing " + equippedItem.name + " " + requestedItem.name + matchedItems.length)
-													// 	compareItems(itemCollection, heroID, equippedItem, requestedItem, foundItemCallback);														
-													// })
+
 													
 													else {
 														

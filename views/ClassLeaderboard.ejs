@@ -14,15 +14,6 @@
 		var gRift = <%- JSON.stringify(ejs_battletags) %>;
 		var zeroCount = 0;
 
-
-
-		//GRift Median
-		//Elemental DPS
-		//CDR
-		//Toughness
-		//Life
-		//CC CHD cc:chd ratio
-
 		var allStats = allData.reduce(function (prev, currentValue) {
 						 	var newVar = {};
 						 	if (currentValue == 0) {
@@ -67,10 +58,6 @@
 				allStats.allRes = allRes / (6*actualLength);
 			}
 		}
-
-		// var avgGrift = gRift.reduce(function (prev, currentValue) {
-		// 					return prev + parseFloat(currentValue["Greater Rift"]);
-		// 				},0) / allData.length;
 		
 		var medianGrift =  parseInt(gRift[gRift.length/2]["Greater Rift"]) + parseInt(gRift[(gRift.length/2) - 1]["Greater Rift"])
 		medianGrift /= 2;
@@ -89,14 +76,15 @@
 		statHTML += "Crit Dam: " + (allStats.critDamage * 100).toFixed(0) + "%<br />";
 		statHTML += "CD/CC: " + (allStats.critDamage / allStats.critChance).toFixed(2) + "<br />";
 
-
 		var statsArray = ['dps', 'toughness', 'elemDps', 'eliteElemDps'];
 		var statsOnPage = ['DPS', 'Toughness', 'Elemental DPS', 'Elite Elemental DPS'];
 
 		$(document).ready(function () {
+		
+			$('#statistics').html(statHTML);
+
 			$('#top').hide();
 			$('#skillPicker').hide();
-			$('#statistics').html(statHTML);
 
 			var statsPickHTML = "";
 
@@ -108,8 +96,8 @@
 			});
 
 			$('#statPicker').append(statsPickHTML); 
+			
 			$('#dps').attr('class', 'currentGraph');
-			$('#statPicker').hide(); 
 
 			$('#statPicker a').each(function () {
 				var statToCalc = $(this).attr('id');
@@ -117,7 +105,7 @@
 				$(this).on('click' , function() {
 					
 
-					createGraph(currentTop, statToCalc);
+					drawStatGraph(currentTop, statToCalc);
 
 					$('#itemGraphDiv').hide();
 					$('#skillGraphDiv').hide();
@@ -146,15 +134,7 @@
 	</script>
 
 	<script>
-	//google analytics
-	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-	  ga('create', 'UA-56162514-1', 'auto');
-	  ga('send', 'pageview');
-
+		
 	</script>
 
 		
@@ -187,7 +167,7 @@
 		<span id="itemSpan">Items</span><br />
 		<div id="itemPicker"></div>
 		
-		<span id="statSpan">Stats</span><br />
+		<span id="statSpan" class="selected">Stats</span><br />
 		<div id="statPicker"></div>	
 
 		<span id="skillSpan">Skills</span><br />
