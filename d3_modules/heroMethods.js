@@ -141,7 +141,7 @@ function findItemsInCollection(hero, delay, db, foundGRiftHeroCallback){
 
 
 												//if itemtype is 2h, and there were no matches, check 1hand and off
-												if (requestedItemType == "2 Hand" && matchedItems.length == 0) {
+												if (requestedItemType === "2 Hand" && matchedItems.length === 0) {
 													
 													console.log("2hands".yellow)
 
@@ -173,7 +173,7 @@ function findItemsInCollection(hero, delay, db, foundGRiftHeroCallback){
 
 
 												//only 1hander, check for 2hands.
-												else if (requestedItemType == "1 Hand" && matchedItems.length == 0) {
+												else if (requestedItemType === "1 Hand" && matchedItems.length === 0) {
 													console.log("only 1 hand, chekcing for 2 hands, insert".yellow)
 													itemCollection.find({"heroID": parseInt(heroID) , "type" :"2 Hand" , "equipped": true}).toArray(function(err, matched2Handers) {
 														if (matched2Handers.length > 0) {
@@ -186,7 +186,7 @@ function findItemsInCollection(hero, delay, db, foundGRiftHeroCallback){
 												}
 
 												//if only offhand, remove any 2h's and then insert
-												else if (requestedItemType == "offHand" && matchedItems.length == 0) {
+												else if (requestedItemType === "offHand" && matchedItems.length === 0) {
 													console.log("only offhand, chekcing for 2 hands, insert".yellow)
 													itemCollection.find({"heroID": parseInt(heroID) , "type" :"2 Hand" , "equipped": true}).toArray(function(err, matched2Handers) {
 														if (matched2Handers.length > 0) {
@@ -199,18 +199,19 @@ function findItemsInCollection(hero, delay, db, foundGRiftHeroCallback){
 
 
 												//if there were matched items.
-												else if (matchedItems.length != 0) {
+												else if (matchedItems.length !== 0) {
 
 													//check to see if player has only one ring, and if its not the same as the ring in DB, add it
-													if (itemMethods.isRing(requestedItemType) && matchedItems.length == 1 && matchedItems[0].itemID != itemID) {
+													if (itemMethods.isRing(requestedItemType) && matchedItems.length === 1 && matchedItems[0].itemID !== itemID) {
 														console.log("Inserted 2nd ring");
 														insertInItemCollection(itemCollection, requestedItem, heroID, foundItemCallback);
 													}
 
 
-													if (requestedItemType === "1 Hand") {
+													// if (requestedItemType === "1 Hand") {
+													// 											console.log("hereaaaa".blue)
 
-													}
+													// }
 
 
 
@@ -304,6 +305,8 @@ function getImportantStats(heroID, updatedStatsCallback) {
 			var eliteDam = 0;
 			var cooldown = 0;
 			var diamondCooldown = 0;
+			var gems = [];
+
 			//fire,light,cold,arcane,poison,phys
 			var elementalDam = [
 			["Fire", 0], ["Lightning", 0], ["Cold", 0], ["Arcane", 0], ["Poison", 0], ["Physical", 0], ["Holy", 0]
@@ -406,8 +409,18 @@ function getImportantStats(heroID, updatedStatsCallback) {
 							eliteString = parseFloat(searchData[0]);
 							eliteDam += eliteString;
 						}
-
 					}//end for affixes
+
+					if (currentItem.type === "Ring" || currentItem.type === "Neck") {
+						var currentGem = currentItem.gems[0];
+						if (currentGem !== undefined) {
+							if (currentGem.item.displayColor === "orange") {
+								gems.push(currentGem.item.name);
+							}
+						}
+						console.log(colors.red(currentItem.gems[0]));
+					}
+
 				});//end for each
 
 				//sorts elemental damages from highest to lowest
@@ -428,7 +441,8 @@ function getImportantStats(heroID, updatedStatsCallback) {
 							"extraItemData": {
 								"cooldown" : totalCooldown,
 								"elementalDam" : JSON.parse(JSON.stringify(elementalDam)),
-								"eliteDam" : eliteDam
+								"eliteDam" : eliteDam,
+								"gems" : gems
 							}
 						}//end of extraItemData
 					}//end of set 
@@ -436,6 +450,7 @@ function getImportantStats(heroID, updatedStatsCallback) {
 					if (err) {
 						return console.log(err);
 					}
+					console.log(gems);
 					console.log("------------added extraItemData for " + heroID);
 					updatedStatsCallback();
 				});

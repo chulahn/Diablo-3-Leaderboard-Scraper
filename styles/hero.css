@@ -24,6 +24,13 @@ a {
 .blue {
 	color: blue;
 }
+.d3-tooltip-wrapper *,
+.d3-tooltip-wrapper *:before,
+.d3-tooltip-wrapper *:after  {
+	box-sizing: content-box;
+	-webkit-box-sizing: content-box;
+	-mozilla-box-sizing: content-box;
+}
 
 body {
 	background-color: #2B2B2B;

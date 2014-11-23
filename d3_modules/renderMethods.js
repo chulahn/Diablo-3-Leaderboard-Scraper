@@ -72,7 +72,8 @@ exports.heroPage = function(heroID, req, res) {
 	/:category/:diabloClass
 	leaderboardType is category (normal, hc, season, seasonhc)
 	Renders leaderboard page by selecting the correct collection in Database and for each battletag,
-	find the gRiftHero (must be 70, match hardcore and season, correct class, and gRiftHero == true)
+	find the gRiftHero (must be 70, match hardcore and season, correct class, and gRiftHero == true), inside heroCollection
+	and append it to array.  store this array in cached collection.
 
 	If leaderboardCollection did not have full amount, find+add missing battletags.
 
@@ -82,6 +83,9 @@ exports.heroPage = function(heroID, req, res) {
 */
 
 exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, res) {    
+
+
+
 	MongoClient.connect(databaseURL, function(err, db) {
 	//Takes about 1/10th second
 
@@ -97,9 +101,29 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 			var collectionName = region + getCollectionName(diabloClass, leaderboardType);
 			var leaderboardCollection = db.collection(collectionName);
 			console.log(collectionName);
+
+			// db.collection("cached").find({"collectName" : collectionName}).toArray(function (err, foundCache) {
+
+			// 	if (foundCache) {
+			// 		var pageData = foundCache[0];
+
+			// 		res.render({title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : pageData.heroes , all:pageData.heroes , lastupdated : date})
+			// 	}
+
+			// 	else {
+
+
+			// 	}
+			// });
+
+
+			function cacheData() {
+
+			}
 			//get all from collection, sort by rank
 			leaderboardCollection.find({},{"_id" : 0 }).sort({"Standing" : 1}).toArray(function (err, leaderboardResults) {
 	    		
+	    		//there aren't enough battletags in leaderboardCollect, update
 	    		if (leaderboardResults.length == 0 || leaderboardResults.length != 100) {
 	    			leaderboard.getCurrentLeaderboard(region, diabloClass, leaderboardType);
 	    			res.redirect('/');
@@ -113,11 +137,15 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 		    		setSearchParams(leaderboardType);
 
 					async.eachSeries(leaderboardResults, function (currentPlayerFromDB, foundGRiftHeroCallback) {
+
 		    			var heroCollection = db.collection("hero");
+		    			
 		    			heroCollection.find({"battletag" : currentPlayerFromDB.Battletag.replace("#", "-"), "class" : getClassNameForDatabase(diabloClass), "seasonal" : searchParamSeason, "hardcore" : searchParamHC, "gRiftHero" : true}).toArray(function (error, gRiftHeroResults) {
 		    				//found grift hero, check if it has extraItemData.  if not add it
 		    				if (gRiftHeroResults.length != 0) {	
+
 		    					heroToPush = gRiftHeroResults[0];
+		    					
 		    					if (heroToPush.extraItemData != undefined) {
 			    					console.log("found grift hero and extraItemData for " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing) 	    					
 	    							allData[currentPlayerFromDB.Standing-1] = heroToPush;
@@ -135,27 +163,30 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 		    				}
 		    				//hero wasnt found. try to found it.
 		    				else {
-		    					//find the heroes from player matches params.
+		    					//find the heroes in heroCollection that matches params.
 				    			heroCollection.find({"battletag" : currentPlayerFromDB.Battletag.replace("#", "-"), "class" : getClassNameForDatabase(diabloClass), "seasonal" : searchParamSeason, "hardcore" : searchParamHC}).toArray(function (error, heroResults) {
 					    			
 					    			//if the hero matches params, find the highest dps.  then get extraItemData.
 				    				if (heroResults.length > 0) {
 				    					heroToPush=heroResults[0];
+				    					
 				    					heroResults.forEach(function(hero) {
 				    						if (hero.stats.damage > heroToPush.stats.damage) {
 				    							heroToPush = hero;
 				    						}
 				    					});
+				    					
 				    					allData[currentPlayerFromDB.Standing-1] = heroToPush;
+				    					
 				    					if (heroToPush.extraItemData == undefined) {
 				    						console.log("found grift hero, 119, adding extraItemData " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
-					    					var thisHero = {items : heroToPush.items,
+					    						var thisHero = {items : heroToPush.items,
 			    									heroID : heroToPush.heroID,
 			    									class : heroToPush.class}
 				    						heroMethods.getItemIDsFromHero(thisHero, 300, foundGRiftHeroCallback);				    						
-
-				    						
 				    					}
+
+
 				    					//player has extraitemData but did not have griftHero
 				    					else {
 				    						console.log("found grift hero, 125, had extraItemData, no griftHero " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
@@ -176,6 +207,14 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 				    					}
 				    					else {
 					    					var validHero70Count = 0;
+
+					    					/*
+												Instead of getting gRiftHero from heroCollection, search leaderboardCollection(ushcbarb, ucseasonwiz)
+												and get the hero's that are valid for that leaderboard.
+					    					*/
+					    					function findHeroInBattletagData(currentPlayerHeroes) {
+
+					    					}
 					    					currentPlayerHeroes.forEach(function(currentHero) {
 					    						//find the hero that matches searchParams (class, HC, seasonal, 70)
 					    						if (currentHero.level == 70 && currentHero.hardcore == searchParamHC && currentHero.seasonal == searchParamSeason && getClassNameForDatabase(diabloClass) == currentHero.class) {
@@ -202,7 +241,6 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 					    							}
 					    						}
 					    					});
-
 				    					}
 				    				}
 
@@ -233,6 +271,23 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 										}
 									});
 							}], function(err, date) {
+
+								// collection loaded
+								// db.collection("cached").update({"collectName" : collectionName},
+								// 								{$set: {
+								// 									"lastupdated": date,
+								// 									"heroes": allData,
+								// 									"battletags": leaderboardResults
+								// 								}}, {upsert: true}, function(err, results) {
+								// 									if (err) {
+								// 										console.log(colors.red("error storing results"));
+								// 									}
+								// 									else {
+								// 										console.log(colors.green("success storing results"));
+								// 									}
+								// 								});
+
+
 		    					res.render('ClassLeaderboard.ejs', {title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , all:allData , lastupdated : date});
 							});	
 		    			}

@@ -28,7 +28,7 @@ app.get("/player/:battletag", function(req,res) {
 //shows a hero page
 app.get("/player/:battletag/hero/:heroID", function(req, res) {
 	render.heroPage(parseInt(req.params.heroID), req, res);
-	//getImportantStats(parseInt(req.params.heroID));
+	// heroMethods.getImportantStats(parseInt(req.params.heroID));
 });
 
 

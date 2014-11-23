@@ -9,11 +9,12 @@ var currentClass = currentArray[0].class;
 var skillURLbase = "http://us.battle.net/d3/en/class/"+currentClass;
 
 var globalData = {};
+d3.select('#graph').style('width');
 
 var statsd3 = {
 	dimens: {
-		h: 300,
-		w: 700,
+		h: parseInt(d3.select('#graph').style('height')),
+		w: parseInt(d3.select('#graph').style('width')),
 		barPad: 1,
 		xPad: 60,
 		yPad: 25
@@ -45,8 +46,8 @@ var statsd3 = {
 
 var itemsd3 = {
 	dimens: {
-		h: 200,
-		w: 200
+		h: parseInt(d3.select('#graph').style('height'))*.75,
+		w: parseInt(d3.select('#graph').style('width'))*.75
 	},
 	graph: null,
 	data: null,
@@ -64,8 +65,8 @@ var itemsd3 = {
 var skillsd3 = {
 	graph: null,
 	dimens: {
-		h: 200,
-		w: 400
+		h: parseInt(d3.select('#graph').style('height'))*.75,
+		w: parseInt(d3.select('#graph').style('width'))*.75
 	},
 	data: {
 		//names[0]="Earthquake", count[0]=50 (earthquake users)
@@ -88,6 +89,21 @@ var skillsd3 = {
 	}
 };
 
+var gemsd3 = {
+	dimens: {
+		h: parseInt(d3.select('#graph').style('height'))*.75,
+		w: parseInt(d3.select('#graph').style('width'))*.75
+	},
+	graph: null,
+	tooltip: null,
+	data: {
+		all : [ [], []],
+		names: null,
+		count: null,
+		total: 0
+	}
+};
+
 /*
 	Initializes graphs so data can be added and visualized.
 */
@@ -98,20 +114,37 @@ function initGraphs() {
 				.attr("width", statsd3.dimens.w)
 				.call(statsd3.tooltip);
 
+	skillsd3.graph = d3.select("#skillGraphDiv")
+				.append("svg")
+				.attr("height", skillsd3.dimens.h)
+				.attr("width" , skillsd3.dimens.w);
+
 	itemsd3.graph = d3.select("#itemGraphDiv")
 				.append("svg")
 				.attr("height", itemsd3.dimens.h)
 				.attr("width" , itemsd3.dimens.w);
 
-	itemsd3.itemTooltip = d3.tip().attr('class', 'd3-tip').html(function(d,i) {
+	gemsd3.graph = d3.select("#gemGraphDiv")
+				.append("svg")
+				.attr("height", gemsd3.dimens.h)
+				.attr("width" , gemsd3.dimens.w);
+
+
+	itemsd3.tooltip = d3.tip().attr('class', 'd3-tip').html(function(d,i) {
 		var items = itemsd3.data
 		return items.names[i]+" ("+items.count[i]+")";
 	});
 
-	skillsd3.graph = d3.select("#skillGraphDiv")
-				.append("svg")
-				.attr("height", skillsd3.dimens.h)
-				.attr("width" , skillsd3.dimens.w);
+	console.log(gemsd3)
+
+	if (gemsd3.data != undefined) 
+	gemsd3.tooltip = d3.tip().attr('class', 'd3-tip').html(function(d,i) {
+		var gems = gemsd3.data;
+		console.log(gems);
+		var gemName = (gems && gems.names[i]) || "None";
+		var gemCount = (gems && gems.count[i]) || "None";
+		return gemName+" ("+gemCount+")";
+	});
 }
 
 
@@ -123,7 +156,6 @@ function initGraphs() {
 */
 function drawStatGraph(currentTop, currentDataset) {
 	currentArray = allData.slice(0,currentTop);
-		// d3.selectAll('.enter').attr("class", "exit").exit().transition().remove();
 
 	statsd3.graph.selectAll('.enter').attr("class", "exit").remove();
 
@@ -134,7 +166,9 @@ function drawStatGraph(currentTop, currentDataset) {
 					.domain([0, d3.max(currentArray, function(d) { 	
 						return getY(d, currentDataset);		
 					})])
-					.range([statsd3.dimens.h - statsd3.dimens.yPad, statsd3.dimens.yPad]);
+					//top, bottom
+					.range([statsd3.dimens.h - 0, 0]);
+					//.range([statsd3.dimens.h - statsd3.dimens.yPad, statsd3.dimens.yPad]);
 
 	var xAxis = d3.svg.axis()
 					.scale(xScale)
@@ -167,7 +201,14 @@ function drawStatGraph(currentTop, currentDataset) {
 			// 	return 0;
 			// }
 			// else {
-				return statsd3.dimens.h-yScale(getY(d, currentDataset))-statsd3.dimens.yPad;
+				var barHeight = statsd3.dimens.h - yScale(getY(d, currentDataset)) - statsd3.dimens.yPad ;
+
+				if (barHeight <= 0) {
+					return 0;
+				}
+				else {
+					return barHeight;
+				}
 			// }	
 		})
 		.attr("class" , function(d,i) {
@@ -200,7 +241,8 @@ function drawStatGraph(currentTop, currentDataset) {
 	//add yAxis
 	statsd3.graph.append("g")
 		.attr("class", "enter axis")
-		.attr("transform", "translate("+statsd3.dimens.xPad+", 0)")
+		.attr("transform", "translate(" + statsd3.dimens.xPad+", " + (-1 * statsd3.dimens.yPad) + ")")
+		//.attr("transform", "translate("+statsd3.dimens.xPad+", 0)")
 		.call(yAxis);	
 
 	/* 
@@ -232,6 +274,7 @@ function drawStatGraph(currentTop, currentDataset) {
 	}
 }
 function drawItemPie() {
+
 	var itemsPieChart = itemsd3.graph;
 	var items = itemsd3.data;
 
@@ -250,7 +293,7 @@ function drawItemPie() {
 					.enter()
 					.append("g")
 					.attr("class", "arc enter")
-					.attr("transform", "translate(" + outerRadius + ", " + outerRadius + ")")
+					.attr("transform", "translate(" + itemsd3.dimens.h * .75+ ", " + outerRadius + ")")
 
 	arcs.append("path")
 		.attr("fill", function(d, i) {
@@ -278,9 +321,9 @@ function drawItemPie() {
 	        }
 	    });
 
-	arcs.call(itemsd3.itemTooltip);
-	arcs.on("mouseover", itemsd3.itemTooltip.show)
-		.on("mouseout", itemsd3.itemTooltip.hide);
+	arcs.call(itemsd3.tooltip);
+	arcs.on("mouseover", itemsd3.tooltip.show)
+		.on("mouseout", itemsd3.tooltip.hide);
 
 
 	/* 
@@ -325,6 +368,98 @@ function drawItemPie() {
 		}
 	}
 }
+function drawGemPie() {
+	var gemsPieChart = gemsd3.graph;
+	var gems = gemsd3.data;
+
+	gemsPieChart.selectAll('.enter').attr("class", "exit").remove();
+
+	var pie = d3.layout.pie();
+	var outerRadius = gemsd3.dimens.h / 2 ;
+	var innerRadius = 0;
+	var arc = d3.svg.arc()
+				.innerRadius(innerRadius)
+				.outerRadius(outerRadius);
+	var color = d3.scale.category10();
+	var arcs = gemsPieChart.selectAll("g.arc")
+					.data(pie(gems.count))
+					.enter()
+					.append("g")
+					.attr("class", "arc enter")
+					.attr("transform", "translate(" + gemsd3.dimens.h * .75 + ", " + outerRadius + ")")
+
+	arcs.append("path")
+		.attr("fill", function(d, i) {
+			return color(i)
+		})
+		.attr("d", arc)
+	    .attr("class", "enter");
+
+
+	arcs.append("text")
+	    .attr("transform", function(d) {
+	        return "translate(" + arc.centroid(d) + ")";
+	    })
+	    .attr("text-anchor", "middle")
+	    .attr("class", "enter")
+	    .html(function(d, i) {
+	    	var itemPercentage = ((d.value/gems.total)*100).toFixed(0);
+	    	var percentageString = itemPercentage + "%";
+	    	
+	        if (itemPercentage > 20) {
+
+	        	var space = gems.names[i].indexOf(" ");
+
+	        	var gemFirstWord = gems.names[i].slice(0,space);
+
+	        	return getShortenedGemName(gems.names[i]) + percentageString;
+	        }
+	        else if (itemPercentage > 2) {
+	        	return percentageString;
+	        }
+	    });
+
+	console.log(gemsd3.tooltip);
+	arcs.call(gemsd3.tooltip);
+	arcs.on("mouseover", gemsd3.tooltip.show)
+		.on("mouseout", gemsd3.tooltip.hide);
+
+
+
+	function getShortenedGemName(fullName) {
+		switch(fullName) {
+			case "Bane Of the Powerful":
+				return "Powerful";
+				break;
+			case "Bane Of the Trapped":
+				return "Trapped";
+				break;
+			case "Gem of Efficacious Toxin":
+				return "Toxin";
+				break;
+			case "No Gems":
+				return "No Gems";
+				break;
+
+			default:
+				var space = fullName.indexOf(" ");
+				if (space !== -1) {
+					var gemFirstWord = fullName.slice(0,space);
+				}
+				else {
+					return fullName;
+				}
+
+				if (gemFirstWord[gemFirstWord.length-1] === "," ) {
+					return gemFirstWord.slice(0,gemFirstWord.length-1);
+				}
+
+				return gemFirstWord;
+
+
+		}	
+	}
+}
 function drawActivePie() {
 	var active = skillsd3.data.active;
 	var skillsPieChart = skillsd3.graph;
@@ -346,7 +481,7 @@ function drawActivePie() {
 					})
 					.append("g")
 					.attr("class", "arc enter")
-					.attr("transform", "translate(" + 200 + ", " + outerRadius + ")")
+					.attr("transform", "translate(" + skillsd3.dimens.w + ", " + outerRadius + ")")
 
 	arcs.append("path")
 		.attr("fill", function(d, i) {
@@ -413,7 +548,7 @@ function drawPassivePie() {
 					})
 					.append("g")
 					.attr("class", "arc enter")
-					.attr("transform", "translate(" + 200 + ", " + outerRadius + ")")
+					.attr("transform", "translate(" + skillsd3.dimens.w + ", " + outerRadius + ")")
 
 	arcs.append("path")
 		.attr("fill", function(d, i) {
@@ -477,6 +612,13 @@ function resetItemData() {
 	items.names = items.all[0];
 	items.count = items.all[1];
 	items.total = 0;
+}
+function resetGemData() {
+	var gems = gemsd3.data;
+	gems.all = [[],[]];
+	gems.names = gems.all[0];
+	gems.count = gems.all[1];
+	gems.total = 0;
 }
 
 /*
@@ -563,7 +705,7 @@ function getTopSkills() {
 }
 function getTopItems(item) {
 	resetItemData();
-	var items = itemsd3.data
+	var items = itemsd3.data;
 
 	allData.forEach(function (currentPlayer) {
 
@@ -582,11 +724,53 @@ function getTopItems(item) {
 		}
 	})
 }
+function getTopGems() {
+	resetGemData();
+	var gems = gemsd3.data;
+
+	allData.forEach(function (currentPlayer) {
+
+		var currentItems = (currentPlayer.items);
+
+		if (currentPlayer.extraItemData && currentPlayer.extraItemData.gems !== undefined) {
+
+			var currentGems = currentPlayer.extraItemData.gems;
+			
+			currentGems.forEach(function(gem) {
+
+				var gemLocation = gems.names.indexOf(gem);
+
+				if (gemLocation === -1) {
+					gems.names.push(gem);
+					gems.count.push(1);
+					gems.total += 1;
+				}
+				else {
+					gems.count[gemLocation] += 1;
+					gems.total += 1;
+				}
+			})
+		}
+		else {
+			// console.log(currentPlayer,"had no gem")
+		}
+	});
+
+	console.log(gems.names);
+	if (gems.names[0] == undefined) {
+		gems.names.push("No Gems");
+		gems.count.push(1);
+		gems.total += 1;
+	}
+
+}
 
 
 $(document).ready(function() {
 
 	var itemPickerHTML = "";
+
+	itemPickerHTML += "<a href=\"#\" class=\"gem\">GEMS</a><br/>";
 
 	$.each(itemStrings , function(index, item){
 		if (itemStrings.indexOf(item) != itemStrings.length-1) {
@@ -605,9 +789,10 @@ $(document).ready(function() {
 	$('#itemPicker').hide();
 	$('#itemGraphDiv').hide();
 	$('#skillGraphDiv').hide();
+	$('#gemGraphDiv').hide();
 
 	$('.items').each(function () {
-		$(this).on('click' , function() {
+		$(this).click(function() {
 			var clickedItem = $(this).attr('id');
 			getTopItems(clickedItem);
 			drawItemPie();
@@ -616,12 +801,25 @@ $(document).ready(function() {
 			$(this).addClass('currentGraph');
 			$('#mainStatsDiv').hide();
 			$('#skillGraphDiv').hide();
+			$('#gemGraphDiv').hide();
 			$('#itemGraphDiv').show();
 		})
 	});
 
+	$('.gem').click(function (){
+
+		drawGemPie();
+		$('.currentGraph').removeClass('currentGraph');
+		$(this).addClass('currentGraph');
+		$('#mainStatsDiv').hide();
+		$('#skillGraphDiv').hide();
+		$('#itemGraphDiv').hide();
+		$('#gemGraphDiv').show();
+	})
+
 	getTopSkills();
 	getTopItems("head");
+	getTopGems();
 
 	initGraphs();
 
