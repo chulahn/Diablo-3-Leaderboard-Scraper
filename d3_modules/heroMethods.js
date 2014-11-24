@@ -154,7 +154,7 @@ function findItemsInCollection(hero, delay, db, foundGRiftHeroCallback){
 															console.log(colors.red(matched1Handers[0]));
 
 															unequipItem(itemCollection, matched1Handers[0], heroID);
-	asdfsaa
+	
 															//assumes all crusaders will have the 2h + shield passive
 															if (hero.class !== "crusader") {
 																console.log("hero is not a crusader, finding offHand");
@@ -442,8 +442,9 @@ function getImportantStats(heroID, updatedStatsCallback) {
 								"cooldown" : totalCooldown,
 								"elementalDam" : JSON.parse(JSON.stringify(elementalDam)),
 								"eliteDam" : eliteDam,
-								"gems" : gems
-							}
+								"gems" : gems,
+								"lastupdated" : new Date()
+							},
 						}//end of extraItemData
 					}//end of set 
 				, function(err, results) {

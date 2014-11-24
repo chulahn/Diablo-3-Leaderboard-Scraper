@@ -19,6 +19,8 @@
 						 	if (currentValue == 0) {
 						 		zeroCount++;
 						 	}
+
+						 	console.log(allData);
 						 	for (key in currentValue.stats) {
 						 		newVar[key] = (prev[key] || 0) + currentValue.stats[key]; 
 						 	}
@@ -194,7 +196,7 @@
 		<% ejs_battletags.slice(0,100).forEach(function (tag) { %>
 			
 			<tr id="<%= tag.Standing %>">
-				<td><%= tag.Standing %></td>
+				<td><%= ejs_battletags.indexOf(tag)+1 %></td>
 				<td><a href = "/player/<%= tag.Battletag.replace("#","-") %>" ><%= tag.Battletag %></a></td>
 				<td><%= tag["Greater Rift"] %></td>
 				<td><%= tag["Time Spent"] %></td>

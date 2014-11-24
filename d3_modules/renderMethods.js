@@ -104,10 +104,9 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 
 			db.collection("cached").find({"collectName" : collectionName}).toArray(function (err, foundCache) {
 
-				if (foundCache && foundCache[0] != undefined) {
+				if (foundCache && foundCache[0] && foundCache[0].heroes == undefined) {
 
 					var pageData = foundCache[0];
-					// console.log(pageData.battletags);
 
 					res.render('ClassLeaderboard.ejs',{title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : pageData.battletags , all:pageData.heroes , lastupdated : date});
 					console.log(colors.green("rendered from cache!"));
@@ -155,8 +154,8 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 
 			    					heroToPush = gRiftHeroResults[0];
 			    					
-			    					if (heroToPush.extraItemData != undefined) {
-				    					console.log("found grift hero and extraItemData for " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing) 	    					
+			    					if (heroToPush.extraItemData != undefined && heroToPush.extraItemData.gems != undefined && heroToPush.extraItemData.lastupdated != undefined) {
+				    					console.log("found grift hero and extraItemData, gems, lastupdated for " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing) 	    					
 		    							allData[currentPlayerFromDB.Standing-1] = heroToPush;
 		    							foundGRiftHeroCallback();
 			    					}
@@ -304,7 +303,7 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 																	});
 
 
-			    					res.render('ClassLeaderboard.ejs', {title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , all:allData , lastupdated : date});
+			    					res.render('ClassLeaderboard.ejs', {title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , all:allData , lastupdated : date, lastCached: new Date()});
 								});	
 			    			}
 
@@ -346,6 +345,78 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 		});
 	});
 */
+}
+
+exports.getAllClasses = function(db, region, leaderboardType, req, res) {
+	async.waterfall([
+
+		function getBarbs(gotBarbs) {
+
+			var allClasses = [];
+			db.collection(region+leaderboardType+"barb").find({}).toArray(function (err, barbs) {
+				allClasses = allClasses.concat(barbs)
+				gotBarbs(null, allClasses);
+			});
+		},
+
+		function getWDs(allClasses, gotWDS) {
+
+			db.collection(region+leaderboardType+"wd").find({}).toArray(function (err, wds) {
+				allClasses = allClasses.concat(wds);
+				gotWDS(null, allClasses);
+			});
+		},
+
+		function getWiz(allClasses, gotWiz) {
+
+			db.collection(region+leaderboardType+"wiz").find({}).toArray(function (err, wiz) {
+				allClasses = allClasses.concat(wiz);
+				gotWiz(null, allClasses);
+			});
+		},
+
+		function getSader(allClasses, gotSaders) {
+
+			db.collection(region+leaderboardType+"sader").find({}).toArray(function (err, saders) {
+				allClasses = allClasses.concat(saders);
+				gotSaders(null, allClasses);
+			});
+		},
+
+		function getMonks(allClasses, gotMonks) {
+			db.collection(region+leaderboardType+"monk").find({}).toArray(function (err, monks) {
+				allClasses = allClasses.concat(monks);
+				gotMonks(null, allClasses);
+			});
+		},
+		function getDHs(allClasses, gotDHs) {
+			db.collection(region+leaderboardType+"dh").find({}).toArray(function (err, DHs) {
+				allClasses = allClasses.concat(DHs);
+				gotDHs(null, allClasses);
+			});
+		}
+	], function (err, allClasses) {
+
+		if (allClasses) {
+
+			allClasses.sort(function (a,b) {
+
+				if (b["Greater Rift"] != a["Greater Rift"]) {
+					return b["Greater Rift"] - a["Greater Rift"];
+				}
+
+				else {
+					return a["Time Spent"]-b["Time Spent"];
+				}
+			});
+
+
+			res.render('ClassLeaderboard.ejs', {title: "All", region: region, leaderboardType: leaderboardType, ejs_battletags: allClasses, all:[], lastupdated: new Date()})
+		}
+		else {
+			res.send(404);
+		}
+	});
 }
 
 

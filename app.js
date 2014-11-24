@@ -9,7 +9,7 @@ var express = require("express");
 var app = express();
 
 var mongo = require("mongodb");
-var Db = mongo.Db;
+
 var MongoClient = mongo.MongoClient;
 var databaseURL = process.env.DBURL || "mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders";
 
@@ -31,6 +31,18 @@ app.get("/player/:battletag/hero/:heroID", function(req, res) {
 	// heroMethods.getImportantStats(parseInt(req.params.heroID));
 });
 
+app.get("/all/", function(req,res) {
+	MongoClient.connect(databaseURL, function(err, db) {
+
+		if (db) {
+			render.getAllClasses(db, "us","normal",req,res);
+		}
+
+		else {
+			res.send("error connecting to db in all")
+		}
+	});
+})
 
 //update methods
 //update leaderboard
