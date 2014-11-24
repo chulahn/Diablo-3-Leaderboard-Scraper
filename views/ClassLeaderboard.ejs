@@ -66,8 +66,8 @@
 
 		statHTML += "Elemental Damage: " + Number(allStats.elemDam.toFixed(0)).toLocaleString('en') + "<br/>";
 		statHTML += "Elite Elemental Damage: " + Number(allStats.eliteElemDam.toFixed(0)).toLocaleString('en') + "</br/>";
-		statHTML += "Toughness: " + allStats.toughness.toFixed(0) + "<br />";
-		statHTML += "Life: " + allStats.life.toFixed(0) + "<br />";
+		statHTML += "Toughness: " + Number(allStats.toughness.toFixed(0)).toLocaleString('en') + "<br />";
+		statHTML += "Life: " + Number(allStats.life.toFixed(0)).toLocaleString('en') + "<br />";
 		statHTML += "All Resist: " + allStats.allRes.toFixed(0) + "<br />"
 		statHTML += "Cooldown Reduction: " + allStats.cooldown.toFixed(2) + "%<br />";
 		statHTML += "Average Paragon: " + allStats.paragon.toFixed(0) +"<br />";

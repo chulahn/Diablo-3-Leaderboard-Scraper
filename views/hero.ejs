@@ -49,6 +49,7 @@
 	<p>Refresh to show more data</p>
 <% } %>
 
+<%= Number(10000000).toLocaleString() %>
 
 <!-- Shows information for a Hero -->
 <div class="container-fluid">
@@ -60,7 +61,7 @@
 				<li>Class : <%= ejs_heroData.class %></li>
 				<li>Level : <%= ejs_heroData.level %></li>
 				<li>Paragon : <%= ejs_heroData.Paragon %></li>
-				<li>Damage : <%= ejs_heroData.stats.damage %></li>
+				<li>Damage : <%= Number(ejs_heroData.stats.damage).toLocaleString('en') %></li>
 					<ul>
 						<% if ( ejs_heroData.class == "demon-hunter" || ejs_heroData.class == "monk" ) { %>
 							<li>Dexterity : <%= ejs_heroData.stats.dexterity %></li>
