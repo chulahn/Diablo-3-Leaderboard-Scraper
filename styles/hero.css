@@ -1,9 +1,29 @@
-h1, h2, p, li {
+h1, h2, h3, p, li, td {
 	color: white;
 }
 a {
 	text-decoration: none;
 }
+
+table {
+	padding: 5px;
+}
+
+td {
+	border: 1px solid white;
+	padding: 5px;
+	text-align: center;
+}
+
+#profile li{
+	font-size: 1.2em;
+	list-style: none;
+}
+
+#profile ul ul li {
+	list-style: circle;
+}
+
 #profile, #items, #skills {
 	display: inline-block;
 	border-style: solid;
@@ -11,7 +31,12 @@ a {
 	padding: 5px;
 	border-color: white;
 }
-
+.itemType, .statData {
+	font-weight: bold;
+}
+.statType {
+	color: #00ff00;
+}
 .orange {
 	color: orange;
 }

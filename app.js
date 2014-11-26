@@ -3,7 +3,6 @@ var playerMethods = require("./d3_modules/playerMethods");
 var heroMethods = require("./d3_modules/heroMethods");
 var render = require("./d3_modules/renderMethods")
 var async = require("async");
-var asyncMethods = require('./asyncMethods.js')
 
 var express = require("express");
 var app = express();

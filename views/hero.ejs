@@ -28,22 +28,42 @@
 
 	  ga('create', 'UA-56162514-1', 'auto');
 	  ga('send', 'pageview');
+	</script>
 
+	<script>
+
+		$(document).ready(function() {
+			$('#profile li').each(function(index, value){
+				var text = $(this).html();
+				console.log(text.toLocaleString())
+
+				var titleEnd = text.indexOf(":");
+				var statTitle = "<span class=\"statType\">" + text.slice(0,titleEnd+1) + "</span>";
+
+				var statData = text.slice(titleEnd+2, text.length);
+				statData = parseFloat(statData).toLocaleString('en');
+				statData = "<span class=\"statData\">"+statData+"</span>";
+				
+				console.log(parseFloat(statData).toLocaleString('en'));
+				
+				$(this).html(statTitle+" "+statData);
+				
+			});
+		});
 	</script>
 </head>
 
 <body>
-<%- ejs_heroData.region %>
 <% var urlLeft = "http://"+ejs_heroData.region+".battle.net/d3/en/" %>
 <% var skillURL = urlLeft + "class/" + ejs_heroData.class %>
 
-<%= (Number(1234510234)/2000).toLocaleString() %>
-
 <h1><%= ejs_heroData.name %> <small><%= ejs_btag %></small>  </h1>
+<h3><%= ejs_heroData.level %><%= (ejs_heroData.seasonal === true) ? " Seasonal" : "" %> <%= (ejs_heroData.hardcore === true) ? "Hardcore" : "Softcore" %> <%= ejs_heroData.class %></h3>
+				
 <p><a href = "http://us.battle.net/d3/en/profile/<%= ejs_btag %>/hero/<%= ejs_heroID %>" > Battle.net Profile </a>
 <% var lastupdated = ejs_heroData.lastupdated || "update now!" %>
 <% if (lastupdated !== "update now!") lastupdated = lastupdated.getMonth()+1 + "/" + lastupdated.getDate() + "/" + (lastupdated.getYear()+1900) %>
-<p>last updated: <%= lastupdated %> <br />
+last updated: <%= lastupdated %> <br />
 <a href = "/update/player/<%= ejs_btag %>/hero/<%= ejs_heroID %>">Update </a>
 <% if (ejs_heroData.extraItemData == undefined) { %>
 	<p>Refresh to show more data</p>
@@ -55,125 +75,173 @@
 	<div class="row">
 		<div id="profile" class="col-lg-3 col-md-3 col-sm-4 col-xs-7">
 			<ul><h2>Stats</h2>
-				<li>Hardcore : <%= ejs_heroData.hardcore %></li>
-				<li>Seasonal : <%= ejs_heroData.seasonal %></li>
-				<li>Class : <%= ejs_heroData.class %></li>
-				<li>Level : <%= ejs_heroData.level %></li>
-				<li>Paragon : <%= ejs_heroData.Paragon %></li>
-				<li>Damage : <%= Number(ejs_heroData.stats.damage).toLocaleString('en') %></li>
+				<li>Paragon: <%= ejs_heroData.Paragon %></li>
+				<li>Damage: <%= Number(ejs_heroData.stats.damage).toLocaleString('en') %></li>
 					<ul>
 						<% if ( ejs_heroData.class == "demon-hunter" || ejs_heroData.class == "monk" ) { %>
-							<li>Dexterity : <%= ejs_heroData.stats.dexterity %></li>
+							<li>Dexterity: <%= ejs_heroData.stats.dexterity %></li>
 						<% } %>
 						<% if ( ejs_heroData.class == "witch-doctor" || ejs_heroData.class == "wizard" ) { %>
-							<li>Intelligence : <%= ejs_heroData.stats.intelligence %></li>
+							<li>Intelligence: <%= ejs_heroData.stats.intelligence %></li>
 						<% } %>
 						<% if ( ejs_heroData.class == "barbarian" || ejs_heroData.class == "crusader" ) { %>
-							<li>Strength : <%= ejs_heroData.stats.strength %></li>
+							<li>Strength: <%= ejs_heroData.stats.strength %></li>
 						<% } %>
-						<li>Crit Chance : <%= (ejs_heroData.stats.critChance*100).toFixed(2)+"%" %></li>
-						<li>Crit Damage : <%= (ejs_heroData.stats.critDamage*100).toFixed(2)+"%" %></li>
+						<li>Crit Chance: <%= (ejs_heroData.stats.critChance*100).toFixed(2)+"%" %></li>
+						<li>Crit Damage: <%= (ejs_heroData.stats.critDamage*100).toFixed(2)+"%" %></li>
 					</ul>
 				<% if (ejs_heroData.extraItemData != undefined) { %>
 					<% ejs_heroData.extraItemData.elementalDam.forEach(function (element) { %>
 						<% if (element[1] != 0) { %> 
-							<li>+<%= element[0] %> Skills Damage : <%= element[1] %>%</li>
+							<li>+<%= element[0] %> Skills Damage: <%= element[1] %>%</li>
 						<% } %>
 					<% }) %>
 					<% if (ejs_heroData.extraItemData.eliteDam != undefined && ejs_heroData.extraItemData.eliteDam != 0) { %>
-						<li>+Elite Damage : <%= ejs_heroData.extraItemData.eliteDam %>%</li>
+						<li>+Elite Damage: <%= ejs_heroData.extraItemData.eliteDam %>%</li>
 					<% } %>
 					<% if (ejs_heroData.extraItemData.elementalDam[0][1] != 0)  { %>
-						<li>Elemental DPS : <%= ejs_heroData.extraItemData.elementalDam[0][1] * ejs_heroData.stats.damage %></li>
+						<li>Elemental DPS: <%= ejs_heroData.extraItemData.elementalDam[0][1] * ejs_heroData.stats.damage %></li>
 					<% } %>
 					<% if (ejs_heroData.extraItemData.eliteDam != undefined && ejs_heroData.extraItemData.eliteDam != 0) { %>
-						<li> Elite DPS : <%= ejs_heroData.extraItemData.eliteDam * ejs_heroData.stats.damage %></li>
-						<li> Elite Elemental DPS : <%= ejs_heroData.extraItemData.elementalDam[0][1] * ejs_heroData.extraItemData.eliteDam * ejs_heroData.stats.damage %></li>
+						<li> Elite DPS: <%= ejs_heroData.extraItemData.eliteDam * ejs_heroData.stats.damage %></li>
+						<li> Elite Elemental DPS: <%= ejs_heroData.extraItemData.elementalDam[0][1] * ejs_heroData.extraItemData.eliteDam * ejs_heroData.stats.damage %></li>
 					<% } %>
 					<% if (ejs_heroData.extraItemData.cooldown != 0) { %>
-						<li>CDR from Items : <%= ejs_heroData.extraItemData.cooldown %>%</li>
+						<li>CDR from Items: <%= ejs_heroData.extraItemData.cooldown %>%</li>
 					<% } %>
 				<% }%>
-				<li>Toughness : <%= ejs_heroData.stats.toughness %></li>
+				<li>Toughness: <%= ejs_heroData.stats.toughness %></li>
 					<ul>
-						<li>Vitality : <%= ejs_heroData.stats.vitality %></li>
-						<li>Armor : <%= ejs_heroData.stats.armor %></li>
-						<li>Average Resist : <%= Math.round((ejs_heroData.stats.fireResist+ejs_heroData.stats.coldResist+ejs_heroData.stats.lightningResist+ejs_heroData.stats.poisonResist+ejs_heroData.stats.arcaneResist)/6) %></li>
-						<li>Life : <%= ejs_heroData.stats.life %></li>
+						<li>Vitality: <%= ejs_heroData.stats.vitality %></li>
+						<li>Armor: <%= ejs_heroData.stats.armor %></li>
+						<li>Average Resist: <%= Math.round((ejs_heroData.stats.fireResist+ejs_heroData.stats.coldResist+ejs_heroData.stats.lightningResist+ejs_heroData.stats.poisonResist+ejs_heroData.stats.arcaneResist)/6) %></li>
+						<li>Life: <%= ejs_heroData.stats.life %></li>
 					</ul>
-				<li>Healing : <%= ejs_heroData.stats.healing %></li>
+				<li>Healing: <%= ejs_heroData.stats.healing %></li>
 				<% if ( ejs_heroData.class == "demon-hunter" || ejs_heroData.class == "monk" ) { %>
-					<li>Strength : <%= ejs_heroData.stats.strength %></li>
-					<li>Intelligence : <%= ejs_heroData.stats.intelligence %></li>
+					<li>Strength: <%= ejs_heroData.stats.strength %></li>
+					<li>Intelligence: <%= ejs_heroData.stats.intelligence %></li>
 				<% } %>
 				<% if ( ejs_heroData.class == "witch-doctor" || ejs_heroData.class == "wizard" ) { %>
-					<li>Strength : <%= ejs_heroData.stats.strength %></li>
-					<li>Dexterity : <%= ejs_heroData.stats.dexterity %></li>
+					<li>Strength: <%= ejs_heroData.stats.strength %></li>
+					<li>Dexterity: <%= ejs_heroData.stats.dexterity %></li>
 				<% } %>
 				<% if ( ejs_heroData.class == "barbarian" || ejs_heroData.class == "crusader" ) { %>
-					<li>Dexterity : <%= ejs_heroData.stats.dexterity %></li>
-					<li>Intelligence : <%= ejs_heroData.stats.intelligence %></li>
+					<li>Dexterity: <%= ejs_heroData.stats.dexterity %></li>
+					<li>Intelligence: <%= ejs_heroData.stats.intelligence %></li>
 				<% } %>
 				
 		</div>
 
 		<div id="items" class="col-lg-3 col-md-4 col-sm-5 col-xs-7 col-sm-offset-1 col-md-offset-3">
-			<ul><h2>Items</h2>
+			<h2 text-align="center">Items</h2>
+			<table>
+				<tr>
+					<td>
+						<span class="itemType">Shoulders</span><br/>
+						<% if (ejs_heroData.items.shoulders != undefined) { %>
+						<a href = "<%= urlLeft %><%= ejs_heroData.items.shoulders.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.shoulders.displayColor %>"><%= ejs_heroData.items.shoulders.name %></a></li>
+						<% } %>					
+					</td>
+					<td>
+						<span class="itemType">Head</span><br/>
+						<% if (ejs_heroData.items.head != undefined) { %>
+						<a href = "<%= urlLeft %><%= ejs_heroData.items.head.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.head.displayColor %>"><%= ejs_heroData.items.head.name %></a>
+						<% } %>
+					</td>
+				
+					<td>
+						<span class="itemType">Amulet</span><br/>
+						<% if (ejs_heroData.items.neck != undefined) { %>
+						<a href = "<%= urlLeft %><%= ejs_heroData.items.neck.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.neck.displayColor %>"><%= ejs_heroData.items.neck.name %></a></li>
+						<% } %>	
+					</td>
+				</tr>
 
-				<% if (ejs_heroData.items == 1) { %> No Items <% } %>
-				<% if (ejs_heroData.items.head != undefined) { %>
-				<li>Head : <a href = "<%= urlLeft %><%= ejs_heroData.items.head.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.head.displayColor %>"><%= ejs_heroData.items.head.name %></a></li>
+				<tr>
+					<td>
+						<span class="itemType">Hands</span><br/>
+						<% if (ejs_heroData.items.hands != undefined) { %>
+						<a href = "<%= urlLeft %><%= ejs_heroData.items.hands.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.hands.displayColor %>"><%= ejs_heroData.items.hands.name %></a></li>
+						<% } %>
+					</td>
+					<td>
+						<span class="itemType">Torso</span><br/>
+						<% if (ejs_heroData.items.torso != undefined) { %>
+						<a href = "<%= urlLeft %><%= ejs_heroData.items.torso.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.torso.displayColor %>"><%= ejs_heroData.items.torso.name %></a></li>
+						<% } %>
+					</td>
+					<td>
+						<span class="itemType">Wrists</span><br/>
+						<% if (ejs_heroData.items.bracers != undefined) { %>
+						<a href = "<%= urlLeft %><%= ejs_heroData.items.bracers.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.bracers.displayColor %>"><%= ejs_heroData.items.bracers.name %></a></li>
+						<% } %>		
+					</td>
+				</tr>
 
-				<% } %>
-				<% if (ejs_heroData.items.torso != undefined) { %>
-				<li title="Insert data from tooltip params">Torso : <a href = "<%= urlLeft %><%= ejs_heroData.items.torso.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.torso.displayColor %>"><%= ejs_heroData.items.torso.name %></a></li>
-				<% } %>
+				<tr>
+					<td>
+						<span class="itemType">Left Finger</span><br/>
+						<% if (ejs_heroData.items.leftFinger != undefined) { %>
+						<a href = "<%= urlLeft %><%= ejs_heroData.items.leftFinger.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.leftFinger.displayColor %>"><%= ejs_heroData.items.leftFinger.name %></a></li>
+						<% } %>			
+					</td>
+					<td>
+						<span class="itemType">Belt</span><br/>
+						<% if (ejs_heroData.items.waist != undefined) { %>
+						<a href = "<%= urlLeft %><%= ejs_heroData.items.waist.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.waist.displayColor %>"><%= ejs_heroData.items.waist.name %></a></li>
+						<% } %>						
+					</td>
+					<td>
+						<span class="itemType">Right Finger</span><br/>
+						<% if (ejs_heroData.items.rightFinger != undefined) { %>
+						<a href = "<%= urlLeft %><%= ejs_heroData.items.rightFinger.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.rightFinger.displayColor %>"><%= ejs_heroData.items.rightFinger.name %></a></li>
+						<% } %>
+					</td>
+				</tr>
 
-				<% if (ejs_heroData.items.neck != undefined) { %>
-				<li title="Insert data from tooltip params">Amulet : <a href = "<%= urlLeft %><%= ejs_heroData.items.neck.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.neck.displayColor %>"><%= ejs_heroData.items.neck.name %></a></li>
-				<% } %>		
-				<% if (ejs_heroData.items.shoulders != undefined) { %>
-				<li title="Insert data from tooltip params">Shoulders : <a href = "<%= urlLeft %><%= ejs_heroData.items.shoulders.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.shoulders.displayColor %>"><%= ejs_heroData.items.shoulders.name %></a></li>
-				<% } %>
-				<% if (ejs_heroData.items.hands != undefined) { %>
-				<li title="Insert data from tooltip params">Hands : <a href = "<%= urlLeft %><%= ejs_heroData.items.hands.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.hands.displayColor %>"><%= ejs_heroData.items.hands.name %></a></li>
-				<% } %>
-
-				<% if (ejs_heroData.items.bracers != undefined) { %>
-				<li title="Insert data from tooltip params">Bracers : <a href = "<%= urlLeft %><%= ejs_heroData.items.bracers.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.bracers.displayColor %>"><%= ejs_heroData.items.bracers.name %></a></li>
-				<% } %>		
-				<% if (ejs_heroData.items.waist != undefined) { %>
-				<li title="Insert data from tooltip params">Belt : <a href = "<%= urlLeft %><%= ejs_heroData.items.waist.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.waist.displayColor %>"><%= ejs_heroData.items.waist.name %></a></li>
-				<% } %>						
-				<% if (ejs_heroData.items.rightFinger != undefined) { %>
-				<li title="Insert data from tooltip params">Right Finger : <a href = "<%= urlLeft %><%= ejs_heroData.items.rightFinger.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.rightFinger.displayColor %>"><%= ejs_heroData.items.rightFinger.name %></a></li>
-				<% } %>
-				<% if (ejs_heroData.items.leftFinger != undefined) { %>
-				<li title="Insert data from tooltip params">Left Finger : <a href = "<%= urlLeft %><%= ejs_heroData.items.leftFinger.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.leftFinger.displayColor %>"><%= ejs_heroData.items.leftFinger.name %></a></li>
-				<% } %>			
-				<% if (ejs_heroData.items.legs != undefined) { %>
-				<li title="Insert data from tooltip params">Legs : <a href = "<%= urlLeft %><%= ejs_heroData.items.legs.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.legs.displayColor %>"><%= ejs_heroData.items.legs.name %></a></li>
-				<% } %>
-				<% if (ejs_heroData.items.feet != undefined) { %>
-				<li title="Insert data from tooltip params">Feet : <a href = "<%= urlLeft %><%= ejs_heroData.items.feet.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.feet.displayColor %>"><%= ejs_heroData.items.feet.name %></a></li>
-				<% } %>				
-				<% if (ejs_heroData.items.mainHand != undefined) { %>
-				<li title="Insert data from tooltip params">Main Hand : <a href = "<%= urlLeft %><%= ejs_heroData.items.mainHand.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.mainHand.displayColor %>"><%= ejs_heroData.items.mainHand.name %></a></li>
-				<% } %>		
-				<% if (ejs_heroData.items.offHand != undefined) { %>
-				<li title="Insert data from tooltip params">Off Hand : <a href = "<%= urlLeft %><%= ejs_heroData.items.offHand.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.offHand.displayColor %>"><%= ejs_heroData.items.offHand.name %></a></li>
-				<% } %>		
-			</ul>
-
+				<tr>
+					<td>
+						<span class="itemType">Main Hand</span><br/>
+						<% if (ejs_heroData.items.mainHand != undefined) { %>
+						<a href = "<%= urlLeft %><%= ejs_heroData.items.mainHand.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.mainHand.displayColor %>"><%= ejs_heroData.items.mainHand.name %></a></li>
+						<% } %>	
+					</td>
+					<td>
+						<span class="itemType">Legs</span><br/>
+						<% if (ejs_heroData.items.legs != undefined) { %>
+						<a href = "<%= urlLeft %><%= ejs_heroData.items.legs.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.legs.displayColor %>"><%= ejs_heroData.items.legs.name %></a></li>
+						<% } %>
+					</td>
+					<td>
+						<span class="itemType">Off Hand</span><br/>
+						<% if (ejs_heroData.items.offHand != undefined) { %>
+						<a href = "<%= urlLeft %><%= ejs_heroData.items.offHand.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.offHand.displayColor %>"><%= ejs_heroData.items.offHand.name %></a></li>
+						<% } %>
+					</td>
+				</tr>
+				<tr>
+					<td>
+					</td>
+					<td>
+						<span class="itemType">Feet</span><br/>
+						<% if (ejs_heroData.items.feet != undefined) { %>
+						<a href = "<%= urlLeft %><%= ejs_heroData.items.feet.tooltipParams %>" onclick="return false" class="<%= ejs_heroData.items.feet.displayColor %>"><%= ejs_heroData.items.feet.name %></a></li>
+						<% } %>				
+					</td>
+					<td>
+					</td>
+				</tr>	
+			</table>
 		</div>
 	</div>
 	<div class="row">
 		<div id="skills" class="col-lg-3 col-md-3 col-sm-4">
 			<ul><h2>Skills</h2>
-				<li>Active Skills :
-					<!-- loop through the active skills -->
+				<li>Active Skills:
+					
 					<ul><% ejs_heroData.skills.active.forEach(function (activeSkill) { %>
-						<!-- if skill is not null, add it to list -->
+					
 						<% if (activeSkill.skill != undefined) { %>
 
 							<%
@@ -184,11 +252,11 @@
 						<!-- http://us.battle.net/d3/en/class/demon-hunter/passive/sharpshooter -->
 							<li><a href="<%= activeURL %>"> <%= activeSkill.skill.name %></a>
 							<!-- if there is a rune add it to skill -->
-							<% if (activeSkill.rune != undefined) { %> : <%= activeSkill.rune.name %><% } %>
+							<% if (activeSkill.rune != undefined) { %>: <%= activeSkill.rune.name %><% } %>
 						</li><% } %> 
 					<% }) %></ul><!-- end of active skills loop -->
 				</li>
-				<li>Passives : 
+				<li>Passives: 
 					<ul><% ejs_heroData.skills.passive.forEach(function (passive) { %>
 						<% if (passive.skill != undefined) { %>
 
