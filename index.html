@@ -5,8 +5,11 @@
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<title>d3INd3</title>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/bootstrap/3.3.0/css/bootstrap.min.css">
-	<link rel="stylesheet" type="text/css" href="/styles/homepage.css">
 
+	<link rel="stylesheet" type="text/css" href="/styles/homepage.css">
+	<link rel="stylesheet/less" type="text/css" href="/styles/homepage.less">
+	
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/less.js/2.1.1/less.min.js"></script>
 	<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
 
 </head>
@@ -34,6 +37,8 @@ $(document).ready(function() {
 			for (m=0; m<diabloClasses.length; m++) {
 				diabloClassHTML += "<a href=\"/us/"+category+"/"+diabloClasses[m]+"\">"+diabloClasses[m]+"</a>&nbsp&nbsp&nbsp";
 			}
+			var selectedColor = $(this).css('background-color');
+			$('#diabloClass').css('background-color', selectedColor);
 			$('#diabloClass').html(diabloClassHTML);
 
 		})

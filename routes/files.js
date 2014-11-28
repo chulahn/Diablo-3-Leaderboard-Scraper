@@ -7,14 +7,26 @@ router.get("/d3functions.js", function(req,res) {
 router.get("/styles/battletag.css", function(req,res) {
 	res.sendfile("styles/battletag.css");
 });
+router.get("/styles/battletag.less", function(req,res) {
+	res.sendfile("styles/battletag.less");
+});
 router.get("/styles/homepage.css", function(req,res) {
 	res.sendfile("styles/homepage.css");
+});
+router.get("/styles/homepage.less", function(req,res) {
+	res.sendfile("styles/homepage.less");
 });
 router.get("/styles/hero.css", function(req,res) {
 	res.sendfile("styles/hero.css");
 });
+router.get("/styles/hero.less", function(req,res) {
+	res.sendfile("styles/hero.less");
+});
 router.get("/styles/leaderboard.css", function(req,res) {
 	res.sendfile("styles/leaderboard.css");
+});
+router.get("/styles/leaderboard.less", function(req,res) {
+	res.sendfile("styles/leaderboard.less");
 });
 router.get("/images/hardcore.png", function(req,res) {
 	res.sendfile("images/hardcore.png");

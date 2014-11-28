@@ -1,5 +1,6 @@
 .selected {
 	font-weight: bold;
+	background-color: black;
 }
 
 header {
@@ -15,3 +16,11 @@ span, a {
 	font-size: 32px;
 }
 
+span {
+	background-color: blue;
+	padding: 2px;
+}
+
+#diabloClass {
+	background-color: black;
+}
