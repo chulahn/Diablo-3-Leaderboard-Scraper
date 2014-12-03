@@ -21,7 +21,22 @@ app.get("/", function(req, res) {
 });
 //shows leaderboard page
 app.get("/:region/:category/:diabloClass", function(req,res) {
-	render.leaderboardPage(req.params.region, req.params.diabloClass, req.params.category, req, res);
+
+	if (req.params.diabloClass !== "all") {
+		render.leaderboardPage(req.params.region, req.params.diabloClass, req.params.category, req, res);
+	}
+	else {
+		MongoClient.connect(databaseURL, function(err, db) {
+
+			if (db) {
+				render.getAllClasses(db, "us",req.params.category,req,res);
+			}
+
+			else {
+				res.send("error connecting to db in all")
+			}
+		});
+	}
 });
 //shows a player page, with heroes.
 app.get("/player/:battletag", function(req,res) {
@@ -33,11 +48,11 @@ app.get("/player/:battletag/hero/:heroID", function(req, res) {
 	// heroMethods.getImportantStats(parseInt(req.params.heroID));
 });
 
-app.get("/all/", function(req,res) {
+app.get("/all/:category", function(req,res) {
 	MongoClient.connect(databaseURL, function(err, db) {
 
 		if (db) {
-			render.getAllClasses(db, "us","normal",req,res);
+			render.getAllClasses(db, "us",req.params.category,req,res);
 		}
 
 		else {
@@ -58,8 +73,21 @@ app.get("/update/player/:battletag/hero/:heroID", function(req, res) {
 			return console.log(err);
 		}
 		else {
-			playerMethods.addHeroData("us",req.params.battletag, parseInt(req.params.heroID), 50, db);
-			res.redirect("/player/"+req.params.battletag+"/hero/"+req.params.heroID);
+			async.series([
+
+				function (callback) {
+					playerMethods.addHeroData("us",req.params.battletag, parseInt(req.params.heroID), 50, db, callback);
+				}
+			 
+			 ],function finished(err) {
+				if (!err) {
+					res.redirect("/player/"+req.params.battletag+"/hero/"+req.params.heroID);
+				}
+				else {
+					console.log(err);
+					return res.send("could not update player");
+				}
+			});
 		}	
 	});
 });

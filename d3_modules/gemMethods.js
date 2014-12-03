@@ -9,7 +9,7 @@ var exports = module.exports = {
 			return true;
 		}
 		else {
-			console.log("not a ame or diamond " + currenItem.gems[0].item.id);
+			console.log("not a ame or diamond " + hatGem[0].item.id);
 			return false;
 		}
 	}, 

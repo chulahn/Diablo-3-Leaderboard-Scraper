@@ -4,9 +4,8 @@
 <head>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<title>d3INd3</title>
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/bootstrap/3.3.0/css/bootstrap.min.css">
 
-	<link rel="stylesheet" type="text/css" href="/styles/homepage.css">
+	<!-- <link rel="stylesheet" type="text/css" href="/styles/homepage.css"> -->
 	<link rel="stylesheet/less" type="text/css" href="/styles/homepage.less">
 	
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/less.js/2.1.1/less.min.js"></script>
@@ -17,10 +16,11 @@
 <body>
 <script>
 
-var diabloClasses = ["sader", "barb", "dh", "wiz", "wd", "monk"];
+var diabloClasses = ["sader", "barb", "dh", "wiz", "wd", "monk", "all"];
 var groups = ["normal", "hc", "season", "seasonhc"];
 $(document).ready(function() {
 
+	$('#diabloClass').hide();
 	var headerHTML="";
 	for (l=0; l<groups.length; l++) {
 		headerHTML += "<span id=\""+groups[l]+"\">"+groups[l]+"</span>&nbsp&nbsp&nbsp";
@@ -30,7 +30,9 @@ $(document).ready(function() {
 
 	$('header span').each(function() {
 		var category = $(this).text();
+
 		$(this).click(function() {
+			$('#diabloClass').show();
 			$('header span').removeClass();
 			$(this).toggleClass('selected');
 			diabloClassHTML = "";

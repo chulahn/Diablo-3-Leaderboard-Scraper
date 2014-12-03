@@ -10,17 +10,17 @@
 	<link rel="stylesheet" type="text/css" href="../../../styles/leaderboard.css">
 
 	<script>
-		var allData = <%-JSON.stringify(all)%>;
-		var gRift = <%- JSON.stringify(ejs_battletags) %>;
+		var allGRiftHeroes = <%- JSON.stringify(ejs_allGRiftHeroes)%>;
+		var allBattletags = <%- JSON.stringify(ejs_battletags) %>;
 		var zeroCount = 0;
 
-		var allStats = allData.reduce(function (prev, currentValue) {
+		var allStats = allGRiftHeroes.reduce(function (prev, currentValue) {
 						 	var newVar = {};
 						 	if (currentValue == 0) {
 						 		zeroCount++;
 						 	}
 
-						 	console.log(allData);
+						 	console.log(allGRiftHeroes);
 						 	for (key in currentValue.stats) {
 						 		newVar[key] = (prev[key] || 0) + currentValue.stats[key]; 
 						 	}
@@ -47,7 +47,7 @@
 						},0);
 
 		//if zero was passed in, dont include in average calc (dead hc heroes lowered average)
-		var actualLength = allData.length - zeroCount;
+		var actualLength = allGRiftHeroes.length - zeroCount;
 
 		var allRes = 0;
 		for (key in allStats) {
@@ -61,7 +61,7 @@
 			}
 		}
 		
-		var medianGrift =  parseInt(gRift[gRift.length/2]["Greater Rift"]) + parseInt(gRift[(gRift.length/2) - 1]["Greater Rift"])
+		var medianGrift =  parseInt(allBattletags[allBattletags.length/2]["Greater Rift"]) + parseInt(allBattletags[(allBattletags.length/2) - 1]["Greater Rift"])
 		medianGrift /= 2;
 
 		var statHTML = "";
@@ -135,9 +135,7 @@
 		});
 	</script>
 
-	<script>
-		
-	</script>
+
 
 		
 </head>
@@ -197,7 +195,7 @@
 			
 			<tr id="<%= tag.Standing %>">
 				<td><%= ejs_battletags.indexOf(tag)+1 %></td>
-				<td><a href = "/player/<%= tag.Battletag.replace("#","-") %>" ><%= tag.Battletag %></a></td>
+				<td><a class="<%= tag.class %>" href="/player/<%= tag.Battletag.replace("#","-") %>" ><%= tag.Battletag %></a></td>
 				<td><%= tag["Greater Rift"] %></td>
 				<td><%= tag["Time Spent"] %></td>
 				<td><%= tag["Date Completed"] %></td>

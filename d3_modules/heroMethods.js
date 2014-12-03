@@ -24,6 +24,7 @@ function itemDelay() {
 
 /*
 	heroItems: items property of the object received after making request for Hero to Blizzard.
+	hero param is an object with {heroID, items, and class}
 	Get's all equipped items and passes it as an array to findItemsInCollection.
 */
 
@@ -50,7 +51,7 @@ exports.getItemIDsFromHero = function(hero, delay, foundGRiftHeroCallback) {
 			
 			if (db != undefined) {
 				hero.items = allItems;
-				console.log(allItems[0]);
+				// console.log(allItems[0]);
 				findItemsInCollection(hero, delay, db, foundGRiftHeroCallback);
 
 			}
@@ -209,7 +210,6 @@ function findItemsInCollection(hero, delay, db, foundGRiftHeroCallback){
 
 
 													// if (requestedItemType === "1 Hand") {
-													// 											console.log("hereaaaa".blue)
 
 													// }
 
@@ -226,7 +226,7 @@ function findItemsInCollection(hero, delay, db, foundGRiftHeroCallback){
 															if (equippedItem.itemID == undefined) {
 																console.log("undefined for " + equippedItem , matchedItems);
 															}
-															console.log("-----comparing " + equippedItem.name + " " + requestedItem.name + matchedItems.length +  " " + allItems.length);
+															console.log("-----comparing " + colors.blue("equipped " + equippedItem.name) + " " + colors.yellow("requested " + requestedItem.name) + matchedItems.length +  " " + allItems.length);
 															compareItems(itemCollection, heroID, equippedItem, requestedItem, foundItemCallback);
 														 }, function(err) {
 															if (err) {
@@ -549,7 +549,7 @@ function findItemInCollection(itemID, heroID, delay, db, foundItemCallback){
 function compareItems(itemCollection, heroID, equippedItem, requestedItem, foundItemCallback) {
 	var requestedItemType = itemMethods.getItemType(requestedItem);
 
-	console.log("comparing items " + equippedItem.name + " " + requestedItem.name);
+	console.log("comparing items " + colors.blue(equippedItem.name) + " " + colors.yellow(requestedItem.name));
 
 
 	/*
@@ -711,17 +711,19 @@ function compareItems(itemCollection, heroID, equippedItem, requestedItem, found
 						
 						if (itemMethods.isHat(requestedItemType)) {
 							if (!gemMethods.isHatGemUtility(equippedGems) && gemMethods.isHatGemUtility(requestedGems)) {
+								console.log("diffItemCompare: item was a hat, and not equipped not utility, requested is");
 								updateAndUnequip(itemCollection, heroID, requestedItem, equippedItem, foundItemCallback);
 							}
 							else {
 								console.log("diffItem: both hats were either diamond/ame.  compare stats");
 								//for now callback
 								foundItemCallback();
+								console.log(colors.red("after callback"));
 							}
 						}
 
 
-						if (itemMethods.isJewlery(requestedItemType)) {
+						else if (itemMethods.isJewlery(requestedItemType)) {
 
 							if (gemMethods.isGemLegendary(equippedGems[0]) && gemMethods.isGemLegendary(requestedGems[0])) {
 								

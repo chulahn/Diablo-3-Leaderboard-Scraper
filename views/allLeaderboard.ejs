@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title><%- region %> <%- leaderboardType %> <%- title %></title>
+	<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.3.11/d3.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.6.3/d3-tip.min.js"></script>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/bootstrap/3.3.0/css/bootstrap.min.css">	
+	<link rel="stylesheet" type="text/css" href="../../../styles/leaderboard.css">
+
+	<script>
+		var allBattletags = <%- JSON.stringify(ejs_battletags) %>;
+		allBattletags = allBattletags.slice(0,100);
+
+		<% 
+			var allBattletags =  ejs_battletags 
+			var classData = [[],[]];
+			var className = classData[0];
+			var classCount = classData[1];
+			ejs_battletags.slice(0,100).forEach(function(battletag) {
+				
+				var classIndex = className.indexOf(battletag.class);
+				console.log(classIndex, battletag.class)
+
+				if (classIndex === -1) {
+					className.push(battletag.class);
+					classCount.push(1);
+				}
+
+				else {
+					classCount[classIndex] += 1;
+				}
+			});
+		%>
+
+
+		$(document).ready(function () {
+			$('#top').hide();
+		});
+
+		$(window).scroll(function() {
+			if ($(window).scrollTop() > 400) {
+	        // > 100px from top - show div
+	        	$('#top').show();
+			}
+
+		    else {
+		        // <= 100px from top - hide div
+		        $('#top').hide();
+		    }
+		});
+	</script>
+	
+</head>
+
+
+<body>
+	<header>
+		<h1 id="#"> <%- region.toUpperCase() %> <%- leaderboardType.toUpperCase() %> <%- title.toUpperCase() %></h1>
+		<a href="#" id="top">top</a>
+		<div id="update">
+			<% if (lastupdated != 0) { %>
+				<% var lastUpdated = lastupdated.getMonth()+1 + "/" + lastupdated.getDate() + "/" + (lastupdated.getYear()+1900) %>
+				leaderboard last updated: <%= lastUpdated %><br />
+			<% } %>
+			<a class="update" href="/update/<%- region %>/<%- leaderboardType %>/<%- title %>">update leaderboard</a>
+		</div>
+	</header>
+	
+	<div id="stats">
+		<% className.forEach(function (thisClass) { 
+			var classIndex = className.indexOf(thisClass);
+			var percentage = classCount[classIndex]; %>
+		
+			<span class="<%= thisClass %>"><%= thisClass + " " + percentage + "%" %></span>
+
+		<% }) %>
+	</div>
+		
+
+	<!-- List of all the BattleTags for the corresponding Leaderboard -->
+	<table>
+		<tr>
+			<th>Standing</th>
+			<th>Battletag</th>
+			<th>Greater Rift</th>
+			<th>Time Spent</th>
+			<th>Date Completed</th>
+		</tr>
+		<% ejs_battletags.slice(0,100).forEach(function (tag) { %>
+			
+			<tr id="<%= tag.Standing %>">
+				<td><%= ejs_battletags.indexOf(tag)+1 %></td>
+				<td><a class="<%= tag.class %>" href="/player/<%= tag.Battletag.replace("#","-") %>" ><%= tag.Battletag %></a></td>
+				<td><%= tag["Greater Rift"] %></td>
+				<td><%= tag["Time Spent"] %></td>
+				<td><%= tag["Date Completed"] %></td>
+			</tr>
+
+		<% }) %>
+	</table>
+
+</body>

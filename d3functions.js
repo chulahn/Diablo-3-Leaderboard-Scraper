@@ -1,7 +1,7 @@
 //used in itemPicker div
 var itemStrings = ["shoulders", "head", "neck", "hands", "torso", "bracers", "leftFinger", "waist", "rightFinger", "mainHand", "legs", "offHand", "feet"];	
 
-var currentArray = allData.slice(0,100);
+var currentArray = allGRiftHeroes.slice(0,100);
 //Data for setting up DPS/Toughness bar graph
 var currentTop = 100;
 var currentDataset = "dps";
@@ -155,7 +155,7 @@ function initGraphs() {
 	Others: draws piechart based on global data that was set in Set methods
 */
 function drawStatGraph(currentTop, currentDataset) {
-	currentArray = allData.slice(0,currentTop);
+	currentArray = allGRiftHeroes.slice(0,currentTop);
 
 	statsd3.graph.selectAll('.enter').attr("class", "exit").remove();
 
@@ -293,7 +293,7 @@ function drawItemPie() {
 					.enter()
 					.append("g")
 					.attr("class", "arc enter")
-					.attr("transform", "translate(" + itemsd3.dimens.h * .75+ ", " + outerRadius + ")")
+					.attr("transform", "translate(" + itemsd3.dimens.w * .5+ ", " + outerRadius + ")")
 
 	arcs.append("path")
 		.attr("fill", function(d, i) {
@@ -386,7 +386,7 @@ function drawGemPie() {
 					.enter()
 					.append("g")
 					.attr("class", "arc enter")
-					.attr("transform", "translate(" + gemsd3.dimens.h * .75 + ", " + outerRadius + ")")
+					.attr("transform", "translate(" + gemsd3.dimens.w * .5 + ", " + outerRadius + ")")
 
 	arcs.append("path")
 		.attr("fill", function(d, i) {
@@ -481,7 +481,7 @@ function drawActivePie() {
 					})
 					.append("g")
 					.attr("class", "arc enter")
-					.attr("transform", "translate(" + skillsd3.dimens.w + ", " + outerRadius + ")")
+					.attr("transform", "translate(" + skillsd3.dimens.w * .5 + ", " + outerRadius + ")")
 
 	arcs.append("path")
 		.attr("fill", function(d, i) {
@@ -548,7 +548,7 @@ function drawPassivePie() {
 					})
 					.append("g")
 					.attr("class", "arc enter")
-					.attr("transform", "translate(" + skillsd3.dimens.w + ", " + outerRadius + ")")
+					.attr("transform", "translate(" + skillsd3.dimens.w * .5 + ", " + outerRadius + ")")
 
 	arcs.append("path")
 		.attr("fill", function(d, i) {
@@ -637,12 +637,12 @@ function getTopSkills() {
 	var passive = skillsd3.data.passive;
 	
 
- 	allData.forEach(function (currentPlayer) {
+ 	allGRiftHeroes.forEach(function (currentHero) {
 
- 		if (currentPlayer.skills != undefined) {
+ 		if (currentHero.skills != undefined) {
  			//add active skills for graph
-	 		var currentPlayerActiveSkills = currentPlayer.skills.active;
-	 		currentPlayerActiveSkills.forEach(function (currentActive) {
+	 		var currentHeroActiveSkills = currentHero.skills.active;
+	 		currentHeroActiveSkills.forEach(function (currentActive) {
 	 			if (currentActive.skill != undefined) {
 		 			var currentSkillName = currentActive.skill.name;
 		 			var currentRuneName;
@@ -684,8 +684,8 @@ function getTopSkills() {
 	 		});//finished adding active skills and runes
 
 			//add passive
-			var currentPlayerPassives = currentPlayer.skills.passive;
-			currentPlayerPassives.forEach(function (currentPassive) {
+			var currentHeroPassives = currentHero.skills.passive;
+			currentHeroPassives.forEach(function (currentPassive) {
 				if (currentPassive.skill != undefined) {
 					var currentPassiveName = currentPassive.skill.name;
 					var locationOfCurrentPassive = passive.names.indexOf(currentPassiveName);
@@ -707,9 +707,9 @@ function getTopItems(item) {
 	resetItemData();
 	var items = itemsd3.data;
 
-	allData.forEach(function (currentPlayer) {
+	allGRiftHeroes.forEach(function (currentHero) {
 
-		var currentItem = (currentPlayer.items && currentPlayer.items[item]);
+		var currentItem = (currentHero.items && currentHero.items[item]);
 		if (currentItem != undefined) {
 			var locationOfCurrentItem = items.names.indexOf(currentItem.name);
 			if (locationOfCurrentItem == -1) {
@@ -728,13 +728,13 @@ function getTopGems() {
 	resetGemData();
 	var gems = gemsd3.data;
 
-	allData.forEach(function (currentPlayer) {
+	allGRiftHeroes.forEach(function (currentHero) {
 
-		var currentItems = (currentPlayer.items);
+		var currentItems = (currentHero.items);
 
-		if (currentPlayer.extraItemData && currentPlayer.extraItemData.gems !== undefined) {
+		if (currentHero.extraItemData && currentHero.extraItemData.gems !== undefined) {
 
-			var currentGems = currentPlayer.extraItemData.gems;
+			var currentGems = currentHero.extraItemData.gems;
 			
 			currentGems.forEach(function(gem) {
 
@@ -752,7 +752,7 @@ function getTopGems() {
 			})
 		}
 		else {
-			// console.log(currentPlayer,"had no gem")
+			// console.log(currentHero,"had no gem")
 		}
 	});
 

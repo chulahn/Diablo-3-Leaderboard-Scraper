@@ -1,0 +1,80 @@
+.selected {
+	font-weight: bold;
+	background-color: black;
+}
+
+html {
+	font-family: sans-serif;
+}
+*,*:before, *:after {
+	box-sizing: border-box;
+}
+@background: #2B2B2B;
+
+header {
+	text-align: center;
+}
+
+body {
+	color: white;
+	background: @background;
+}
+
+span, a {
+	font-size: 32px;
+}
+
+span {
+	background-color: lighten(@background, 30%);
+	padding: 2px;
+}
+
+@normal: #787878;
+@hc: darken(@normal, 15%);
+@season: rgb(73, 113, 26);
+@seasonhc: darken(@season, 10%);
+
+.transition() {	
+	transition: 1s all linear;
+	-o-transition: 1s all linear;
+	-moz-transition: 1s all linear;
+	-webkit-transition: 1s all linear;
+}
+
+a, span {
+	text-decoration: none;
+	&:hover{
+		text-decoration:underline;
+	}
+}
+
+a:visited, a:active, a:visited, a:link {
+	color: white;
+}
+
+
+
+#normal {
+	background-color: @normal;
+}
+
+#hc {
+	background-color: @hc;
+	color: red;
+
+}
+
+#season {
+	background-color: @season;
+}
+
+#seasonhc {
+	background-color: @seasonhc;
+	color: red;
+}
+
+#diabloClass {
+	background-color: black;
+	padding: 4px;
+	margin-top: 1px;
+}

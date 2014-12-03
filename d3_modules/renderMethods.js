@@ -46,6 +46,7 @@ exports.heroPage = function(heroID, req, res) {
 					if (heroData.level == 70 && heroData.extraItemData == undefined) {
 						// exports.getItemIDsFromHero(heroItems,heroID,10);
 					}
+					console.log(heroData);
 					res.render("hero.ejs", {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
 					debug.timeString(heroID + " Page after request in database");
 				}
@@ -84,8 +85,6 @@ exports.heroPage = function(heroID, req, res) {
 
 exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, res) {    
 
-
-
 	MongoClient.connect(databaseURL, function(err, db) {
 	//Takes about 1/10th second
 
@@ -104,11 +103,11 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 
 			db.collection("cached").find({"collectName" : collectionName}).toArray(function (err, foundCache) {
 
-				if (foundCache && foundCache[0] && foundCache[0].heroes == undefined) {
+				if (foundCache && foundCache[0] && foundCache[0].heroes !== undefined && foundCache[0].heroes.length === 100) {
 
 					var pageData = foundCache[0];
 
-					res.render('ClassLeaderboard.ejs',{title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : pageData.battletags , all:pageData.heroes , lastupdated : date});
+					res.render('ClassLeaderboard.ejs',{title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : pageData.battletags , ejs_allGRiftHeroes : pageData.heroes , lastupdated : date});
 					console.log(colors.green("rendered from cache!"));
 					debug.timeString(diabloClass + " Page rendered ");
 				}
@@ -134,7 +133,7 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 		    			debug.timeString(diabloClass + " Page after request ");
 						console.log(leaderboardType,"Here");
 						//array for storing all heroes in DB
-			    		var allData = [];
+			    		var allGRiftHeroes = [];
 			    		setSearchParams(leaderboardType);
 
 						async.eachSeries(leaderboardResults, function (currentPlayerFromDB, foundGRiftHeroCallback) {
@@ -156,7 +155,7 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 			    					
 			    					if (heroToPush.extraItemData != undefined && heroToPush.extraItemData.gems != undefined && heroToPush.extraItemData.lastupdated != undefined) {
 				    					console.log("found grift hero and extraItemData, gems, lastupdated for " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing) 	    					
-		    							allData[currentPlayerFromDB.Standing-1] = heroToPush;
+		    							allGRiftHeroes[currentPlayerFromDB.Standing-1] = heroToPush;
 		    							foundGRiftHeroCallback();
 			    					}
 			    					//get items, then get extraitemdata, then push, then increment. 
@@ -184,7 +183,7 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 					    						}
 					    					});
 					    					
-					    					allData[currentPlayerFromDB.Standing-1] = heroToPush;
+					    					allGRiftHeroes[currentPlayerFromDB.Standing-1] = heroToPush;
 					    					
 					    					if (heroToPush.extraItemData == undefined) {
 					    						console.log("found grift hero, 119, adding extraItemData " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
@@ -215,7 +214,7 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 							    			var currentPlayerHeroes = currentPlayerFromDB.Heroes;
 					    					//player deleted all heroes or no matches
 					    					if (currentPlayerHeroes.length == 0) {
-				    							allData[currentPlayerFromDB.Standing-1] = 0;
+				    							allGRiftHeroes[currentPlayerFromDB.Standing-1] = 0;
 					    						console.log("Deleted all heroes or no matches 130 " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
 
 				    							foundGRiftHeroCallback();
@@ -251,7 +250,7 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 
 						    							if (validHero70Count == 0) {
 						    								console.log("validHero70Count was 0 for " + currentPlayerFromDB.Standing + " " + currentPlayerFromDB.Battletag);
-						    								allData[currentPlayerFromDB.Standing-1] = 0;
+						    								allGRiftHeroes[currentPlayerFromDB.Standing-1] = 0;
 						    								foundGRiftHeroCallback();
 						    							}
 						    						}
@@ -291,7 +290,7 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 									db.collection("cached").update({"collectName" : collectionName},
 																	{$set: {
 																		"lastupdated": date,
-																		"heroes": allData,
+																		"heroes": allGRiftHeroes,
 																		"battletags": leaderboardResults
 																	}}, {upsert: true}, function(err, results) {
 																		if (err) {
@@ -303,7 +302,7 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 																	});
 
 
-			    					res.render('ClassLeaderboard.ejs', {title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , all:allData , lastupdated : date, lastCached: new Date()});
+			    					res.render('ClassLeaderboard.ejs', {title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : leaderboardResults , ejs_allGRiftHeroes : allGRiftHeroes , lastupdated : date, lastCached: new Date()});
 								});	
 			    			}
 
@@ -354,6 +353,10 @@ exports.getAllClasses = function(db, region, leaderboardType, req, res) {
 
 			var allClasses = [];
 			db.collection(region+leaderboardType+"barb").find({}).toArray(function (err, barbs) {
+
+				barbs.forEach(function(barb) {
+					barb.class = "barbarian";
+				});
 				allClasses = allClasses.concat(barbs)
 				gotBarbs(null, allClasses);
 			});
@@ -362,6 +365,11 @@ exports.getAllClasses = function(db, region, leaderboardType, req, res) {
 		function getWDs(allClasses, gotWDS) {
 
 			db.collection(region+leaderboardType+"wd").find({}).toArray(function (err, wds) {
+
+				wds.forEach(function(wd) {
+					wd.class = "witch-doctor";
+				});
+
 				allClasses = allClasses.concat(wds);
 				gotWDS(null, allClasses);
 			});
@@ -369,8 +377,13 @@ exports.getAllClasses = function(db, region, leaderboardType, req, res) {
 
 		function getWiz(allClasses, gotWiz) {
 
-			db.collection(region+leaderboardType+"wiz").find({}).toArray(function (err, wiz) {
-				allClasses = allClasses.concat(wiz);
+			db.collection(region+leaderboardType+"wiz").find({}).toArray(function (err, wizs) {
+				
+				wizs.forEach(function(wiz) {
+					wiz.class = "wizard";
+				});
+
+				allClasses = allClasses.concat(wizs);
 				gotWiz(null, allClasses);
 			});
 		},
@@ -378,6 +391,11 @@ exports.getAllClasses = function(db, region, leaderboardType, req, res) {
 		function getSader(allClasses, gotSaders) {
 
 			db.collection(region+leaderboardType+"sader").find({}).toArray(function (err, saders) {
+
+				saders.forEach(function(sader) {
+					sader.class = "crusader";
+				});
+
 				allClasses = allClasses.concat(saders);
 				gotSaders(null, allClasses);
 			});
@@ -385,12 +403,22 @@ exports.getAllClasses = function(db, region, leaderboardType, req, res) {
 
 		function getMonks(allClasses, gotMonks) {
 			db.collection(region+leaderboardType+"monk").find({}).toArray(function (err, monks) {
+				
+				monks.forEach(function(monk) {
+					monk.class = "monk";
+				});
+
 				allClasses = allClasses.concat(monks);
 				gotMonks(null, allClasses);
 			});
 		},
 		function getDHs(allClasses, gotDHs) {
 			db.collection(region+leaderboardType+"dh").find({}).toArray(function (err, DHs) {
+				
+				DHs.forEach(function(DH) {
+					DH.class = "demon-hunter";
+				});
+
 				allClasses = allClasses.concat(DHs);
 				gotDHs(null, allClasses);
 			});
@@ -411,7 +439,7 @@ exports.getAllClasses = function(db, region, leaderboardType, req, res) {
 			});
 
 
-			res.render('ClassLeaderboard.ejs', {title: "All", region: region, leaderboardType: leaderboardType, ejs_battletags: allClasses, all:[], lastupdated: new Date()})
+			res.render('allLeaderboard.ejs', {title: "All", region: region, leaderboardType: leaderboardType, ejs_battletags: allClasses, all:[], lastupdated: new Date()})
 		}
 		else {
 			res.send(404);

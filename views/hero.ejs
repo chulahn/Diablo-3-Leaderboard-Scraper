@@ -61,7 +61,7 @@
 <h3><%= ejs_heroData.level %><%= (ejs_heroData.seasonal === true) ? " Seasonal" : "" %> <%= (ejs_heroData.hardcore === true) ? "Hardcore" : "Softcore" %> <%= ejs_heroData.class %></h3>
 				
 <p><a href = "http://us.battle.net/d3/en/profile/<%= ejs_btag %>/hero/<%= ejs_heroID %>" > Battle.net Profile </a>
-<% var lastupdated = ejs_heroData.lastupdated || "update now!" %>
+<% var lastupdated = ejs_heroData.extraItemData.lastupdated || "update now!" %>
 <% if (lastupdated !== "update now!") lastupdated = lastupdated.getMonth()+1 + "/" + lastupdated.getDate() + "/" + (lastupdated.getYear()+1900) %>
 last updated: <%= lastupdated %> <br />
 <a href = "/update/player/<%= ejs_btag %>/hero/<%= ejs_heroID %>">Update </a>

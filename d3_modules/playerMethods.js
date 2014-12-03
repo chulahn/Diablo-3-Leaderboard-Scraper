@@ -125,7 +125,9 @@ function insertInHeroCollection(heroCollection, battletag, requestedHeroData, re
 			}
 			else {
 				console.log("addHeroData not found, inserting "+ battletag + " " + requestedHeroData.id);
-				callback()
+				var heroData = {"heroID" : requestedHeroData.id, "class": requestedHeroData.class, "items": requestedHeroData.items};
+				heroMethods.getItemIDsFromHero(heroData, 50, callback);
+
 			}
 	});
 }
@@ -152,7 +154,8 @@ function updateInHeroCollection(heroCollection, battletag, requestedHeroData, re
 			}
 			else {
 				console.log("updateInHeroCollection found, updating "+ battletag + " " + requestedHeroData.id);
-				callback();
+				var heroData = {"heroID" : requestedHeroData.id, "class": requestedHeroData.class, "items": requestedHeroData.items};
+				heroMethods.getItemIDsFromHero(heroData, 50, callback);
 			}
 	});//end update.	
 }
