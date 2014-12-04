@@ -30,7 +30,7 @@ function timeToDelay() {
 	setTimeout( function() {
 		request(requestURL, function (error, response, data) {
 			if (data == undefined) {
-				console.log("addHeroData data was undefined, calling again");
+				console.log("addHeroData: data was undefined, calling again");
 				//error handling, call again
 				exports.addHeroData(region, battletag, heroID, 2000);
 			}
@@ -45,14 +45,14 @@ function timeToDelay() {
 				}
 				//check if data is not null
 				else if (items == null) {
-					console.log("addHeroData items was null for " + battletag + " " + heroID + " calling again");
+					console.log("addHeroData: items was null for " + battletag + " " + heroID + " calling again");
 					exports.addHeroData(region, battletag, heroID, timeToDelay(), callback);
 					console.log(requestedHeroData);
 				}					
 				else {
 					//database was null
 					if (db == null) {
-						console.log("addHeroData database was null for " + battletag + " " + heroID + " calling again");
+						console.log("addHeroData: database was null for " + battletag + " " + heroID + " calling again");
 						exports.addHeroData(region, battletag, heroID, timeToDelay(), callback);							
 					}
 					//end error handling
@@ -111,7 +111,7 @@ function insertInHeroCollection(heroCollection, battletag, requestedHeroData, re
 			"name" : requestedHeroData.name, 
 			"class" : requestedHeroData.class ,
 			"level" : requestedHeroData.level, 
-			"Paragon" : requestedHeroData.paragonLevel, 
+			"paragonLevel" : requestedHeroData.paragonLevel, 
 			"hardcore" : requestedHeroData.hardcore, 
 			"seasonal" : requestedHeroData.seasonal, 
 			"skills" : requestedHeroData.skills, 
@@ -124,9 +124,10 @@ function insertInHeroCollection(heroCollection, battletag, requestedHeroData, re
 				return console.log("insertInHeroCollection error, " + err);
 			}
 			else {
-				console.log("addHeroData not found, inserting "+ battletag + " " + requestedHeroData.id);
-				var heroData = {"heroID" : requestedHeroData.id, "class": requestedHeroData.class, "items": requestedHeroData.items};
-				heroMethods.getItemIDsFromHero(heroData, 50, callback);
+				console.log("addHeroData: not found, inserting "+ battletag + " " + requestedHeroData.id);
+				callback();
+				// var heroData = {"heroID" : requestedHeroData.id, "class": requestedHeroData.class, "items": requestedHeroData.items};
+				// heroMethods.getItemIDsFromHero(heroData, 50, callback);
 
 			}
 	});
@@ -140,7 +141,7 @@ function updateInHeroCollection(heroCollection, battletag, requestedHeroData, re
 			"name" : requestedHeroData.name, 
 			"class" : requestedHeroData.class , 
 			"level" : requestedHeroData.level, 
-			"Paragon" : requestedHeroData.paragonLevel, 
+			"paragonLevel" : requestedHeroData.paragonLevel, 
 			"hardcore" : requestedHeroData.hardcore, 
 			"seasonal" : requestedHeroData.seasonal, 
 			"skills" : requestedHeroData.skills, 

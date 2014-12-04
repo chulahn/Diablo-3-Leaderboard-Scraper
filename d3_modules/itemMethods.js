@@ -10,7 +10,8 @@ var exports = module.exports = {
 
 		else {
 			itemType = itemType.id;
-			if (itemType === "VoodooMask" || itemType === "Helm" || itemType === "SpiritStone_Monk") {
+			console.log('-----' + itemType);
+			if (itemType === "VoodooMask" || (itemType.indexOf("Helm") !== -1) || itemType === "SpiritStone_Monk") {
 				return "Head";
 			}
 			//shield or crusader shield
@@ -21,13 +22,13 @@ var exports = module.exports = {
 			else if (itemType === "Mace" || itemType.indexOf("Dagger") !== -1 || itemType === "Mace" || itemType === "Flail1H" || itemType === "FistWeapon" || itemType === "Wand" || itemType === "Sword" || itemType === "HandXbow" || itemType === "Axe" || itemType === "Spear") {
 				return "1 Hand";
 			}
-			else if (itemType === "Bracers") {
+			else if (itemType.indexOf("Bracers") !== -1) {
 				return "Wrists";
 			}
-			else if (itemType === "Gloves") {
+			else if (itemType.indexOf("Gloves") !== -1) {
 				return "Hands";
 			}
-			else if (itemType === "ChestArmor") {
+			else if (itemType.indexOf("ChestArmor") !== -1) {
 				return "Chest";
 			}
 			//belt and mighty belt
@@ -40,12 +41,16 @@ var exports = module.exports = {
 			else if (itemType === "Amulet") {
 				return "Neck";
 			}
-			else if (itemType === "Boots") {
+			//Boots_crusader
+			else if (itemType.indexOf("Boots") !== -1) {
 				return "Feet";
 			}
 			//return legs, shoulders
-			else {
-				return itemType;
+			else if (itemType.indexOf("Shoulders") !== -1) {
+				return "Shoulders";
+			}
+			else if (itemType.indexOf("Legs") !== -1) {
+				return "Legs";
 			}
 		}
 	},

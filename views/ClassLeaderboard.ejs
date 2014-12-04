@@ -42,7 +42,7 @@
 						 	var cooldown = parseFloat(currentValue.extraItemData && currentValue.extraItemData.cooldown) || 0;
 
 						 	newVar.cooldown = (prev.cooldown || 0) + cooldown;
-						 	newVar.paragon = (prev.paragon || 0) + parseFloat(currentValue.Paragon || 0);
+						 	newVar.paragonLevel = (prev.paragonLevel || 0) + parseFloat(currentValue.paragonLevel || 0);
 							return newVar;
 						},0);
 
@@ -72,7 +72,7 @@
 		statHTML += "Life: " + Number(allStats.life.toFixed(0)).toLocaleString('en') + "<br />";
 		statHTML += "All Resist: " + allStats.allRes.toFixed(0) + "<br />"
 		statHTML += "Cooldown Reduction: " + allStats.cooldown.toFixed(2) + "%<br />";
-		statHTML += "Average Paragon: " + allStats.paragon.toFixed(0) +"<br />";
+		statHTML += "Average Paragon: " + allStats.paragonLevel.toFixed(0) +"<br />";
 		statHTML += "Median GRift Level: " + medianGrift + "<br />";
 		statHTML += "Crit Chance: " + (allStats.critChance * 100).toFixed(0) + "%<br />";
 		statHTML += "Crit Dam: " + (allStats.critDamage * 100).toFixed(0) + "%<br />";

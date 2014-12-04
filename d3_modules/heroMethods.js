@@ -319,9 +319,9 @@ function getImportantStats(heroID, updatedStatsCallback) {
 
 			console.log("getImportantStats " + heroID);
 			itemCollection.find({"heroID" : heroID, "equipped" : true}).toArray(function(error, heroItems) {
-
+				console.log(colors.blue(heroItems.length));
 				heroItems.forEach(function(currentItem) {
-					console.log(currentItem.name)
+					console.log(colors.red.underline(currentItem.name))
 					//get CDR from hat
 					if (currentItem.type == "Head") {
 						//if it has gem and it is a diamond a diamond
@@ -418,7 +418,6 @@ function getImportantStats(heroID, updatedStatsCallback) {
 								gems.push(currentGem.item.name);
 							}
 						}
-						console.log(colors.red(currentItem.gems[0]));
 					}
 
 				});//end for each
@@ -857,7 +856,7 @@ function insertInItemCollection(itemCollection, currentItem, heroID, callback) {
 function unequipItem(itemCollection, itemToUnequip, heroID) {
 		itemCollection.update(
 			{"heroID": parseInt(heroID) , "itemID" : itemToUnequip.itemID },
-			{$set : {"Equipped" : false}}, 
+			{$set : {"equipped" : false}}, 
 				function(err, result) {
 					console.log("Successfully unequipped " + itemToUnequip.name + " " + itemToUnequip.itemID.substring(0,5));
 				});

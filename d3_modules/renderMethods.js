@@ -59,6 +59,7 @@ exports.heroPage = function(heroID, req, res) {
 						if (heroData.level == 70) {
 							// exports.getItemIDsFromHero(heroItems,heroID,10);
 						}
+						console.log(heroData)
 						res.render("hero.ejs", {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
 						debug.timeString(heroID + " Page after request ");
 					});
@@ -178,11 +179,12 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 					    					heroToPush=heroResults[0];
 					    					
 					    					heroResults.forEach(function(hero) {
+					    						console.log(colors.blue(hero.heroID));
 					    						if (hero.stats.damage > heroToPush.stats.damage) {
 					    							heroToPush = hero;
 					    						}
 					    					});
-					    					
+					    					console.log(colors.red(heroToPush.heroID));
 					    					allGRiftHeroes[currentPlayerFromDB.Standing-1] = heroToPush;
 					    					
 					    					if (heroToPush.extraItemData == undefined) {
@@ -229,14 +231,13 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 						    					function findHeroInBattletagData(currentPlayerHeroes) {
 
 						    					}
+						    					console.log(colors.red(currentPlayerFromDB.Battletag, currentPlayerFromDB.Standing, "hero length ",currentPlayerHeroes.length))
 						    					currentPlayerHeroes.forEach(function(currentHero) {
 						    						//find the hero that matches searchParams (class, HC, seasonal, 70)
 						    						if (currentHero.level == 70 && currentHero.hardcore == searchParamHC && currentHero.seasonal == searchParamSeason && getClassNameForDatabase(diabloClass) == currentHero.class) {
 							    						if (currentHero.dead == false) {
 							    							validHero70Count += 1;
-							    							// console.log(currentHero);
-									    						console.log("searching battletag data 143 " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
-
+							    							console.log(colors.green(currentHero.id));
 							    							playerMethods.addHeroData(region, currentPlayerFromDB.Battletag.replace("#", "-"), currentHero.id, 300, db, foundGRiftHeroCallback);
 							    						}
 							    						//error handling for hc players.  heroID is in currentPlayerFromDB.Heroes, but was dead, dont add to valid hero count

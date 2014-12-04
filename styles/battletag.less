@@ -1,0 +1,81 @@
+.demon-hunter {
+	color: purple;
+}
+.barbarian {
+	color: red;
+}
+.crusader {
+	color: blue;
+}
+
+.witch-doctor {
+	color: green;
+}
+
+.wizard {
+	color: orange;
+}
+.monk {
+	color: yellow;
+	background-color:black;
+}
+.selected {
+	font-weight: bold;
+}
+
+
+.muleStart() {
+	-webkit-transform: scale(.75);
+	-moz-tansform: scale(.75);
+	-o-transform: scale(.75);
+	transform: scale(.75);
+
+	-webkit-transform-origin:0 0;
+	-moz-transform-origin:0 0;
+	-o-transform-origin:0 0;
+	transform-origin:0 0;
+}
+
+.muleEnd() {
+	-webkit-transform: scale(1);
+	-moz-transform: scale(1);
+	-o-transform: scale(1);
+	transform: scale(1);		
+}
+
+.mule {
+	
+	width: 100%;
+	.muleStart;
+	transition: .3s all linear;
+
+	&:hover{
+		.muleEnd;
+	}
+}
+
+.hero {
+	width: 50%;
+}
+
+.highlight() {	
+	transition: 1s background ease;
+	-o-transition: 1s background ease;
+	-moz-transition: 1s background ease;
+	-webkit-transition: 1s background ease;
+}
+
+div {
+	.highlight;
+	&:hover {
+		background: #404040;
+	}
+}
+
+body {
+	background: #2B2B2B;
+}
+
+h1 , div {
+	color: white;
+}

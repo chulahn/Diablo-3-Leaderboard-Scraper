@@ -35,33 +35,43 @@
 		$(document).ready(function() {
 			$('#profile li').each(function(index, value){
 				var text = $(this).html();
-				console.log(text.toLocaleString())
+				console.log("----",text.toLocaleString())
 
 				var titleEnd = text.indexOf(":");
 				var statTitle = "<span class=\"statType\">" + text.slice(0,titleEnd+1) + "</span>";
 
 				var statData = text.slice(titleEnd+2, text.length);
+				console.log("xxxx",statData);
 				statData = parseFloat(statData).toLocaleString('en');
+				console.log("yyyyy",statData);
+				if (text.indexOf("%") !== -1) {
+					statData += "%";
+				}
 				statData = "<span class=\"statData\">"+statData+"</span>";
-				
-				console.log(parseFloat(statData).toLocaleString('en'));
+				console.log(statData);
 				
 				$(this).html(statTitle+" "+statData);
 				
 			});
 		});
+
 	</script>
+	<% var urlLeft = "http://"+ejs_heroData.region+".battle.net/d3/en/" %>
+	<% var skillURL = urlLeft + "class/" + ejs_heroData.class %>
+	<% function dpsCalc(damage, percentage) {
+
+		return damage * (1 + (percentage/100))
+	} %>
+
 </head>
 
 <body>
-<% var urlLeft = "http://"+ejs_heroData.region+".battle.net/d3/en/" %>
-<% var skillURL = urlLeft + "class/" + ejs_heroData.class %>
 
 <h1><%= ejs_heroData.name %> <small><%= ejs_btag %></small>  </h1>
 <h3><%= ejs_heroData.level %><%= (ejs_heroData.seasonal === true) ? " Seasonal" : "" %> <%= (ejs_heroData.hardcore === true) ? "Hardcore" : "Softcore" %> <%= ejs_heroData.class %></h3>
 				
 <p><a href = "http://us.battle.net/d3/en/profile/<%= ejs_btag %>/hero/<%= ejs_heroID %>" > Battle.net Profile </a>
-<% var lastupdated = ejs_heroData.extraItemData.lastupdated || "update now!" %>
+<% var lastupdated = (ejs_heroData.extraItemData && ejs_heroData.extraItemData.lastupdated) || "update now!" %>
 <% if (lastupdated !== "update now!") lastupdated = lastupdated.getMonth()+1 + "/" + lastupdated.getDate() + "/" + (lastupdated.getYear()+1900) %>
 last updated: <%= lastupdated %> <br />
 <a href = "/update/player/<%= ejs_btag %>/hero/<%= ejs_heroID %>">Update </a>
@@ -73,11 +83,13 @@ last updated: <%= lastupdated %> <br />
 <!-- Shows information for a Hero -->
 <div class="container-fluid">
 	<div class="row">
+		<!-- Shows Stats -->
 		<div id="profile" class="col-lg-3 col-md-3 col-sm-4 col-xs-7">
 			<ul><h2>Stats</h2>
-				<li>Paragon: <%= ejs_heroData.Paragon %></li>
+				<li>Paragon: <%= ejs_heroData.paragonLevel %></li>
 				<li>Damage: <%= Number(ejs_heroData.stats.damage).toLocaleString('en') %></li>
 					<ul>
+						<!-- Shows Main Stat -->
 						<% if ( ejs_heroData.class == "demon-hunter" || ejs_heroData.class == "monk" ) { %>
 							<li>Dexterity: <%= ejs_heroData.stats.dexterity %></li>
 						<% } %>
@@ -87,29 +99,46 @@ last updated: <%= lastupdated %> <br />
 						<% if ( ejs_heroData.class == "barbarian" || ejs_heroData.class == "crusader" ) { %>
 							<li>Strength: <%= ejs_heroData.stats.strength %></li>
 						<% } %>
+						<!-- CHC and CHD -->
 						<li>Crit Chance: <%= (ejs_heroData.stats.critChance*100).toFixed(2)+"%" %></li>
 						<li>Crit Damage: <%= (ejs_heroData.stats.critDamage*100).toFixed(2)+"%" %></li>
 					</ul>
+				<!-- Extra Item Data -->
 				<% if (ejs_heroData.extraItemData != undefined) { %>
+					<!-- Elemental Bonuses -->
 					<% ejs_heroData.extraItemData.elementalDam.forEach(function (element) { %>
 						<% if (element[1] != 0) { %> 
 							<li>+<%= element[0] %> Skills Damage: <%= element[1] %>%</li>
 						<% } %>
 					<% }) %>
+
+					<!--Elite Bonus -->
 					<% if (ejs_heroData.extraItemData.eliteDam != undefined && ejs_heroData.extraItemData.eliteDam != 0) { %>
 						<li>+Elite Damage: <%= ejs_heroData.extraItemData.eliteDam %>%</li>
 					<% } %>
+
+					<!-- Elem DPS -->
 					<% if (ejs_heroData.extraItemData.elementalDam[0][1] != 0)  { %>
-						<li>Elemental DPS: <%= ejs_heroData.extraItemData.elementalDam[0][1] * ejs_heroData.stats.damage %></li>
+						<% var elemDam = dpsCalc(ejs_heroData.stats.damage, ejs_heroData.extraItemData.elementalDam[0][1]) %>
+						<li>Elemental DPS: <%= elemDam %></li>
 					<% } %>
+
+					<!-- Elite DPS & Elite Elem DPS -->
 					<% if (ejs_heroData.extraItemData.eliteDam != undefined && ejs_heroData.extraItemData.eliteDam != 0) { %>
-						<li> Elite DPS: <%= ejs_heroData.extraItemData.eliteDam * ejs_heroData.stats.damage %></li>
-						<li> Elite Elemental DPS: <%= ejs_heroData.extraItemData.elementalDam[0][1] * ejs_heroData.extraItemData.eliteDam * ejs_heroData.stats.damage %></li>
+						<% var eliteDam = dpsCalc(ejs_heroData.stats.damage, ejs_heroData.extraItemData.eliteDam) %>
+						<li> Elite DPS: <%= eliteDam %></li>
+						<% if (ejs_heroData.extraItemData.elementalDam[0][1] != 0)  { %>
+							<% var eliteElemDam = dpsCalc(eliteDam, ejs_heroData.extraItemData.elementalDam[0][1]) %>
+							<li> Elite Elemental DPS: <%= eliteElemDam %></li>
+						<% } %>
 					<% } %>
+
+					<!-- CDR -->
 					<% if (ejs_heroData.extraItemData.cooldown != 0) { %>
 						<li>CDR from Items: <%= ejs_heroData.extraItemData.cooldown %>%</li>
 					<% } %>
 				<% }%>
+
 				<li>Toughness: <%= ejs_heroData.stats.toughness %></li>
 					<ul>
 						<li>Vitality: <%= ejs_heroData.stats.vitality %></li>
@@ -118,6 +147,8 @@ last updated: <%= lastupdated %> <br />
 						<li>Life: <%= ejs_heroData.stats.life %></li>
 					</ul>
 				<li>Healing: <%= ejs_heroData.stats.healing %></li>
+
+				<!-- Non main stat -->
 				<% if ( ejs_heroData.class == "demon-hunter" || ejs_heroData.class == "monk" ) { %>
 					<li>Strength: <%= ejs_heroData.stats.strength %></li>
 					<li>Intelligence: <%= ejs_heroData.stats.intelligence %></li>
@@ -132,11 +163,11 @@ last updated: <%= lastupdated %> <br />
 				<% } %>
 				
 		</div>
-
+		<!-- Show Items -->
 		<div id="items" class="col-lg-3 col-md-4 col-sm-5 col-xs-7 col-sm-offset-1 col-md-offset-3">
 			<h2 text-align="center">Items</h2>
 			<table>
-				<tr>
+				<tr><!-- Top Row : Shoulders, Head, Amulet -->
 					<td>
 						<span class="itemType">Shoulders</span><br/>
 						<% if (ejs_heroData.items.shoulders != undefined) { %>
@@ -158,7 +189,7 @@ last updated: <%= lastupdated %> <br />
 					</td>
 				</tr>
 
-				<tr>
+				<tr><!-- 2nd Row : Hands, Torso, Wrists -->
 					<td>
 						<span class="itemType">Hands</span><br/>
 						<% if (ejs_heroData.items.hands != undefined) { %>
@@ -179,7 +210,7 @@ last updated: <%= lastupdated %> <br />
 					</td>
 				</tr>
 
-				<tr>
+				<tr><!-- 3rd Row : Left Finger, Belt, Right Finger -->
 					<td>
 						<span class="itemType">Left Finger</span><br/>
 						<% if (ejs_heroData.items.leftFinger != undefined) { %>
@@ -200,7 +231,7 @@ last updated: <%= lastupdated %> <br />
 					</td>
 				</tr>
 
-				<tr>
+				<tr><!-- 4th Row : Main Hand, Legs, Off Hand -->
 					<td>
 						<span class="itemType">Main Hand</span><br/>
 						<% if (ejs_heroData.items.mainHand != undefined) { %>
@@ -220,7 +251,7 @@ last updated: <%= lastupdated %> <br />
 						<% } %>
 					</td>
 				</tr>
-				<tr>
+				<tr><!-- Bottom Row : N/A, Feet, N/A -->
 					<td>
 					</td>
 					<td>
@@ -236,6 +267,7 @@ last updated: <%= lastupdated %> <br />
 		</div>
 	</div>
 	<div class="row">
+		<!-- Show Skills -->
 		<div id="skills" class="col-lg-3 col-md-3 col-sm-4">
 			<ul><h2>Skills</h2>
 				<li>Active Skills:
@@ -245,11 +277,11 @@ last updated: <%= lastupdated %> <br />
 						<% if (activeSkill.skill != undefined) { %>
 
 							<%
+								console.log(activeSkill.skill.name)
 								var activeURL = skillURL + "/active/";
-								activeURL += activeSkill.skill.name.toLowerCase().replace(" ", "-");
+								activeURL += activeSkill.skill.name.toLowerCase().replace(/ /g, "-").replace("'","");
 							%>
 
-						<!-- http://us.battle.net/d3/en/class/demon-hunter/passive/sharpshooter -->
 							<li><a href="<%= activeURL %>"> <%= activeSkill.skill.name %></a>
 							<!-- if there is a rune add it to skill -->
 							<% if (activeSkill.rune != undefined) { %>: <%= activeSkill.rune.name %><% } %>
@@ -262,7 +294,7 @@ last updated: <%= lastupdated %> <br />
 
 						<% 
 							var passiveURL = skillURL + "/passive/";
-							passiveURL += passive.skill.name.toLowerCase().replace(" ", "-");
+							passiveURL += passive.skill.name.toLowerCase().replace(/ /g, "-").replace("'","");
  						%>
 							<li><a href="<%= passiveURL %>"><%= passive.skill.name %></a></li> 
 						<% } %>
