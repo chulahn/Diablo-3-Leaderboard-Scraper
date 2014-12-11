@@ -47,33 +47,38 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 			debug.timeString(region + " " + diabloClass + " " + gRiftCategory + " Leaders before request ");
 			var requestURL = "https://" + region + ".battle.net/d3/en/rankings/" + gRiftCategory + getClassNameForLeaderboard(diabloClass);
 			request(requestURL, function (error, response, body) {
-				console.log("getLeaderboardFromDB inside request")
+				console.log("getLeaderboardFromDB inside request");
+
 				var startTable = body.indexOf("<table>");
 				var endTable = body.indexOf("</table>");
-				//get leaderboard table from Battle.net website
 				var table = body.substring(startTable,endTable);
+				
 				//the information of all players on leaderboard
 				var leaders = [];
+				
 				//env uses HTML or URL, [script, it will be JQuery], and callback function(error, window)
 				//passes in table from battle.net and allows Jquery to be used
-
 				jsdom.env(table, ["http://code.jquery.com/jquery.js"], function (error, window) {
-					//allows normal JQuery usage
 					var $ = window.jQuery;
-					//used to know when to stop collecting data.  eg. top50,100,etc
+
+					//used to know when to stop collecting data.  eg. top50,100,etc.*top 100 for now*
 					var count =0;
 
-					//Looping through each TR element from Battle.net Leaderboard.  For each TR, add the data from each TD, and after all data has been collected for a TR
+					//Looping through each TR element from Battle.net Leaderboard.  
+					//For each TR, add the data from each TD, and after all data has been collected for a TR
 					//push that row to leaders array.
 					$('tbody tr').each( function getDataFromRow(){
-						//get the top players from 1 to count, CHANGE TO 1000 later
+
+						//CHANGE TO 1000 later
 						if (count < 100) {
-							//index for a row's column.  gets reset after each row.
+							
 							var cellIndex = 0; 
-							//information from the current player will be added to this array.  When all information for player is added, it will be pushed to leaders array
-							//[rank, battletag, tier, timespend, date accomplished]
+							//information from the current player will be added to this array.  
+							//When all information for player is added, it will be pushed to leaders array
+							//[rank, battletag, tier, timespent, date accomplished]
 							var playerData = [];
-							//for the current row, get each data from each td.
+
+							//for the current row, get data from each td.
 							$(this).children().each( function() {
 								//rank
 								if (cellIndex == 0) {
@@ -81,7 +86,7 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 									//remove char in front, last space and period at end
 									rank = rank.substring(1,rank.length-2);
 									console.log(rank + " " + (count+1));
-									if (rank != "Rankings not yet availabl") {
+									if (rank !== "Rankings not yet availabl") {
 										playerData.push(parseInt(rank));
 									}
 								}
@@ -103,8 +108,7 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 								cellIndex++;
 							});//end looping through columns for a row
 							
-							//if there was data add it to list of players
-							if (playerData.length != 0) {
+							if (playerData.length !== 0) {
 								leaders.push(playerData);
 							}
 						} //end if count<length loop
@@ -113,9 +117,9 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 					
 					//For each player in leaders, use the battletag to make a request to the API.
 					//currentCallNum is to know when 10 requests have been made because API only allows 10 requests per second.
-					//last10CallsTime is set when first API call is made and is updated on every 10th call to know when to make the next request
+					//last10thCallTime is set when first API call is made and is updated on every 10th call to know when to make the next request
 					var currentCallNum = 0;
-					var last10CallsTime;
+					var last10thCallTime;
 					leaders.forEach(function (playerData, i) {
 						i = currentCallNum;
 
@@ -125,32 +129,28 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 						//only update if greater than 100  REMOVE THIS LATER
 						if (i >= 0) {
 						//Not the 10th call
-						if (i % 10 != 9) {
+						if (i % 10 !== 9) {
 							//but is first 10
 							if (i < 10) {
-								//and is first call, set last10CallsTime, and updateDB.
-								if (i == 0) {
-									last10CallsTime = new Date();
-									last10CallsTime = last10CallsTime.getSeconds()*1000 + last10CallsTime.getMilliseconds();
+								//and is first call, set last10thCallTime, and updateDB.
+								if (i === 0) {
+									last10thCallTime = new Date();
+									last10thCallTime = last10thCallTime.getSeconds()*1000 + last10thCallTime.getMilliseconds();
 								}
-								console.log("requested " + i + " " + last10CallsTime);
-								checkLeaderboardCollectForPlayer(region, playerData,0,db,diabloClass,0);					
+								console.log("requested " + i + " " + last10thCallTime);
+								checkLeaderboardCollectForPlayer(region, playerData, 0, db, diabloClass, 0);					
 							}
-							//Not 10th call or first 10, get the current time and check how long its been since the previous 10 calls, (previousTime - currentTime)
+							//Not 10th call or first 10(11-19, 21-29), get the current time and 
+							//check how long its been since the previous 10 calls, (previousTime - currentTime)
 							//If enough time has passsed (timeDifference was <= 0), update with no delay.  Else add delay
 							else {
-								//temporary code
-								// 								if (i == 100) {
-								// 	last10CallsTime = new Date();
-								// 	last10CallsTime = last10CallsTime.getSeconds()*1000 + last10CallsTime.getMilliseconds();
-								// }
-								//temporary code end
+								
 								var currentTime = new Date();
 								currentTime = currentTime.getSeconds()*1000 + currentTime.getMilliseconds();
-								var timeDifference = last10CallsTime - currentTime;
-								console.log("requested " + playerData + " " + last10CallsTime + " " + currentTime);
+								var timeDifference = last10thCallTime - currentTime;
+								console.log("requested " + playerData + " " + last10thCallTime + " " + currentTime);
 								if (timeDifference <= 0) {
-									checkLeaderboardCollectForPlayer(region, playerData,0,db,diabloClass,0);	
+									checkLeaderboardCollectForPlayer(region, playerData, 0, db, diabloClass, 0);	
 								}
 								else {
 									console.log(i + " timeDiff was " + timeDifference);
@@ -159,17 +159,17 @@ exports.getCurrentLeaderboard = function(region, diabloClass, leaderboardType) {
 							}//end not first 10 else
 						}//end not a 10th call loop
 						
-						//It was a 10th call, add 1000 to last10CallsTime, so currentTime 
+						//It was a 10th call, add 1000 to last10thCallTime, so currentTime 
 						else {
-							last10CallsTime += 1000;
-							if (i == 9){
-								console.log("requested " + i + " " + last10CallsTime + "Current request" + currentTime);
+							last10thCallTime += 1000;
+							if (i === 9){
+								console.log("requested " + i + " " + last10thCallTime + "Current request" + currentTime);
 								checkLeaderboardCollectForPlayer(region, playerData,0,db,diabloClass,0);
 							}
-							//after 10th call
+							//after 10th(20,30) call
 							else{
-								var timeDifference = last10CallsTime - currentTime;
-								console.log("requested " + i + " " + last10CallsTime + " " + currentTime);
+								var timeDifference = last10thCallTime - currentTime;
+								console.log("requested " + i + " " + last10thCallTime + " " + currentTime);
 								checkLeaderboardCollectForPlayer(region, playerData,timeDifference+800,db,diabloClass,0);
 							}	
 						}

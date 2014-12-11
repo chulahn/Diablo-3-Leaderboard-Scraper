@@ -184,10 +184,10 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 					    							heroToPush = hero;
 					    						}
 					    					});
-					    					console.log(colors.red(heroToPush.heroID));
+					    					console.log(colors.red(heroToPush.heroID , "had highest dps"));
 					    					allGRiftHeroes[currentPlayerFromDB.Standing-1] = heroToPush;
 					    					
-					    					if (heroToPush.extraItemData == undefined) {
+					    					if (heroToPush.extraItemData === undefined) {
 					    						console.log("found grift hero, 119, adding extraItemData " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
 					    						getItemDataFor(heroToPush)
 						    					// 	var thisHero = {items : heroToPush.items,
@@ -201,13 +201,13 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 					    					else {
 					    						console.log("found grift hero, 125, had extraItemData, no griftHero " + currentPlayerFromDB.Battletag + " " + currentPlayerFromDB.Standing)
 					    						
-					    						var thisHero = {items : heroToPush.items,
-				    									heroID : heroToPush.heroID,
-				    									class : heroToPush.class}
-					    						heroMethods.getItemIDsFromHero(thisHero, 300, foundGRiftHeroCallback);		
+					    						// var thisHero = {items : heroToPush.items,
+				    							// 		heroID : heroToPush.heroID,
+				    							// 		class : heroToPush.class}
+					    						// heroMethods.getItemIDsFromHero(thisHero, 300, foundGRiftHeroCallback);		
 
-
-					    						foundGRiftHeroCallback();
+					    						getItemDataFor(heroToPush);
+					    						// foundGRiftHeroCallback();
 					    					}
 					    				}
 

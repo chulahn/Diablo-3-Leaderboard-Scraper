@@ -17,34 +17,65 @@
 <script>
 
 var diabloClasses = ["sader", "barb", "dh", "wiz", "wd", "monk", "all"];
-var groups = ["normal", "hc", "season", "seasonhc"];
+var categories = ["normal", "hc", "season", "seasonhc"];
+var currentRegion;
 $(document).ready(function() {
 
-	$('#diabloClass').hide();
-	var headerHTML="";
-	for (l=0; l<groups.length; l++) {
-		headerHTML += "<span id=\""+groups[l]+"\">"+groups[l]+"</span>&nbsp&nbsp&nbsp";
-	}
+	var regions = ["us", "eu", "kr"];
+	var regionHTML = "";
 
-	$('header').prepend(headerHTML);
+	regions.forEach(function(reg) {
 
-	$('header span').each(function() {
+		regionHTML += "<span id=\"" + reg + "\">" + reg + "</span>&nbsp&nbsp&nbsp";
+
+	});
+
+
+	$('#regionPicker').html(regionHTML);
+
+	$('#regionPicker span').each(function() {
+
+
+		$(this).click(function() {
+			currentRegion = $(this).text();
+			console.log(currentRegion);
+			$('#categoryPicker').show();
+			$('#regionPicker .selected').removeClass('selected');
+			$(this).addClass('selected');
+		});
+	})
+
+	$('#categoryPicker').hide();
+	$('#diabloClassPicker').hide();
+
+	var categoryHTML="";
+
+	categories.forEach(function (cat) {
+		categoryHTML += "<span id=\"" + cat + "\">" + cat + "</span>&nbsp&nbsp&nbsp";
+	});
+
+	$('#categoryPicker').html(categoryHTML);
+
+	$('#categoryPicker span').each(function() {
 		var category = $(this).text();
 
 		$(this).click(function() {
-			$('#diabloClass').show();
-			$('header span').removeClass();
-			$(this).toggleClass('selected');
+			$('#diabloClassPicker').show();
+			// $('#diabloClassPicker span').removeClass();
+			$('#categoryPicker .selected').removeClass('selected');
+			$(this).addClass('selected');
 			diabloClassHTML = "";
-			for (m=0; m<diabloClasses.length; m++) {
-				diabloClassHTML += "<a href=\"/us/"+category+"/"+diabloClasses[m]+"\">"+diabloClasses[m]+"</a>&nbsp&nbsp&nbsp";
-			}
+
+			diabloClasses.forEach(function (dClass) {
+				diabloClassHTML += "<a href=\"/" + currentRegion + "/" + category + "/" + dClass + "\">" + dClass + "</a>&nbsp&nbsp&nbsp";
+			})
+
 			var selectedColor = $(this).css('background-color');
-			$('#diabloClass').css('background-color', selectedColor);
-			$('#diabloClass').html(diabloClassHTML);
+			$('#diabloClassPicker').css('background-color', selectedColor);
+			$('#diabloClassPicker').html(diabloClassHTML);
 
 		})
-	})
+	});
 
 });
 
@@ -62,7 +93,9 @@ $(document).ready(function() {
 
 
 <header>
-<div id="diabloClass"></div>
+	<div id="regionPicker"></div>
+	<div id="categoryPicker"></div>
+	<div id="diabloClassPicker"></div>
 </header>
 
 

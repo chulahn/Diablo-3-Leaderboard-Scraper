@@ -42,6 +42,9 @@ function timeToDelay() {
 				//account was inactive 
 				if (requestedHeroData.code == "NOTFOUND") {
 					console.log("notfound");
+					console.log(data);
+					console.log(requestedHeroData);
+					callback();
 				}
 				//check if data is not null
 				else if (items == null) {
