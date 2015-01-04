@@ -12,81 +12,88 @@
 	<script>
 		var allGRiftHeroes = <%- JSON.stringify(ejs_allGRiftHeroes)%>;
 		var allBattletags = <%- JSON.stringify(ejs_battletags) %>;
-		var zeroCount = 0;
 
-		var allStats = allGRiftHeroes.reduce(function (prev, currentValue) {
-						 	var newVar = {};
-						 	if (currentValue == 0) {
-						 		zeroCount++;
-						 	}
+		function addAvgData() {
+			var statHTML = ""
+			var zeroCount = 0;
+			var allStats;
+			var medianGrift;
 
-						 	console.log(allGRiftHeroes);
-						 	for (key in currentValue.stats) {
-						 		newVar[key] = (prev[key] || 0) + currentValue.stats[key]; 
-						 	}
-						 	var elemDam = (currentValue.extraItemData && currentValue.extraItemData.elementalDam[0][1]) || 0;
-						 	elemDam = 1 + (elemDam/100);
+			function calcAvgData() {
+				allStats = allGRiftHeroes.reduce(function (prev, currentValue) {
+								 	var newVar = {};
+								 	if (currentValue == 0) {
+								 		zeroCount++;
+								 	}
 
-						 	var eliteDam = (currentValue.extraItemData && currentValue.extraItemData.eliteDam) || 0;
-						 	eliteDam = 1 + (eliteDam/100);
+								 	// console.log(allGRiftHeroes);
+								 	for (key in currentValue.stats) {
+								 		newVar[key] = (prev[key] || 0) + currentValue.stats[key]; 
+								 	}
+								 	var elemDam = (currentValue.extraItemData && currentValue.extraItemData.elementalDam[0][1]) || 0;
+								 	elemDam = 1 + (elemDam/100);
 
-						 	//when 0 is passed due to dead hc players
-						 	var damage = (currentValue.stats && currentValue.stats.damage) || 0;
+								 	var eliteDam = (currentValue.extraItemData && currentValue.extraItemData.eliteDam) || 0;
+								 	eliteDam = 1 + (eliteDam/100);
 
-						 	newVar.elemDam = (prev.elemDam || 0) + 
-						 	(elemDam * damage);
+								 	//when 0 is passed due to dead hc players
+								 	var damage = (currentValue.stats && currentValue.stats.damage) || 0;
 
-						 	newVar.eliteElemDam = (prev.eliteElemDam || 0) + 
-						 	(elemDam * eliteDam * damage);
+								 	newVar.elemDam = (prev.elemDam || 0) + 
+								 	(elemDam * damage);
 
-						 	var cooldown = parseFloat(currentValue.extraItemData && currentValue.extraItemData.cooldown) || 0;
+								 	newVar.eliteElemDam = (prev.eliteElemDam || 0) + 
+								 	(elemDam * eliteDam * damage);
 
-						 	newVar.cooldown = (prev.cooldown || 0) + cooldown;
-						 	newVar.paragonLevel = (prev.paragonLevel || 0) + parseFloat(currentValue.paragonLevel || 0);
-							return newVar;
-						},0);
+								 	var cooldown = parseFloat(currentValue.extraItemData && currentValue.extraItemData.cooldown) || 0;
 
-		//if zero was passed in, dont include in average calc (dead hc heroes lowered average)
-		var actualLength = allGRiftHeroes.length - zeroCount;
+								 	newVar.cooldown = (prev.cooldown || 0) + cooldown;
+								 	newVar.paragonLevel = (prev.paragonLevel || 0) + parseFloat(currentValue.paragonLevel || 0);
+									return newVar;
+								},0);
+				
+				//if zero was passed in, dont include in average calc (dead hc heroes lowered average)
+				var actualLength = allGRiftHeroes.length - zeroCount;
 
-		var allRes = 0;
-		for (key in allStats) {
-			if (key.indexOf("Resist") != -1) {
-				allRes += allStats[key];
-				console.log(allStats[key],allRes, key)
+				//calculate avg allRes
+				var allRes = 0;
+				for (key in allStats) {
+					if (key.indexOf("Resist") != -1) {
+						allRes += allStats[key];
+						console.log(allStats[key],allRes, key)
+					}
+					allStats[key] /= actualLength;
+					if (key === "arcaneResist") {
+						allStats.allRes = allRes / (6*actualLength);
+					}
+				}
+
+				medianGrift =  parseInt(allBattletags[allBattletags.length/2]["Greater Rift"]) + parseInt(allBattletags[(allBattletags.length/2) - 1]["Greater Rift"])
+				medianGrift /= 2;
 			}
-			allStats[key] /= actualLength;
-			if (key === "arcaneResist") {
-				allStats.allRes = allRes / (6*actualLength);
+			function createHTML() {
+				statHTML += "Elemental Damage: " + Number(allStats.elemDam.toFixed(0)).toLocaleString('en') + "<br/>";
+				statHTML += "Elite Elemental Damage: " + Number(allStats.eliteElemDam.toFixed(0)).toLocaleString('en') + "</br/>";
+				statHTML += "Toughness: " + Number(allStats.toughness.toFixed(0)).toLocaleString('en') + "<br />";
+				statHTML += "Life: " + Number(allStats.life.toFixed(0)).toLocaleString('en') + "<br />";
+				statHTML += "All Resist: " + allStats.allRes.toFixed(0) + "<br />"
+				statHTML += "Cooldown Reduction: " + allStats.cooldown.toFixed(2) + "%<br />";
+				statHTML += "Average Paragon: " + allStats.paragonLevel.toFixed(0) +"<br />";
+				statHTML += "Median GRift Level: " + medianGrift + "<br />";
+				statHTML += "Crit Chance: " + (allStats.critChance * 100).toFixed(0) + "%<br />";
+				statHTML += "Crit Dam: " + (allStats.critDamage * 100).toFixed(0) + "%<br />";
+				statHTML += "CD/CC: " + (allStats.critDamage / allStats.critChance).toFixed(2) + "<br />";
 			}
-		}
-		
-		var medianGrift =  parseInt(allBattletags[allBattletags.length/2]["Greater Rift"]) + parseInt(allBattletags[(allBattletags.length/2) - 1]["Greater Rift"])
-		medianGrift /= 2;
 
-		var statHTML = "";
-
-		statHTML += "Elemental Damage: " + Number(allStats.elemDam.toFixed(0)).toLocaleString('en') + "<br/>";
-		statHTML += "Elite Elemental Damage: " + Number(allStats.eliteElemDam.toFixed(0)).toLocaleString('en') + "</br/>";
-		statHTML += "Toughness: " + Number(allStats.toughness.toFixed(0)).toLocaleString('en') + "<br />";
-		statHTML += "Life: " + Number(allStats.life.toFixed(0)).toLocaleString('en') + "<br />";
-		statHTML += "All Resist: " + allStats.allRes.toFixed(0) + "<br />"
-		statHTML += "Cooldown Reduction: " + allStats.cooldown.toFixed(2) + "%<br />";
-		statHTML += "Average Paragon: " + allStats.paragonLevel.toFixed(0) +"<br />";
-		statHTML += "Median GRift Level: " + medianGrift + "<br />";
-		statHTML += "Crit Chance: " + (allStats.critChance * 100).toFixed(0) + "%<br />";
-		statHTML += "Crit Dam: " + (allStats.critDamage * 100).toFixed(0) + "%<br />";
-		statHTML += "CD/CC: " + (allStats.critDamage / allStats.critChance).toFixed(2) + "<br />";
-
-		var statsArray = ['dps', 'toughness', 'elemDps', 'eliteElemDps'];
-		var statsOnPage = ['DPS', 'Toughness', 'Elemental DPS', 'Elite Elemental DPS'];
-
-		$(document).ready(function () {
-		
+			calcAvgData();
+			createHTML();
 			$('#statistics').html(statHTML);
+		}
 
-			$('#top').hide();
-			$('#skillPicker').hide();
+		function createStatNav() {
+			
+			var statsArray = ['dps', 'toughness', 'elemDps', 'eliteElemDps'];
+			var statsOnPage = ['DPS', 'Toughness', 'Elemental DPS', 'Elite Elemental DPS'];
 
 			var statsPickHTML = "";
 
@@ -98,7 +105,16 @@
 			});
 
 			$('#statPicker').append(statsPickHTML); 
-			
+		}
+
+
+		$(document).ready(function () {
+
+			addAvgData();
+			createStatNav();
+		
+			$('#top').hide();
+			$('#skillPicker').hide();
 			$('#dps').attr('class', 'currentGraph');
 
 			$('#statPicker a').each(function () {
@@ -106,7 +122,6 @@
 				
 				$(this).on('click' , function() {
 					
-
 					drawStatGraph(currentTop, statToCalc);
 
 					$('#itemGraphDiv').hide();
@@ -118,26 +133,18 @@
 
 				});
 			});
-
-
 		})
 
 		$(window).scroll(function() {
 			if ($(window).scrollTop() > 400) {
-	        // > 100px from top - show div
 	        	$('#top').show();
 			}
 
 		    else {
-		        // <= 100px from top - hide div
 		        $('#top').hide();
 		    }
 		});
-	</script>
-
-
-
-		
+	</script>		
 </head>
 
 
@@ -156,11 +163,7 @@
 
 
 <div id = "container">
-
 	<div id="statistics">
-
-
-
 	</div>
 
 	<div id="graphChooser">

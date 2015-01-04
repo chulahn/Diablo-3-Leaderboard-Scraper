@@ -1,5 +1,3 @@
-//used in itemPicker div
-var itemStrings = ["shoulders", "head", "neck", "hands", "torso", "bracers", "leftFinger", "waist", "rightFinger", "mainHand", "legs", "offHand", "feet"];	
 
 var currentArray = allGRiftHeroes.slice(0,100);
 //Data for setting up DPS/Toughness bar graph
@@ -273,120 +271,46 @@ function drawStatGraph(currentTop, currentDataset) {
 		}
 	}
 }
-function drawItemPie() {
 
-	var itemsPieChart = itemsd3.graph;
-	var items = itemsd3.data;
+function drawPie(string) {
 
-	itemsPieChart.selectAll('.enter').attr("class", "exit").remove();
+	var data;
+	var graph;
+	var dimens;
+	var tooltip;
 
-	var pie = d3.layout.pie();
-	var outerRadius = itemsd3.dimens.h / 2 ;
-	var innerRadius = 0;
-	var arc = d3.svg.arc()
-				.innerRadius(innerRadius)
-				.outerRadius(outerRadius);
-	var color = d3.scale.category10();
+	switch (string) {
+		case "items":
+			data = itemsd3.data;
+			graph = itemsd3.graph;
+			dimens = itemsd3.dimens;
+			tooltip = itemsd3.tooltip;
+			break;
 
-	var arcs = itemsPieChart.selectAll("g.arc")
-					.data(pie(items.count))
-					.enter()
-					.append("g")
-					.attr("class", "arc enter")
-					.attr("transform", "translate(" + itemsd3.dimens.w * .5+ ", " + outerRadius + ")")
+		case "gems":
+			data = gemsd3.data;
+			graph = gemsd3.graph;
+			dimens = gemsd3.dimens;
+			tooltip = gemsd3.tooltip;
+			break;
 
-	arcs.append("path")
-		.attr("fill", function(d, i) {
-			return color(i)
-		})
-		.attr("d", arc)
-	    .attr("class", "enter");
-
-
-	arcs.append("text")
-	    .attr("transform", function(d) {
-	        return "translate(" + arc.centroid(d) + ")";
-	    })
-	    .attr("text-anchor", "middle")
-	    .attr("class", "enter")
-	    .html(function(d, i) {
-	    	var itemPercentage = ((d.value/items.total)*100).toFixed(0);
-	    	var percentageString = itemPercentage + "%";
-	    	//if itemPercentage > 20, add name of item
-	        if (itemPercentage > 20) {
-	        	return getShortenedItemName(items.names[i], itemPercentage);
-	        }
-	        else if (itemPercentage > 2) {
-	        	return percentageString;
-	        }
-	    });
-
-	arcs.call(itemsd3.tooltip);
-	arcs.on("mouseover", itemsd3.tooltip.show)
-		.on("mouseout", itemsd3.tooltip.hide);
-
-
-	/* 
-		Helper method used in drawItemPie
-		Returns a string that will fit the pieChart.
-	*/
-	function getShortenedItemName(currentItemName, itemPercentage) {
-		var percentageString = itemPercentage + "% ";
-
-		if (currentItemName == "Ring of Royal Grandeur") {
-			return percentageString + "RoRG";
-		}
-		if (currentItemName == "Stone of Jordan") {
-			return percentageString + "SoJ";
-		}
-
-		//If item name is more than one word, get the first word.
-		var findSpace = currentItemName.indexOf(" ");
-		if (findSpace != -1) {
-			var newItemName = currentItemName.substring(0, findSpace);
-
-			if (newItemName != "The") {
-				return percentageString + newItemName;
-			}
-			//Trim the first word from itemString.  Check if there are more than two words
-			//If so, trim all words after the second, and return.
-			//else return second word
-			else {
-				newItemName = currentItemName.substring(findSpace+1, currentItemName.length);
-				findSpace = newItemName.indexOf(" ");
-				if (findSpace != -1) {
-					newItemName = newItemName.substring(0, findSpace);
-					return percentageString + newItemName;
-				}
-				else {
-					return percentageString + newItemName;
-				}
-			}
-		} 	
-		else {
-			return percentageString + currentItemName;
-		}
 	}
-}
-function drawGemPie() {
-	var gemsPieChart = gemsd3.graph;
-	var gems = gemsd3.data;
 
-	gemsPieChart.selectAll('.enter').attr("class", "exit").remove();
+	graph.selectAll('.enter').attr("class", "exit").remove();
 
 	var pie = d3.layout.pie();
-	var outerRadius = gemsd3.dimens.h / 2 ;
+	var outerRadius = dimens.h / 2 ;
 	var innerRadius = 0;
 	var arc = d3.svg.arc()
 				.innerRadius(innerRadius)
 				.outerRadius(outerRadius);
 	var color = d3.scale.category10();
-	var arcs = gemsPieChart.selectAll("g.arc")
-					.data(pie(gems.count))
+	var arcs = graph.selectAll("g.arc")
+					.data(pie(data.count))
 					.enter()
 					.append("g")
 					.attr("class", "arc enter")
-					.attr("transform", "translate(" + gemsd3.dimens.w * .5 + ", " + outerRadius + ")")
+					.attr("transform", "translate(" + dimens.w * .5 + ", " + outerRadius + ")")
 
 	arcs.append("path")
 		.attr("fill", function(d, i) {
@@ -395,7 +319,6 @@ function drawGemPie() {
 		.attr("d", arc)
 	    .attr("class", "enter");
 
-
 	arcs.append("text")
 	    .attr("transform", function(d) {
 	        return "translate(" + arc.centroid(d) + ")";
@@ -403,30 +326,25 @@ function drawGemPie() {
 	    .attr("text-anchor", "middle")
 	    .attr("class", "enter")
 	    .html(function(d, i) {
-	    	var itemPercentage = ((d.value/gems.total)*100).toFixed(0);
-	    	var percentageString = itemPercentage + "%";
+	    	var itemPercentage = ((d.value/data.total)*100).toFixed(0);
+	    	var percentageString = itemPercentage + "% ";
 	    	
 	        if (itemPercentage > 20) {
+	        	
+	        	return percentageString + getShortenedName(data.names[i]);
 
-	        	var space = gems.names[i].indexOf(" ");
-
-	        	var gemFirstWord = gems.names[i].slice(0,space);
-
-	        	return getShortenedGemName(gems.names[i]) + percentageString;
 	        }
 	        else if (itemPercentage > 2) {
 	        	return percentageString;
 	        }
 	    });
 
-	console.log(gemsd3.tooltip);
-	arcs.call(gemsd3.tooltip);
-	arcs.on("mouseover", gemsd3.tooltip.show)
-		.on("mouseout", gemsd3.tooltip.hide);
+	arcs.call(tooltip);
+	arcs.on("mouseover", tooltip.show)
+		.on("mouseout", tooltip.hide);
 
+	function getShortenedName(fullName) {
 
-
-	function getShortenedGemName(fullName) {
 		switch(fullName) {
 			case "Bane Of the Powerful":
 				return "Powerful";
@@ -441,25 +359,49 @@ function drawGemPie() {
 				return "No Gems";
 				break;
 
+			case "Ring of Royal Grandeur":
+				return "RoRG";
+				break;
+
+			case "Stone of Jordan":
+				return "SoJ";
+				break;
+
 			default:
-				var space = fullName.indexOf(" ");
-				if (space !== -1) {
-					var gemFirstWord = fullName.slice(0,space);
+				var findSpace = fullName.indexOf(" ");
+				if (findSpace !== -1) {
+					var firstWord = fullName.slice(0,findSpace);
+					firstWord = firstWord.replace(",","");
+
+					
+					if (firstWord !== "The") {
+						return firstWord;
+					}
+
+					//the furnace, remove first word
+					//if ther are more than one word, remove them.
+					else {
+						var removedFirst = fullName.substring(findSpace+1, fullName.length);
+						var findSpace = removedFirst.indexOf(" ");
+						if (findSpace !== -1) {
+							removedAll = removedFirst.substring(0, findSpace);
+							return removedAll;
+						}
+						else {
+							return removedFirst;
+						}
+
+					}
 				}
 				else {
 					return fullName;
 				}
 
-				if (gemFirstWord[gemFirstWord.length-1] === "," ) {
-					return gemFirstWord.slice(0,gemFirstWord.length-1);
-				}
-
-				return gemFirstWord;
-
-
-		}	
-	}
+		}
+	}		
 }
+
+
 function drawActivePie() {
 	var active = skillsd3.data.active;
 	var skillsPieChart = skillsd3.graph;
@@ -590,35 +532,35 @@ function drawPassivePie() {
 
 	Initializes and resets data(skillsd3.data) that will be used in the skillGraph(skillsd3.graph)
 */
-function resetSkillData() {
-	var active = skillsd3.data.active;
-	active.all = [ [], [], [], [] ];
-	active.names = active.all[0];
-	active.count = active.all[1];
-	active.runeNames = active.all[2];
-	active.runeCount = active.all[3];
- 	active.total = 0;
+function resetData(category) {
+	var data;
+	var active;
+	switch(category) {
+		case "gems":
+			data = gemsd3.data;
+			break;
+		case "items":
+			data = itemsd3.data;
+			break;
+		case "skills":
+			data = skillsd3.data.passive;
+			active = skillsd3.data.active;
+			break;
+	}
 
-	
-	var passive = skillsd3.data.passive;
-	passive.all = [[],[]];
-	passive.names = passive.all[0];
-	passive.count = passive.all[1];
-	passive.total = 0;
-}
-function resetItemData() {
-	var items = itemsd3.data;
-	items.all = [[],[]];
-	items.names = items.all[0];
-	items.count = items.all[1];
-	items.total = 0;
-}
-function resetGemData() {
-	var gems = gemsd3.data;
-	gems.all = [[],[]];
-	gems.names = gems.all[0];
-	gems.count = gems.all[1];
-	gems.total = 0;
+	data.all = [[],[]];
+	data.names = data.all[0];
+	data.count = data.all[1];
+	data.total = 0;
+
+	if (active !== undefined) {
+		active.all = [ [], [], [], [] ];
+		active.names = active.all[0];
+		active.count = active.all[1];
+		active.runeNames = active.all[2];
+		active.runeCount = active.all[3];
+	 	active.total = 0;
+	}
 }
 
 /*
@@ -630,8 +572,7 @@ function resetGemData() {
 	getTopItems: Get item(head, torso, etc..) for each hero.
 */
 function getTopSkills() {
-	//reset values.  
-	resetSkillData();
+	resetData("skills");
 
 	var active = skillsd3.data.active;
 	var passive = skillsd3.data.passive;
@@ -704,7 +645,7 @@ function getTopSkills() {
  	});
 }
 function getTopItems(item) {
-	resetItemData();
+	resetData("items");
 	var items = itemsd3.data;
 
 	allGRiftHeroes.forEach(function (currentHero) {
@@ -725,7 +666,7 @@ function getTopItems(item) {
 	})
 }
 function getTopGems() {
-	resetGemData();
+	resetData("gems");
 	var gems = gemsd3.data;
 
 	allGRiftHeroes.forEach(function (currentHero) {
@@ -762,16 +703,15 @@ function getTopGems() {
 		gems.count.push(1);
 		gems.total += 1;
 	}
-
 }
 
-
-$(document).ready(function() {
+function createItemNav() {
+	//used in itemPicker div
+	var itemStrings = ["shoulders", "head", "neck", "hands", "torso", "bracers", "leftFinger", "waist", "rightFinger", "mainHand", "legs", "offHand", "feet"];
 
 	var itemPickerHTML = "";
-
 	itemPickerHTML += "<a href=\"#\" class=\"gem\">GEMS</a><br/>";
-
+	
 	$.each(itemStrings , function(index, item){
 		if (itemStrings.indexOf(item) != itemStrings.length-1) {
 			itemPickerHTML += "<a href=\"#\" class=\"items\" id="+item+">"+item+"</a> ";
@@ -786,6 +726,14 @@ $(document).ready(function() {
 
 	$('#itemPicker').append(itemPickerHTML);
 
+
+}
+
+
+$(document).ready(function() {
+
+	createItemNav();
+
 	$('#itemPicker').hide();
 	$('#itemGraphDiv').hide();
 	$('#skillGraphDiv').hide();
@@ -795,7 +743,8 @@ $(document).ready(function() {
 		$(this).click(function() {
 			var clickedItem = $(this).attr('id');
 			getTopItems(clickedItem);
-			drawItemPie();
+			// drawItemPie();
+			drawPie("items")
 			$('#statSpan').removeClass('selected');
 			$('.currentGraph').removeClass('currentGraph');
 			$(this).addClass('currentGraph');
@@ -808,7 +757,8 @@ $(document).ready(function() {
 
 	$('.gem').click(function (){
 
-		drawGemPie();
+		// drawGemPie();
+		drawPie("gems");
 		$('.currentGraph').removeClass('currentGraph');
 		$(this).addClass('currentGraph');
 		$('#mainStatsDiv').hide();
@@ -829,40 +779,22 @@ $(document).ready(function() {
 });
 
 /* 
-	Creating click handler.  Show more options on click if not statBarGraph.  else show statBarGraph
+	Creating click handler.  Show more options on click if not statBarGraph; else hide
 */
 $('#graphChooser span').each(function () {
 	var spanID = $(this).attr('id');
-	//skills, items
-	if (spanID !== "statSpan") {
+	var clickedNav = $('#'+spanID.replace("Span", "Picker"))
 
-		$(this).click(function() {
-			$(this).toggleClass('selected');
+	$(this).click(function() {
+		$(this).toggleClass('selected');
 
-			if ($(this).attr('class') == "selected") {
-				$('#'+spanID.replace("Span", "Picker")).show();	
-			}
-			else {
-				$('#'+spanID.replace("Span", "Picker")).hide();
-			}
-		});
-	}
-	//Stats
-	else {
-
-		$(this).click(function() {
-			$(this).toggleClass('selected');
-
-			if ($(this).attr('class') == "selected") {
-				$('#'+spanID.replace("Span", "Picker")).show();	
-			}
-			else {
-				$('#'+spanID.replace("Span", "Picker")).hide();
-			}
-
-
-		});
-	}
+		if ($(this).attr('class') == "selected") {
+			clickedNav.show();	
+		}
+		else {
+			clickedNav.hide();
+		}
+	});	
 });
 
 $('#skillPicker a').each(function () {
