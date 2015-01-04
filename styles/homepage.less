@@ -1,6 +1,4 @@
-.selected {
-	font-weight: bold;
-}
+@import "../partials/_default.less";
 
 html {
 	font-family: sans-serif;
@@ -8,19 +6,8 @@ html {
 *,*:before, *:after {
 	box-sizing: border-box;
 }
-@background: #2B2B2B;
-
 header {
 	text-align: center;
-}
-
-body {
-	color: white;
-	background: @background;
-}
-
-span, a {
-	font-size: 32px;
 }
 
 span {
@@ -28,19 +15,18 @@ span {
 	padding: 2px;
 }
 
+.selected {
+	font-weight: bold;
+	text-decoration: underline;
+}
+
 @normal: #787878;
 @hc: darken(@normal, 15%);
 @season: rgb(73, 113, 26);
 @seasonhc: darken(@season, 10%);
 
-.transition() {	
-	transition: 1s all linear;
-	-o-transition: 1s all linear;
-	-moz-transition: 1s all linear;
-	-webkit-transition: 1s all linear;
-}
-
 a, span {
+	font-size: 32px;
 	text-decoration: none;
 	&:hover{
 		text-decoration:underline;
@@ -51,8 +37,6 @@ a:visited, a:active, a:visited, a:link {
 	color: white;
 }
 
-
-
 #normal {
 	background-color: @normal;
 }
@@ -60,7 +44,6 @@ a:visited, a:active, a:visited, a:link {
 #hc {
 	background-color: @hc;
 	color: red;
-
 }
 
 #season {

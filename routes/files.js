@@ -4,6 +4,8 @@ var router = express.Router();
 router.get("/d3functions.js", function(req,res) {
 	res.sendfile("d3functions.js");
 });
+
+//style
 router.get("/styles/battletag.css", function(req,res) {
 	res.sendfile("styles/battletag.css");
 });
@@ -28,6 +30,12 @@ router.get("/styles/leaderboard.css", function(req,res) {
 router.get("/styles/leaderboard.less", function(req,res) {
 	res.sendfile("styles/leaderboard.less");
 });
+
+router.get("/partials/_default.less", function(req, res) {
+	res.sendfile("partials/_default.less");
+})
+
+//images
 router.get("/images/hardcore.png", function(req,res) {
 	res.sendfile("images/hardcore.png");
 });
