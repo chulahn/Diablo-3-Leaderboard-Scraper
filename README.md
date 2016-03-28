@@ -19,6 +19,7 @@ I used to spend a lot of time playing Diablo 3, almost too much time.  After max
   <ul><li>Rune Words</li></ul>
   <li>Guess Leaderboard Hero
   <li>Cache and update (Buggy with items)
+</ul>
   
     
 <h3>Notes</h3>
