@@ -24,7 +24,7 @@ I used to spend a lot of time playing Diablo 3, almost too much time.  After max
   
     
 <h3>Notes</h3>
-This was made ~ 1.5 years ago and hasn't been touched in a while, so the MongoDB might be a little dated and might take time to store data.  If a page doesn't work, try refreshing the page so the API calls can be made.  This was done while Season 1 was up, and it is current at Season 5 if I am correct so I did not account for each separate Season.  I stopped played Diablo 3 so this app has not been updated in quite a while.
+This was made ~ 1.5 years ago and hasn't been touched in a while, so the MongoDB might be a little dated and might take time to store data.  If a page doesn't work, try refreshing the page so the API calls can be made.  This was done while Season 1 was up, and it is current at Season 5 if I am correct so I did not account for each separate Season.  I stopped played Diablo 3 so this app has not been updated in quite a while.  Also if a player has an abnormally low stat, it may be because he does not want others to see his set-up or because he was switching items between characters.
 
 <h3>How was it made?</h3>
 <ul>
