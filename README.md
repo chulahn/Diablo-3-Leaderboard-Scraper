@@ -1,6 +1,7 @@
 # Diablo-3-Leaderboard-Scraper
 Webscraper using Node.js.
 
+<a href="http://d3ind3.herokuapp.com">Link to the webapp</a>
 <h3>About</h3>
 This was my first webapp with d3.js and using a database(MongoDB).  I wanted to challenge myself after making the StartingStrength app.  It was truly a learning experience with using a database, and I had to think about how I wanted to organize everything as well as adding and updating.
 <p>It grabs data from Battle.net <a href="http://us.battle.net/d3/en/rankings/season/1/rift-hardcore-wd">Leaderboards</a> and generates stats based on gear.  First the user clicks which leaderboard he wants to see, and then shows the users who have the top 100 spot.  From those 100, it calculates what I thought was important statistics(average damage, toughness, critcal hit chance), popular items, and skillsets.  Then once a Player is clicked, all Heroes for a Player are displayed and the Hero that is assumed to be on the Leaderboard is shown with a star(A player might have two Barbarians however one might be used for farming while the other might be strictly for Greater Rifting).  Then once a Hero is clicked, their items and stats can be viewed with tooltips just like it is on Battle.net.  
