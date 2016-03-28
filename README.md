@@ -24,3 +24,11 @@ I used to spend a lot of time playing Diablo 3, almost too much time.  After max
     
 <h3>Notes</h3>
 This was made ~ 1.5 years ago and hasn't been touched in a while, so the MongoDB might be a little dated and might take time to store data.  If a page doesn't work, try refreshing the page so the API calls can be made.  This was done while Season 1 was up, and it is current at Season 5 if I am correct so I did not account for each separate Season.  I stopped played Diablo 3 so this app has not been updated in quite a while.
+
+<h3>How was it made?</h3>
+<ul>
+  <li><b>NodeJS</b> - BackEnd
+  <li><b>JQuery</b> - Event-handling and AJAX Requests
+  <li><b>MongoDB</b> - Database
+  <li><b>D3.js</b> - Bar and Pie Charts
+</ul>
