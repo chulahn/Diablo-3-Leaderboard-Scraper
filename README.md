@@ -9,5 +9,16 @@ I used to spend a lot of time playing Diablo 3, almost too much time.  After max
 
 
 
-
-It also calculates the percentage of which item was used at certain spots and also what skills as well as what runes for those skills.  After clicking a player, it shows all characters and the app does its best guess the correct character that made it to the leaderboard, as one player can have more than one character.  For each player 
+<h3>Features</h3>
+<ul>
+  <li>Show Top 100 Players
+  <li>Show Stats (Number and Graph)
+  <li>Show Popular Items / Gems
+  <li>Show Popular Skills
+  <ul><li>Rune Words</li></ul>
+  <li>Guess Leaderboard Hero
+  <li>Cache and update (Buggy with items)
+  
+    
+<h3>Notes</h3>
+This was made ~ 1.5 years ago and hasn't been touched in a while, so the MongoDB might be a little dated and might take time to store data.  If a page doesn't work, try refreshing the page so the API calls can be made.  This was done while Season 1 was up, and it is current at Season 5 if I am correct so I did not account for each separate Season.
