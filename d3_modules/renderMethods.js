@@ -29,7 +29,7 @@ var collectionCategory = "normal";
 exports.heroPage = function(heroID, req, res) {
 	var heroRequestURL = "https://" + region + apiURL + "/profile/" +req.params.battletag+"/hero/"+heroID+"?locale="+locale+"&apikey="+apiKey;
 
-	debug.timeString(heroID + " Page before request ");
+	debug.timeString(req.params.battletag+ " : " + heroID + " Page before request ");
 
 	//Takes 200ms.  Only has information from DB.  Not always up to Date
 	MongoClient.connect(databaseURL, function(err, db) {
@@ -37,31 +37,112 @@ exports.heroPage = function(heroID, req, res) {
 			return console.log("getHeroDetails error connecting to db")
 		}
 		else {
+			// Find in heroID in Hero Table
 			heroCollection = db.collection("hero");
 			heroCollection.find({"heroID" : parseInt(heroID)}).toArray(function(err, matchedHero) {
+				
+				// if hero exists in HeroTable , update items.
+				// render from database
 				if (matchedHero.length > 0) {
 					var heroData = matchedHero[0];
 					var heroItems = heroData.items;
-					//add items to DB if extraItemData is undefined
+
+					//!!!TODO:add items to DB if extraItemData is undefined, and extraItemData 
 					if (heroData.level == 70 && heroData.extraItemData == undefined) {
 						// exports.getItemIDsFromHero(heroItems,heroID,10);
 					}
-					console.log(heroData);
+					console.log("heroPage: updating items:", heroData);
 					res.render("hero.ejs", {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
-					debug.timeString(heroID + " Page after request in database");
+					debug.timeString("heroPage: ", heroID + " Page after request in database");
 				}
-				//not in database.  must request data from Blizzard site.
-				//Takes about same time.  Can crash if too many requests were made 
+
+				// not in database.  must request data from Blizzard site.
+				// Takes about same time.  Can crash if too many requests were made 
 				else {
 					request(heroRequestURL, function (error, response, data) {
+						console.log(colors.yellow("heroPage: requesting from battleNet"));
 						var heroData = JSON.parse(data);
 						var heroItems = heroData.items;
+
+						// If level 70, add items 
 						if (heroData.level == 70) {
 							// exports.getItemIDsFromHero(heroItems,heroID,10);
 						}
+
+						console.log("heroData:")
+						/*
+							{ id: 103194985,
+								name: 'Abby',
+								class: 'monk',
+								gender: 1,
+								level: 70,
+								paragonLevel: 2218,
+								kills: { elites: 1704 },
+								hardcore: true,
+								seasonal: true,
+								seasonCreated: 14,
+								skills:
+								{ active: [ [Object], [Object], [Object], [Object], [Object], [Object] ],
+									passive: [ [Object], [Object], [Object], [Object] ] },
+								items:
+								{ head:
+										{ id: 'Unique_SpiritStone_007_x1',
+											name: 'Tzo Krin\'s Gaze',
+											icon: 'unique_spiritstone_007_x1_demonhunter_male',
+											displayColor: 'orange',
+											tooltipParams: '/item/tzo-krins-gaze-Unique_SpiritStone_007_x1',
+											dyeColor: [Object] },
+									neck:
+										{ id: 'Unique_Amulet_Set_11_x1',
+											name: 'Sunwuko\'s Shines',
+											icon: 'unique_amulet_set_11_x1_demonhunter_male',
+											displayColor: 'green',
+											tooltipParams: '/item/sunwukos-shines-Unique_Amulet_Set_11_x1' },
+						*/
 						console.log(heroData)
+
+						console.log("heroItems")
+						/*
+							{ head:
+								{ id: 'Unique_SpiritStone_007_x1',
+									name: 'Tzo Krin\'s Gaze',
+									icon: 'unique_spiritstone_007_x1_demonhunter_male',
+									displayColor: 'orange',
+									tooltipParams: '/item/tzo-krins-gaze-Unique_SpiritStone_007_x1',
+									dyeColor:
+										{ id: 'Dye_11',
+											name: 'Summer Dye',
+											icon: 'dye_11_demonhunter_male',
+											tooltipParams: 'item/summer-dye' } },
+								neck:
+								{ id: 'Unique_Amulet_Set_11_x1',
+									name: 'Sunwuko\'s Shines',
+									icon: 'unique_amulet_set_11_x1_demonhunter_male',
+									displayColor: 'green',
+									tooltipParams: '/item/sunwukos-shines-Unique_Amulet_Set_11_x1' },
+								torso:
+								{ id: 'Unique_Chest_Set_11_x1',
+									name: 'Sunwuko\'s Soul',
+									icon: 'unique_chest_set_11_x1_demonhunter_male',
+									displayColor: 'green',
+									tooltipParams: '/item/sunwukos-soul-Unique_Chest_Set_11_x1',
+									dyeColor:
+										{ id: 'Dye_18',
+											name: 'Infernal Dye',
+											icon: 'dye_18_demonhunter_male',
+											tooltipParams: 'item/infernal-dye' },
+									transmogItem:
+										{ id: 'Unique_Chest_001_x1',
+											name: 'Goldskin',
+											icon: 'unique_chest_001_x1_demonhunter_male',
+											displayColor: 'orange',
+											tooltipParams: '/item/goldskin-Unique_Chest_001_x1' } },
+
+						*/
+						console.log(heroItems);
+
+						debug.timeString(req.params.battletag + " : " + heroID + " Page after request ");
 						res.render("hero.ejs", {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
-						debug.timeString(heroID + " Page after request ");
 					});
 				}
 			});

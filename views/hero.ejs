@@ -84,7 +84,7 @@ last updated: <%= lastupdated %> <br />
 <div class="container-fluid">
 	<div class="row">
 		<!-- Shows Stats -->
-		<div id="profile" class="col-lg-3 col-md-3 col-sm-4 col-xs-7">
+		<div id="profile" class="col-md-4 col-sm-4 col-xs-7">
 			<ul><h2>Stats</h2>
 				<li>Paragon: <%= ejs_heroData.paragonLevel %></li>
 				<li>Damage: <%= Number(ejs_heroData.stats.damage).toLocaleString('en') %></li>
@@ -164,7 +164,7 @@ last updated: <%= lastupdated %> <br />
 				
 		</div>
 		<!-- Show Items -->
-		<div id="items" class="col-lg-3 col-md-4 col-sm-5 col-xs-7 col-sm-offset-1 col-md-offset-3">
+		<div id="items" class="col-md-4 col-sm-5 col-xs-7">
 			<h2 text-align="center">Items</h2>
 			<table>
 				<tr><!-- Top Row : Shoulders, Head, Amulet -->
@@ -265,10 +265,9 @@ last updated: <%= lastupdated %> <br />
 				</tr>	
 			</table>
 		</div>
-	</div>
-	<div class="row">
+
 		<!-- Show Skills -->
-		<div id="skills" class="col-lg-3 col-md-3 col-sm-4">
+		<div id="skills" class="col-lg-4 col-md-3 col-sm-4">
 			<ul><h2>Skills</h2>
 				<li>Active Skills:
 					
@@ -277,7 +276,7 @@ last updated: <%= lastupdated %> <br />
 						<% if (activeSkill.skill != undefined) { %>
 
 							<%
-								console.log(activeSkill.skill.name)
+								console.log("hero.ejs: ", activeSkill.skill.name)
 								var activeURL = skillURL + "/active/";
 								activeURL += activeSkill.skill.name.toLowerCase().replace(/ /g, "-").replace("'","");
 							%>
