@@ -13,7 +13,7 @@ var mongo = require("mongodb");
 var Db = mongo.Db;
 var MongoClient = mongo.MongoClient;
 var databaseURL = process.env.DBURL || "mongodb://admin:admin@ds039850.mongolab.com:39850/d3leaders";
-var apiKey = process.env.APIKEY || "y34m8hav4zpvrezvrs6xhgjh6uphqa5r";
+var apiKey = process.env.APIKEY || "mrra8722carcndwzpww2dcvcg6q965ca";
 
 var region = "us";
 var apiURL = ".api.battle.net/d3/"
@@ -90,14 +90,18 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 	//Takes about 1/10th second
 
 
-		debug.timeString(diabloClass + " Page before request ");
+		debug.timeString(diabloClass + " leaderboard Page before request ");
+		//[ 47 : 37 : 120 ]  sader leaderboard Page before request
 		if (err) {
 			return console.log(err);
 		}	
 		//successfully connected
 		else  {
-			console.log("Inside getLeaderboardFromDB for " + region + " " + diabloClass + " " + leaderboardType);
+			// us / sader / normal
+			console.log(colors.yellow("Connected to DB " , region , "/", diabloClass , "/", leaderboardType));
 			set.setRegion(region);
+
+			// us + normalsader
 			var collectionName = region + getCollectionName(diabloClass, leaderboardType);
 			var leaderboardCollection = db.collection(collectionName);
 			console.log(collectionName);
@@ -109,13 +113,15 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 					var pageData = foundCache[0];
 
 					res.render('ClassLeaderboard.ejs',{title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : pageData.battletags , ejs_allGRiftHeroes : pageData.heroes , lastupdated : date});
-					console.log(colors.green("rendered from cache!"));
+					console.log(colors.yellow("rendered from cache!"));
 					debug.timeString(diabloClass + " Page rendered ");
 				}
 
 				else {
 
 					cacheData();
+
+					
 				}
 			});
 
@@ -460,44 +466,70 @@ exports.getHeroes = function(battletag, req, res) {
 
 		//find gRiftHero then pass in.
 		function findGRiftHero(foundGRiftHeroCallback) {
-			debug.timeString(battletag + " Page before db search");
+			debug.timeString(battletag + " findGRiftHero: before db search");
+
 			MongoClient.connect(databaseURL, function(err, db) {
 				var heroCollection = db.collection("hero");
+				
 				heroCollection.find({"battletag" : battletag , "gRiftHero" : true}).toArray(function (err, heroResults) {
-					debug.timeString(battletag + " Page after db search");
+					
+					debug.timeString(battletag + " findGRiftHero: after db search");
 					if (heroResults.length > 0) {
 						gRiftHeroes = heroResults;
 						foundGRiftHeroCallback();
 					}
 					else {
-						console.log(heroResults);
+						console.log(colors.yellow(heroResults, 'length = 0'));
 						foundGRiftHeroCallback();
 					}
 				});//end find in heroCollection
 			});			
 		},
+
 		function getAllHeroes(gotHeroesCallback) {
 			var requestURL = "https://" + region + apiURL + "profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey;
-			debug.timeString(battletag + " Page before request");
+			debug.timeString(battletag + " getAllHeroes: Page before request");
+			
 			request(requestURL, function (error, response, playerInformation) {
+				console.log(colors.yellow(requestURL));
+				
 				var playerJSON = JSON.parse(playerInformation);
+
+				// Error Handling
 				if (playerJSON.code == "NOTFOUND") {
 					res.send("Invalid Battletag");
+					console.log(colors.red(requestURL , 'Invalid BattleTag'));
+					
 					//request the tag again.
 					getHeroes(battletag,req,res);
 				}
-				playersHeroes = playerJSON.heroes;
-				if (playersHeroes == undefined) {
-					console.log("getHeroes playerJSON.heroes undefined");
-					getHeroes(battletag,req,res);
-				}
+
+				// {"code":403, "type":"Forbidden", "detail":"Account Inactive"}
+				if(playerJSON.code === 403) {
+					console.log(colors.red(playerJSON.code, playerJSON.type, playerJSON.detail));
+				} 
+
+				//
 				else {
-					for (i=0; i<playersHeroes.length; i++) {
-						// exports.addHeroData(battletag, playersHeroes[i].id, 0,timeToDelay());
+					playersHeroes = playerJSON.heroes;
+					if (playersHeroes == undefined) {
+						console.log("getHeroes playerJSON.heroes undefined");
+						
+						// Why was Heroes undefined
+						// gotHeroesCallback();	
+						// getHeroes(battletag,req,res);
 					}
-					debug.timeString(battletag + " Page after request");
-					gotHeroesCallback();
+					else {
+						// Add each Hero to DB.
+						for (i=0; i<playersHeroes.length; i++) {
+							// exports.addHeroData(battletag, playersHeroes[i].id, 0,timeToDelay());
+						}
+						debug.timeString(battletag + " getAllHeroes: Rendering Page.");
+						gotHeroesCallback();
+					}
 				}
+
+				
 			});
 
 		},
@@ -508,7 +540,22 @@ exports.getHeroes = function(battletag, req, res) {
 			getHeroes(battletag, req, res);
 		}
 		else {
-			debug.timeString(battletag + " Page rendered");
+			debug.timeString(battletag + " getHeroes:renderPage(err)");
+ 
+			/* playersHeroes [] =>
+				{ id: 103194985,
+				name: 'Abby',
+				class: 'monk',
+				classSlug: 'monk',
+				gender: 1,
+				level: 70,
+				kills: { elites: 1704 },
+				paragonLevel: 0,
+				hardcore: true,
+				seasonal: true,
+				dead: false,
+				'last-updated': 1533336112 },
+			*/
 			res.render('player.ejs', { ejs_btag : battletag , ejs_heroes : playersHeroes , ejs_grift_heroes : gRiftHeroes });
 		}
 	});
@@ -516,7 +563,7 @@ exports.getHeroes = function(battletag, req, res) {
 
 
 
-
+//sader, normal
 function getCollectionName(diabloClass, gRiftCategory) {
 	//inside update, after request from bnet, collectionName is what was set in setGRiftCategory
 	if (gRiftCategory == "era/1/rift-") {
@@ -533,8 +580,10 @@ function getCollectionName(diabloClass, gRiftCategory) {
 	}
 	//not updating, but accesing db from getLeaderboardFromDB
 	else {
+		// collectionCategory is passed in normal: EG normal
 		collectionCategory = gRiftCategory;
 	}
+	// normal + sader
 	return collectionCategory + diabloClass;
 }
 
