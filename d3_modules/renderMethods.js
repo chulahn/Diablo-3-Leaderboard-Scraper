@@ -41,22 +41,22 @@ exports.heroPage = function(heroID, req, res) {
 			heroCollection = db.collection("hero");
 			heroCollection.find({"heroID" : parseInt(heroID)}).toArray(function(err, matchedHero) {
 				
-				// if hero exists in HeroTable , update items.
+				// If hero exists in HeroTable , update items.
 				// render from database
 				if (matchedHero.length > 0) {
 					var heroData = matchedHero[0];
 					var heroItems = heroData.items;
 
-					//!!!TODO:add items to DB if extraItemData is undefined, and extraItemData 
+					//!!!TODO:add items to DB if extraItemData is undefined, OR extraItemData needs to be updated
 					if (heroData.level == 70 && heroData.extraItemData == undefined) {
 						// exports.getItemIDsFromHero(heroItems,heroID,10);
 					}
 					console.log("heroPage: updating items:", heroData);
-					res.render("hero.ejs", {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
 					debug.timeString("heroPage: ", heroID + " Page after request in database");
+					res.render("hero.ejs", {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_heroID : heroID})
 				}
 
-				// not in database.  must request data from Blizzard site.
+				// Not in database.  Must request data from Blizzard site.
 				// Takes about same time.  Can crash if too many requests were made 
 				else {
 					request(heroRequestURL, function (error, response, data) {
@@ -69,7 +69,8 @@ exports.heroPage = function(heroID, req, res) {
 							// exports.getItemIDsFromHero(heroItems,heroID,10);
 						}
 
-						console.log("heroData:")
+						// console.log("heroData:")
+						// console.log(heroData)
 						/*
 							{ id: 103194985,
 								name: 'Abby',
@@ -99,9 +100,9 @@ exports.heroPage = function(heroID, req, res) {
 											displayColor: 'green',
 											tooltipParams: '/item/sunwukos-shines-Unique_Amulet_Set_11_x1' },
 						*/
-						console.log(heroData)
 
-						console.log("heroItems")
+						// console.log("heroItems")
+						// console.log(heroItems);
 						/*
 							{ head:
 								{ id: 'Unique_SpiritStone_007_x1',
@@ -139,10 +140,9 @@ exports.heroPage = function(heroID, req, res) {
 											tooltipParams: '/item/goldskin-Unique_Chest_001_x1' } },
 
 						*/
-						console.log(heroItems);
 
 						debug.timeString(req.params.battletag + " : " + heroID + " Page after request ");
-						res.render("hero.ejs", {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_itemData : heroItems, ejs_heroID : heroID})
+						res.render("hero.ejs", {ejs_btag : req.params.battletag ,ejs_heroData : heroData, ejs_heroID : heroID})
 					});
 				}
 			});
@@ -576,6 +576,199 @@ exports.getHeroes = function(battletag, req, res) {
 				
 				var playerJSON = JSON.parse(playerInformation);
 
+				/*
+					{ battleTag: 'Darth#1885',
+						paragonLevel: 912,
+						paragonLevelHardcore: 3902,
+						paragonLevelSeason: 0,
+						paragonLevelSeasonHardcore: 2218,
+						guildName: 'n00b Clutch Gamerz',
+						heroes:
+						[ { id: 103194985,
+								name: 'Abby',
+								class: 'monk',
+								classSlug: 'monk',
+								gender: 1,
+								level: 70,
+								kills: [Object],
+								paragonLevel: 0,
+								hardcore: true,
+								seasonal: true,
+								dead: false,
+								'last-updated': 1533336112 },
+							{ id: 102216954,
+								name: 'Augabaal',
+								class: 'necromancer',
+								classSlug: 'necromancer',
+								gender: 0,
+								level: 70,
+								kills: [Object],
+								paragonLevel: 0,
+								hardcore: true,
+								seasonal: true,
+								dead: false,
+								'last-updated': 1533335434 },
+							{ id: 101679667,
+								name: 'Caeser',
+								class: 'crusader',
+								classSlug: 'crusader',
+								gender: 0,
+								level: 70,
+								kills: [Object],
+								paragonLevel: 0,
+								hardcore: true,
+								seasonal: true,
+								dead: false,
+								'last-updated': 1533103497 },
+						],
+						lastHeroPlayed: 103194985,
+						lastUpdated: 1533336112,
+						kills:
+						{ monsters: 17235987,
+							elites: 1247696,
+							hardcoreMonsters: 12151743 },
+						highestHardcoreLevel: 70,
+						timePlayed:
+						{ 'demon-hunter': 0.114,
+							barbarian: 0.119,
+							'witch-doctor': 0.116,
+							necromancer: 0.049,
+							wizard: 0.16,
+							monk: 1,
+							crusader: 0.042 },
+						progression: { act1: true, act3: true, act2: true, act5: true, act4: true },
+						fallenHeroes:
+						[ { heroId: 54426636,
+								name: 'BriarRabbit',
+								class: 'monk',
+								level: 70,
+								elites: 9599,
+								hardcore: true,
+								death: [Object],
+								gender: 1 },
+							{ heroId: 61546872,
+								name: 'BaileyKnox',
+								class: 'monk',
+								level: 70,
+								elites: 16521,
+								hardcore: true,
+								death: [Object],
+								gender: 1 },
+							{ heroId: 65296168,
+								name: 'Disconnects',
+								class: 'monk',
+								level: 70,
+								elites: 23308,
+								hardcore: true,
+								death: [Object],
+								gender: 1 },
+							{ heroId: 70980087,
+								name: 'TzuNaamE',
+								class: 'monk',
+								level: 70,
+								elites: 13319,
+								hardcore: true,
+								death: [Object],
+								gender: 1 },
+							{ heroId: 73524933,
+								name: 'Brynn',
+								class: 'monk',
+								level: 70,
+								elites: 12738,
+								hardcore: true,
+								death: [Object],
+								gender: 1 },
+							{ heroId: 76006712,
+								name: 'Costley',
+								class: 'demon-hunter',
+								level: 70,
+								elites: 10428,
+								hardcore: true,
+								death: [Object],
+								gender: 1 },
+							{ heroId: 78555457,
+								name: 'Shzwuko',
+								class: 'monk',
+								level: 70,
+								elites: 18210,
+								hardcore: true,
+								death: [Object],
+								gender: 0 },
+							{ heroId: 87864309,
+								name: 'SavageBeast',
+								class: 'witch-doctor',
+								level: 70,
+								elites: 4139,
+								hardcore: true,
+								death: [Object],
+								gender: 0 },
+							{ heroId: 92069399,
+								name: 'jflogr',
+								class: 'monk',
+								level: 70,
+								elites: 11868,
+								hardcore: true,
+								death: [Object],
+								gender: 1 },
+							{ heroId: 98650636,
+								name: 'thatsahugeb',
+								class: 'barbarian',
+								level: 70,
+								elites: 5344,
+								hardcore: true,
+								death: [Object],
+								gender: 1 } ],
+						seasonalProfiles:
+						{ season11:
+								{ seasonId: 11,
+									paragonLevel: 483,
+									paragonLevelHardcore: 1835,
+									kills: [Object],
+									timePlayed: [Object],
+									highestHardcoreLevel: 70 },
+							season14:
+								{ seasonId: 14,
+									paragonLevel: 0,
+									paragonLevelHardcore: 2218,
+									kills: [Object],
+									timePlayed: [Object],
+									highestHardcoreLevel: 70 },
+							season13:
+								{ seasonId: 13,
+									paragonLevel: 0,
+									paragonLevelHardcore: 2392,
+									kills: [Object],
+									timePlayed: [Object],
+									highestHardcoreLevel: 70 },
+							season12:
+								{ seasonId: 12,
+									paragonLevel: 533,
+									paragonLevelHardcore: 2386,
+									kills: [Object],
+									timePlayed: [Object],
+									highestHardcoreLevel: 70 },
+							season0:
+								{ seasonId: 0,
+									paragonLevel: 912,
+									paragonLevelHardcore: 3902,
+									kills: [Object],
+									timePlayed: [Object],
+									highestHardcoreLevel: 70 } },
+						blacksmith: { slug: 'blacksmith', level: 12 },
+						jeweler: { slug: 'jeweler', level: 12 },
+						mystic: { slug: 'mystic', level: 12 },
+						blacksmithSeason: { slug: 'blacksmith', level: 12 },
+						jewelerSeason: { slug: 'jeweler', level: 12 },
+						mysticSeason: { slug: 'mystic', level: 12 },
+						blacksmithHardcore: { slug: 'blacksmith', level: 12 },
+						jewelerHardcore: { slug: 'jeweler', level: 12 },
+						mysticHardcore: { slug: 'mystic', level: 12 },
+						blacksmithSeasonHardcore: { slug: 'blacksmith', level: 12 },
+						jewelerSeasonHardcore: { slug: 'jeweler', level: 12 },
+						mysticSeasonHardcore: { slug: 'mystic', level: 12 } }
+				*/
+				// console.log(playerJSON);
+
 				// Error Handling
 				if (playerJSON.code == "NOTFOUND") {
 					res.send("Invalid Battletag");
@@ -590,7 +783,7 @@ exports.getHeroes = function(battletag, req, res) {
 					console.log(colors.red(playerJSON.code, playerJSON.type, playerJSON.detail));
 				} 
 
-				//
+				// No Errors
 				else {
 					playersHeroes = playerJSON.heroes;
 					if (playersHeroes == undefined) {
