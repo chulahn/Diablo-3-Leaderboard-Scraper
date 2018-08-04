@@ -147,9 +147,13 @@
 	</script>		
 </head>
 
+<!--
+	res.render('ClassLeaderboard.ejs',{title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : pageData.battletags , ejs_allGRiftHeroes : pageData.heroes , lastupdated : date});
+-->
 
 <body>
 	<header>
+		<!-- US NORMAL SADER -->
 		<h1 id="#"> <%- region.toUpperCase() %> <%- leaderboardType.toUpperCase() %> <%- title.toUpperCase() %></h1>
 		<a href="#" id="top">top</a>
 		<div id="update">

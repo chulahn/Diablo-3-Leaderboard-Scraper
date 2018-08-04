@@ -170,7 +170,6 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 	MongoClient.connect(databaseURL, function(err, db) {
 	//Takes about 1/10th second
 
-
 		debug.timeString(diabloClass + " leaderboard Page before request ");
 		//[ 47 : 37 : 120 ]  sader leaderboard Page before request
 		if (err) {
@@ -187,13 +186,61 @@ exports.leaderboardPage = function(region, diabloClass, leaderboardType, req, re
 			var leaderboardCollection = db.collection(collectionName);
 			console.log(collectionName);
 
+			// Go through cached
 			db.collection("cached").find({"collectName" : collectionName}).toArray(function (err, foundCache) {
 
 				if (foundCache && foundCache[0] && foundCache[0].heroes !== undefined && foundCache[0].heroes.length === 100) {
 
 					var pageData = foundCache[0];
 
+					// .collectName: 'usernormalsader'
+					// .lastupdated: 2014-11-28
+					// .heroes: [] => 
+					/*
+								{ _id: 547e961dddd27ffc1c8a6b46,
+										heroID: 46567733,
+										battletag: 'TomCruise-1406',
+										name: '超酷者',
+										class: 'crusader',
+										level: 70,
+										paragonLevel: 831,
+										hardcore: false,
+										seasonal: false,
+										skills: [Object],
+										items: [Object],
+										stats: [Object],
+										region: 'us',
+										lastupdated: 2014-12-03T04:48:29.392Z,
+										gRiftHero: true,
+										extraItemData: [Object] },
+
+					*/
+					// .battletags: [] =>
+					/*
+							[ { Battletag: 'TomCruise#1406',
+									'Date Completed': 'Nov 22, 2014 4:01 AM',
+									'Greater Rift': '44',
+									Heroes: [Array],
+									Standing: 1,
+									'Time Spent': '13m 30.400s',
+									lastupdated: 2014-11-28T03:30:02.234Z },
+								{ Battletag: 'jjsexy#1455',
+									'Date Completed': 'Nov 6, 2014 1:27 AM',
+									'Greater Rift': '44',
+									Heroes: [Array],
+									Standing: 2,
+									'Time Spent': '13m 52.050s',
+									lastupdated: 2014-11-28T03:30:02.402Z },
+								]
+					*/
+
+					// console.log(colors.red("pageData"));
+					// console.log(pageData)
+
+					// ejs_battletags , Standing, Battletag, Greater Rift, Time Spent, Date Completed,
+					// ejs_allGRiftHeroes used to compute Stats on LeaderPage
 					res.render('ClassLeaderboard.ejs',{title : diabloClass , region : region, leaderboardType : collectionCategory , ejs_battletags : pageData.battletags , ejs_allGRiftHeroes : pageData.heroes , lastupdated : date});
+
 					console.log(colors.yellow("rendered from cache!"));
 					debug.timeString(diabloClass + " Page rendered ");
 				}
@@ -547,14 +594,14 @@ exports.getHeroes = function(battletag, req, res) {
 
 		//find gRiftHero then pass in.
 		function findGRiftHero(foundGRiftHeroCallback) {
-			debug.timeString(battletag + " findGRiftHero: before db search");
+			debug.timeString("getHeroes: " + battletag + " findGRiftHero: before db search");
 
 			MongoClient.connect(databaseURL, function(err, db) {
 				var heroCollection = db.collection("hero");
 				
 				heroCollection.find({"battletag" : battletag , "gRiftHero" : true}).toArray(function (err, heroResults) {
 					
-					debug.timeString(battletag + " findGRiftHero: after db search");
+					debug.timeString("getHeroes: " + battletag + " findGRiftHero: after db search");
 					if (heroResults.length > 0) {
 						gRiftHeroes = heroResults;
 						foundGRiftHeroCallback();
@@ -569,7 +616,7 @@ exports.getHeroes = function(battletag, req, res) {
 
 		function getAllHeroes(gotHeroesCallback) {
 			var requestURL = "https://" + region + apiURL + "profile/" + battletag + "/?locale=" + locale + "&apikey=" + apiKey;
-			debug.timeString(battletag + " getAllHeroes: Page before request");
+			debug.timeString("getHeroes: " + battletag + " getAllHeroes: Page before request");
 			
 			request(requestURL, function (error, response, playerInformation) {
 				console.log(colors.yellow(requestURL));
@@ -787,7 +834,7 @@ exports.getHeroes = function(battletag, req, res) {
 				else {
 					playersHeroes = playerJSON.heroes;
 					if (playersHeroes == undefined) {
-						console.log("getHeroes playerJSON.heroes undefined");
+						console.log("getHeroes: playerJSON.heroes undefined");
 						
 						// Why was Heroes undefined
 						// gotHeroesCallback();	
@@ -798,7 +845,7 @@ exports.getHeroes = function(battletag, req, res) {
 						for (i=0; i<playersHeroes.length; i++) {
 							// exports.addHeroData(battletag, playersHeroes[i].id, 0,timeToDelay());
 						}
-						debug.timeString(battletag + " getAllHeroes: Rendering Page.");
+						debug.timeString("getHeroes: " + battletag + " getAllHeroes: Rendering Page.");
 						gotHeroesCallback();
 					}
 				}
@@ -814,7 +861,8 @@ exports.getHeroes = function(battletag, req, res) {
 			getHeroes(battletag, req, res);
 		}
 		else {
-			debug.timeString(battletag + " getHeroes:renderPage(err)");
+			debug.timeString("getHeroes: " + battletag + " getHeroes:renderPage(err)");
+			// console.log(playersHeroes);
  
 			/* playersHeroes [] =>
 				{ id: 103194985,

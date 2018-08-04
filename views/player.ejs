@@ -14,7 +14,10 @@
 	  ga('create', 'UA-56162514-1', 'auto');
 	  ga('send', 'pageview');
 
-</script>
+	</script>
+	<!--
+			res.render('player.ejs', { ejs_btag : battletag , ejs_heroes : playersHeroes , ejs_grift_heroes : gRiftHeroes });
+	-->
 </head>
 
 <body>
@@ -35,7 +38,7 @@
 	<% switch(gender) { case 1: gender = "female"; break; case 0: gender = "male"; break; } %>
 	<% var imgURL = hero.class+"-"+gender %>
 	<div class="hero<% if (hero.level < 70) { %> mule <% } %>">
-
+		<!-- If ejs_grift_heroes, add a star -->
 		<% if (ejs_grift_heroes !== 0) { %>
 			<% ejs_grift_heroes.forEach(function (gRiftHero) { %>
 				<% if (hero.id == gRiftHero.heroID) { %>
