@@ -12,7 +12,7 @@
     "ejs": "2.5.5",
     "express": "4.10.1",
     "jsdom": "11.12.0",
-    "mongodb": "2.0.4",
+    "mongodb": "3.1.13",
     "request": "2.47.0"
   },
   "author": "Chul Ahn",
